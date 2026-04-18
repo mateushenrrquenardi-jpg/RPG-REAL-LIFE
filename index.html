@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>RPG da Vida Real — Mateus</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#C9A84C;--gold-light:#E8D5A0;--purple:#3D2B6B;--purple-mid:#6B4FA0;
+  --bg:#0D0B14;--surface:#16121F;--surface2:#1E1829;--border:rgba(201,168,76,0.2);
+  --text:#F0EAD6;--muted:#8B7FA8;
+}
+body{font-family:'Crimson Pro',serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.app{max-width:680px;margin:0 auto;padding:1.5rem 1rem;}
+
+.hero-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem;position:relative;overflow:hidden;}
+.hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.hero-top{display:flex;align-items:center;gap:16px;}
+.hero-avatar{width:52px;height:52px;border-radius:50%;background:var(--purple);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:20px;color:var(--gold);}
+.hero-name{font-family:'Cinzel',serif;font-size:20px;font-weight:600;color:var(--gold);}
+.hero-sub{font-size:13px;color:var(--muted);margin-top:2px;font-style:italic;}
+.exp-track{background:var(--surface2);border-radius:99px;height:6px;overflow:hidden;border:1px solid var(--border);margin-top:14px;}
+.exp-fill{height:100%;background:linear-gradient(90deg,var(--purple-mid),var(--gold));border-radius:99px;transition:width 0.6s ease;}
+.exp-txt{font-size:12px;color:var(--muted);margin-top:5px;text-align:right;}
+.attrs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px;}
+.attr{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 6px;text-align:center;}
+.attr-lbl{font-size:10px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;font-family:'Cinzel',serif;}
+.attr-val{font-size:24px;color:var(--gold);font-family:'Cinzel',serif;font-weight:600;line-height:1.2;}
+
+.tabs{display:flex;gap:4px;margin-bottom:1rem;}
+.tab{font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.05em;padding:7px 16px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+.tab:hover{color:var(--gold-light);}
+.tab.active{background:var(--purple);border-color:var(--purple-mid);color:var(--gold-light);}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.panel-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:0.06em;margin-bottom:1rem;}
+
+.ai-row{display:flex;gap:8px;margin-bottom:1rem;}
+.ai-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Crimson Pro',serif;font-size:15px;outline:none;}
+.ai-input::placeholder{color:var(--muted);}
+.ai-input:focus{border-color:var(--gold);}
+.btn-ai{background:var(--purple);border:1px solid var(--purple-mid);border-radius:8px;padding:10px 16px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.btn-ai:hover{background:var(--purple-mid);}
+.btn-ai:disabled{opacity:0.5;cursor:not-allowed;}
+
+.ai-suggestion{background:var(--surface2);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:12px 14px;margin-bottom:1rem;display:none;}
+.ai-sug-name{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:4px;}
+.ai-sug-desc{font-size:14px;color:var(--text);font-style:italic;}
+.ai-actions{display:flex;gap:6px;margin-top:10px;}
+
+.divider{border:none;border-top:1px solid var(--border);margin:1rem 0;}
+
+.add-form{display:flex;flex-direction:column;gap:8px;margin-bottom:0.5rem;}
+.form-row{display:flex;gap:8px;}
+input[type=text],select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Crimson Pro',serif;font-size:15px;outline:none;width:100%;}
+input[type=text]::placeholder{color:var(--muted);}
+input[type=text]:focus,select:focus{border-color:var(--gold);}
+select option{background:var(--surface2);}
+.btn-add{background:var(--gold);border:none;border-radius:8px;padding:9px 18px;color:var(--bg);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;letter-spacing:0.05em;transition:opacity 0.2s;}
+.btn-add:hover{opacity:0.85;}
+.btn-cancel{background:transparent;border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--muted);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;}
+
+.quest-list{display:flex;flex-direction:column;gap:8px;}
+.quest-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);}
+.quest-info{flex:1;}
+.quest-name{font-size:15px;color:var(--text);}
+.quest-meta{font-size:12px;color:var(--muted);margin-top:2px;font-style:italic;}
+.badge{display:inline-block;font-size:10px;font-family:'Cinzel',serif;letter-spacing:0.04em;padding:2px 8px;border-radius:99px;margin-right:4px;}
+.badge-main{background:rgba(61,43,107,0.6);color:#C9A84C;border:1px solid rgba(107,79,160,0.4);}
+.badge-side{background:rgba(13,43,30,0.6);color:#7BC99A;border:1px solid rgba(60,120,80,0.3);}
+.quest-btns{display:flex;gap:6px;}
+.btn-done{background:transparent;border:1px solid var(--gold);border-radius:6px;padding:5px 10px;color:var(--gold);font-family:'Cinzel',serif;font-size:10px;cursor:pointer;transition:all 0.2s;}
+.btn-done:hover{background:var(--gold);color:var(--bg);}
+.btn-del{background:transparent;border:1px solid rgba(180,60,60,0.3);border-radius:6px;padding:5px 10px;color:rgba(180,60,60,0.6);font-family:'Cinzel',serif;font-size:10px;cursor:pointer;}
+.btn-del:hover{border-color:#b43c3c;color:#b43c3c;}
+
+.hist-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;}
+.hist-item{padding:10px 12px;border-left:2px solid var(--gold);background:var(--surface2);border-radius:0 8px 8px 0;}
+.hist-name{font-size:14px;color:var(--text);}
+.hist-meta{font-size:11px;color:var(--muted);margin-top:2px;font-style:italic;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold);border-radius:8px;padding:10px 20px;font-family:'Cinzel',serif;font-size:13px;color:var(--gold);opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;z-index:99;}
+.toast.show{opacity:1;}
+.levelup{background:var(--purple);border:1px solid var(--gold);border-radius:10px;padding:14px;text-align:center;font-family:'Cinzel',serif;font-size:15px;color:var(--gold);margin-bottom:1rem;display:none;letter-spacing:0.05em;}
+.empty{font-size:13px;color:var(--muted);text-align:center;padding:1.5rem 0;font-style:italic;}
+.loading{color:var(--muted);font-size:13px;font-style:italic;text-align:center;padding:1rem 0;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="toast" class="toast"></div>
+  <div id="levelup" class="levelup"></div>
+
+  <div class="hero-card">
+    <div class="hero-top">
+      <div class="hero-avatar">M</div>
+      <div>
+        <div class="hero-name">Mateus</div>
+        <div class="hero-sub" id="hero-sub">Carregando...</div>
+      </div>
+    </div>
+    <div class="exp-track"><div class="exp-fill" id="exp-fill" style="width:0%"></div></div>
+    <div class="exp-txt" id="exp-txt">— EXP</div>
+    <div class="attrs">
+      <div class="attr"><div class="attr-lbl">Força</div><div class="attr-val" id="a-forca">—</div></div>
+      <div class="attr"><div class="attr-lbl">Magia</div><div class="attr-val" id="a-magia">—</div></div>
+      <div class="attr"><div class="attr-lbl">Carisma</div><div class="attr-val" id="a-carisma">—</div></div>
+      <div class="attr"><div class="attr-lbl">Intel.</div><div class="attr-val" id="a-intel">—</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('quests')">Quests</button>
+    <button class="tab" onclick="showTab('historico')">Histórico</button>
+  </div>
+
+  <div id="tab-quests">
+    <div class="panel">
+      <div class="panel-title">✦ Criar com IA</div>
+      <div class="ai-row">
+        <input class="ai-input" id="ai-input" placeholder="Ex: preciso treinar, estudar inglês, orar todo dia..." />
+        <button class="btn-ai" id="ai-btn" onclick="askAI()">Invocar</button>
+      </div>
+      <div class="ai-suggestion" id="ai-suggestion">
+        <div class="ai-sug-name" id="ai-name"></div>
+        <div class="ai-sug-desc" id="ai-desc"></div>
+        <div class="ai-actions">
+          <button class="btn-add" onclick="confirmAI()">Adicionar quest</button>
+          <button class="btn-cancel" onclick="cancelAI()">Cancelar</button>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <div class="panel-title">Adicionar manualmente</div>
+      <div class="add-form">
+        <input type="text" id="q-nome" placeholder="Nome da quest..." />
+        <div class="form-row">
+          <select id="q-tipo">
+            <option value="side">Side quest (+10 EXP, +1)</option>
+            <option value="principal">Missão principal (+30 EXP, +3)</option>
+          </select>
+          <select id="q-atrib">
+            <option value="forca">Força</option>
+            <option value="magia">Magia</option>
+            <option value="carisma">Carisma</option>
+            <option value="inteligencia">Inteligência</option>
+          </select>
+        </div>
+        <button class="btn-add" onclick="addQuest()">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Quests ativas</div>
+      <div class="quest-list" id="quest-list"><div class="loading">Carregando missões...</div></div>
+    </div>
+  </div>
+
+  <div id="tab-historico" style="display:none;">
+    <div class="panel">
+      <div class="panel-title">Histórico de batalhas</div>
+      <div class="hist-list" id="hist-list"><div class="loading">Carregando registros...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbx_NKGI8-BRmR-IBqFt1dRjxH3Oz5Ek-pZxDo9oEXSk2lSTaZBT0KIZ8NOCxDzSHwVf/exec';
+const CLAUDE='https://api.anthropic.com/v1/messages';
+let aiData=null;
+
+const TITLES=[[1,'Iniciante'],[5,'Aventureiro'],[10,'Guerreiro'],[15,'Campeão'],[20,'Herói'],[30,'Lendário'],[50,'Mítico']];
+function getTitle(n){let t='Iniciante';for(const[l,name]of TITLES){if(n>=l)t=name;}return t;}
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);}
+
+function showTab(tab){
+  document.getElementById('tab-quests').style.display=tab==='quests'?'':'none';
+  document.getElementById('tab-historico').style.display=tab==='historico'?'':'none';
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',(i===0&&tab==='quests')||(i===1&&tab==='historico'));});
+  if(tab==='historico')loadHistorico();
+}
+
+async function call(params){
+  const res=await fetch(API+'?'+new URLSearchParams(params));
+  return res.json();
+}
+
+async function loadHero(){
+  try{
+    const h=await call({action:'getHero'});
+    const pct=Math.round((h.exp_atual/h.exp_necessaria)*100);
+    document.getElementById('exp-fill').style.width=pct+'%';
+    document.getElementById('exp-txt').textContent=h.exp_atual+' / '+h.exp_necessaria+' EXP';
+    document.getElementById('hero-sub').textContent='Nível '+h.nivel+' · '+getTitle(h.nivel);
+    document.getElementById('a-forca').textContent=h.forca;
+    document.getElementById('a-magia').textContent=h.magia;
+    document.getElementById('a-carisma').textContent=h.carisma;
+    document.getElementById('a-intel').textContent=h.inteligencia;
+  }catch(e){toast('Erro ao carregar herói.');}
+}
+
+async function loadQuests(){
+  try{
+    const quests=await call({action:'getQuests'});
+    const list=document.getElementById('quest-list');
+    const ativas=quests.filter(q=>q.status==='ativa');
+    if(!ativas.length){list.innerHTML='<div class="empty">Nenhuma quest ativa, herói.</div>';return;}
+    list.innerHTML=ativas.map(q=>`
+      <div class="quest-item">
+        <div class="quest-info">
+          <div class="quest-name">${q.nome}</div>
+          <div class="quest-meta">
+            <span class="badge ${q.tipo==='principal'?'badge-main':'badge-side'}">${q.tipo==='principal'?'Principal':'Side'}</span>
+            ${q.atributo.charAt(0).toUpperCase()+q.atributo.slice(1)}
+          </div>
+        </div>
+        <div class="quest-btns">
+          <button class="btn-done" onclick="completeQuest('${q.id}')">Concluir</button>
+          <button class="btn-del" onclick="deleteQuest('${q.id}')">✕</button>
+        </div>
+      </div>`).join('');
+  }catch(e){toast('Erro ao carregar quests.');}
+}
+
+async function addQuest(nome,tipo,atributo){
+  const n=nome||document.getElementById('q-nome').value.trim();
+  if(!n){toast('Digite o nome da quest!');return;}
+  const t=tipo||document.getElementById('q-tipo').value;
+  const a=atributo||document.getElementById('q-atrib').value;
+  try{
+    await call({action:'addQuest',nome:n,tipo:t,atributo:a});
+    if(!nome)document.getElementById('q-nome').value='';
+    toast('Quest adicionada!');
+    loadQuests();
+  }catch(e){toast('Erro ao adicionar.');}
+}
+
+async function completeQuest(id){
+  try{
+    const r=await call({action:'completeQuest',id});
+    if(r.error){toast('Erro: '+r.error);return;}
+    if(r.levelUp){
+      const b=document.getElementById('levelup');
+      b.textContent='⬆ LEVEL UP! Nível '+r.nivel+' — '+getTitle(r.nivel)+'!';
+      b.style.display='block';
+      setTimeout(()=>b.style.display='none',4000);
+    }else{
+      toast('+'+r.expGanho+' EXP · +'+r.pontosAtrib+' '+r.atributo);
+    }
+    loadHero();loadQuests();
+  }catch(e){toast('Erro ao concluir.');}
+}
+
+async function deleteQuest(id){
+  try{await call({action:'deleteQuest',id});toast('Quest removida.');loadQuests();}
+  catch(e){toast('Erro ao remover.');}
+}
+
+async function loadHistorico(){
+  try{
+    const hist=await call({action:'getHistorico'});
+    const list=document.getElementById('hist-list');
+    if(!hist.length){list.innerHTML='<div class="empty">Nenhuma batalha registrada ainda.</div>';return;}
+    list.innerHTML=hist.slice(0,30).map(h=>`
+      <div class="hist-item">
+        <div class="hist-name">${h.acao}</div>
+        <div class="hist-meta">+${h.exp_ganho} EXP · +${h.pontos} ${h.atributo} · Nível ${h.nivel_atual} · ${h.data}</div>
+      </div>`).join('');
+  }catch(e){toast('Erro ao carregar histórico.');}
+}
+
+async function askAI(){
+  const input=document.getElementById('ai-input').value.trim();
+  if(!input){toast('Descreva a quest primeiro!');return;}
+  const btn=document.getElementById('ai-btn');
+  btn.disabled=true;btn.textContent='Invocando...';
+  document.getElementById('ai-suggestion').style.display='none';
+  try{
+    const res=await fetch(CLAUDE,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:500,
+        messages:[{role:'user',content:`Você é o administrador de um RPG de vida real. Crie uma quest com nome temático baseada na tarefa descrita.
+
+Tarefa: "${input}"
+
+Responda SOMENTE em JSON válido, sem markdown:
+{"nome":"Nome criativo RPG (máx 6 palavras)","tipo":"side ou principal","atributo":"forca ou magia ou carisma ou inteligencia","descricao":"Frase imersiva curta"}
+
+Regras: side=diária/simples, principal=grande objetivo. forca=físico, magia=espiritual/criativo, carisma=social, inteligencia=estudo/leitura.`}]
+      })
+    });
+    const data=await res.json();
+    const text=data.content.map(i=>i.text||'').join('');
+    aiData=JSON.parse(text.replace(/```json|```/g,'').trim());
+    document.getElementById('ai-name').textContent='✦ '+aiData.nome;
+    document.getElementById('ai-desc').textContent=aiData.descricao+' ('+aiData.tipo+' · '+aiData.atributo+')';
+    document.getElementById('ai-suggestion').style.display='block';
+  }catch(e){toast('Erro ao invocar a IA.');}
+  btn.disabled=false;btn.textContent='Invocar';
+}
+
+function confirmAI(){
+  if(!aiData)return;
+  addQuest(aiData.nome,aiData.tipo,aiData.atributo);
+  document.getElementById('ai-suggestion').style.display='none';
+  document.getElementById('ai-input').value='';
+  aiData=null;
+}
+
+function cancelAI(){
+  document.getElementById('ai-suggestion').style.display='none';
+  aiData=null;
+}
+
+loadHero();loadQuests();
+</script>
+</body>
+</html>

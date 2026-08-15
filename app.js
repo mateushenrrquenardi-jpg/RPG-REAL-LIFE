@@ -221,7 +221,11 @@ async function resetDailies(button) {
   try {
     const result = await callApi({ action: "resetDailies" });
     if (result?.error) throw new Error(result.error);
-    showToast("Diarias resetadas. Novo ciclo iniciado.");
+    const resetCount = Number(result?.resetCount || result?.resetadas || 0);
+    const message = resetCount > 0
+      ? `${resetCount} diaria${resetCount > 1 ? "s" : ""} resetada${resetCount > 1 ? "s" : ""}.`
+      : "Diarias ja estavam pendentes.";
+    showToast(message);
     await loadQuests();
   } catch (error) {
     showToast("Erro ao resetar diarias.");

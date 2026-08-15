@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbx_NKGI8-BRmR-IBqFt1dRjxH3Oz5Ek-pZxDo9oEXSk2lSTaZBT0KIZ8NOCxDzSHwVf/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzDrLul734wj6q58L3d1tdENJMTnlcqQ1VisLwUdEeTr4xtjHz0dV_tArCU-466M74o/exec";
 
 const TITLES = [
   [1, "Iniciante"],

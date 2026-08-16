@@ -1,5 +1,5 @@
 {
-  "timeZone": "America/Cuiaba",
+  "timeZone": "Etc/GMT+4",
   "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",

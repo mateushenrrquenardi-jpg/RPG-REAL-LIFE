@@ -7,7 +7,7 @@ Aplicacao web simples publicada no GitHub Pages, com dados em Google Sheets e AP
 ```text
 .
 +-- apps-script/
-|   +-- Code.gs
+|   +-- Código.js
 |   +-- appsscript.json
 +-- assets/
 |   +-- profile.jpg
@@ -42,6 +42,8 @@ Instale as dependencias:
 ```bash
 npm install
 ```
+
+Se a instalacao falhar depois de trocar entre gerenciadores de pacote, remova `node_modules` e rode `npm install` novamente.
 
 Faca login no Google para autorizar o clasp:
 

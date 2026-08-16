@@ -150,14 +150,6 @@ h1 {
   transform: none;
 }
 
-.btn-primary {
-  grid-column: 1 / -1;
-  width: 100%;
-  background: linear-gradient(135deg, var(--cyan), var(--pink));
-  color: #08070b;
-  font-weight: 700;
-}
-
 .btn-secondary {
   width: 100%;
   background: var(--cyan);
@@ -466,15 +458,6 @@ select:focus {
 @media (min-width: 620px) {
   .app-shell {
     padding-top: 28px;
-  }
-
-  .hero-grid {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
-  .btn-primary {
-    grid-column: auto;
-    width: auto;
   }
 
   .form-grid {

@@ -290,7 +290,6 @@ function showTab(tabName) {
 
 function bindEvents() {
   $("#quest-form").addEventListener("submit", addQuest);
-  $("#btn-new-day").addEventListener("click", (event) => resetDailies(event.currentTarget));
   $("#btn-reset-dailies").addEventListener("click", (event) => resetDailies(event.currentTarget));
 
   document.querySelector(".tabs").addEventListener("click", (event) => {

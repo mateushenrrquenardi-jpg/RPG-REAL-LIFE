@@ -496,6 +496,13 @@ select:focus {
   color: var(--pink);
 }
 
+.btn-config-logout {
+  margin-top: 8px;
+  background: rgba(255, 200, 87, 0.10);
+  border: 1px solid rgba(255, 200, 87, 0.45);
+  color: var(--amber);
+}
+
 @media (min-width: 620px) {
   .app-shell {
     padding-top: 28px;

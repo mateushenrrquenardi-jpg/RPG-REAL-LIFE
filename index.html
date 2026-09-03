@@ -7,10 +7,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260902-2">
+  <link rel="stylesheet" href="styles.css?v=20260903-1">
 </head>
 <body>
-  <main class="app-shell">
+  <main id="auth-screen" class="app-shell">
+    <section class="panel" aria-label="Login">
+      <div class="panel-header"><h2>Entrar no RPG</h2></div>
+      <p class="state-text">Seus dados ficam protegidos pela sua conta.</p>
+      <form id="auth-form" class="quest-form">
+        <label class="field"><span>Email</span><input id="auth-email" type="email" autocomplete="email" required></label>
+        <label class="field"><span>Senha</span><input id="auth-password" type="password" autocomplete="current-password" minlength="6" required></label>
+        <button class="btn btn-secondary" type="submit" data-mode="signin">Entrar</button>
+        <button id="btn-signup" class="btn btn-ghost" type="button" data-mode="signup">Criar conta</button>
+      </form>
+    </section>
+  </main>
+
+  <main id="app-screen" class="app-shell" hidden>
     <section class="hero-panel" aria-label="Status do personagem">
       <div class="hero-grid">
         <div class="avatar-frame">
@@ -63,6 +76,7 @@
       <button class="tab active" type="button" data-tab="quests">Quests</button>
       <button class="tab" type="button" data-tab="historico">Log</button>
       <button class="tab" type="button" data-tab="config">Config</button>
+      <button id="btn-logout" class="tab" type="button">Sair</button>
     </nav>
 
     <section id="tab-quests" class="tab-panel active">
@@ -145,24 +159,12 @@
         </div>
 
         <div class="config-info">
-          <p class="state-text" style="padding: 0 0 12px;">
-            O banco fica em <code>data/database.json</code> neste repositorio GitHub.
-            Para alterar os dados, informe um token GitHub limitado a este repositorio.
-          </p>
-          <label class="field">
-            <span>Token do GitHub (fine-grained)</span>
-            <input id="github-token" type="password" placeholder="github_pat_..." autocomplete="off">
-          </label>
-          <button id="btn-save-token" class="btn btn-secondary" type="button">Salvar token neste navegador</button>
-          <p id="github-token-status" class="state-text" style="padding: 12px 0;"></p>
+          <p class="state-text" style="padding: 0 0 12px;">Banco PostgreSQL no Supabase. Conta atual: <strong id="account-email"></strong></p>
         </div>
 
         <div class="config-actions">
           <button id="btn-export" class="btn btn-config btn-config-export" type="button">
             &#8681; Exportar dados (JSON)
-          </button>
-          <button id="btn-import" class="btn btn-config btn-config-import" type="button">
-            &#8679; Importar dados (JSON)
           </button>
           <button id="btn-reset-data" class="btn btn-config btn-config-reset" type="button">
             &#10005; Resetar tudo
@@ -173,7 +175,8 @@
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="db.js?v=20260902-2"></script>
-  <script src="app.js?v=20260902-2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="db.js?v=20260903-1"></script>
+  <script src="app.js?v=20260903-1"></script>
 </body>
 </html>

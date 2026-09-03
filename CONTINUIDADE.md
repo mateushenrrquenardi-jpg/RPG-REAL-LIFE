@@ -1,32 +1,26 @@
 # Contexto de continuidade
 
-## Objetivo concluido
-
-O antigo backend Google Sheets foi removido em favor de um banco de dados inteiramente versionado no GitHub.
-
 ## Arquitetura atual
 
-| Componente | Papel |
+O site e GitHub Pages; os dados estao no projeto Supabase `eddapoexxzlxicqkvxts` (PostgreSQL, Sao Paulo).
+
+| Item | Papel |
 | --- | --- |
-| `data/database.json` | Banco unico: heroi, quests e historico. |
-| `db.js` | Leitura publica via Raw GitHub e escrita autenticada via Contents API. |
-| `app.js` | Interface assincrona; aguarda cada gravacao antes de atualizar a tela. |
-| `index.html` | Campo de token e a interface do usuario. |
+| `db.js` | Cliente Supabase, autenticacao e operacoes do banco. |
+| `app.js` | Interface assincrona e login. |
+| `profiles`, `quests`, `history` | Tabelas do banco. |
+| `complete_quest` | Transacao atomica para concluir quest, EXP, atributos e log. |
+| `reset_daily_quests`, `reset_rpg` | Operacoes atomicas de reset. |
 
-O token fine-grained do GitHub fica somente no `localStorage` da pessoa usuaria. Nunca coloque token, chave ou segredo em arquivo versionado.
+RLS esta habilitado nas tres tabelas. Nunca use nem versione uma `secret key`; somente a publishable key pode estar no frontend.
 
-## Validacoes recomendadas
+## Validacao
 
-1. Execute `node --check db.js` e `node --check app.js`.
-2. Publique na `main` e confirme que o GitHub Pages carregou a nova versao.
-3. No site, configure um token limitado ao repositorio com `Contents: Read and write`.
-4. Adicione, conclua e remova uma quest; confirme que cada acao criou commit e atualizou `data/database.json`.
-5. Exporte e importe um backup JSON de teste.
-
-## Observacao de escala
-
-GitHub Pages + Contents API e apropriado para este RPG pessoal e ganha versionamento/backup. Nao e um banco transacional de alto volume: muitas gravacoes simultaneas podem conflitar. `db.js` busca o SHA mais recente e tenta novamente tres vezes para reduzir esse risco. Caso o produto cresca para muitos usuarios simultaneos, a proxima evolucao deve ser uma API com autenticacao e banco dedicado.
+1. `node --check db.js` e `node --check app.js`.
+2. Crie uma conta no site e entre.
+3. Crie, conclua, remova e resete uma quest diaria.
+4. Confira que outro usuario nao consegue ler os dados da primeira conta.
 
 ## Prompt de retomada
 
-> Estou mantendo o repositorio `mateushenrrquenardi-jpg/RPG-REAL-LIFE`, um GitHub Pages estatico. O banco inteiro fica em `data/database.json`; `db.js` le pelo Raw GitHub e grava pela GitHub Contents API usando um fine-grained token armazenado somente no localStorage. Leia `README.md` e `CONTINUIDADE.md`, preserve essa arquitetura e nunca versione tokens. Antes de alterar, execute `git status`; depois valide `node --check db.js` e `node --check app.js`. Explique e documente qualquer mudanca.
+> Mantenha o RPG Real Life, um GitHub Pages com Supabase. Leia README.md e CONTINUIDADE.md. Preserve RLS e nao exponha chaves secretas. Antes de publicar, valide a sintaxe JavaScript e teste autenticacao e CRUD no Supabase.

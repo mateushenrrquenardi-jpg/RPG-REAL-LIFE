@@ -1,42 +1,30 @@
 # RPG da Vida Real
 
-Aplicacao estatica publicada no GitHub Pages. O banco de dados esta integralmente no proprio repositorio, no arquivo [`data/database.json`](data/database.json).
+RPG pessoal publicado no GitHub Pages, com dados em PostgreSQL no Supabase.
 
 **Site:** https://mateushenrrquenardi-jpg.github.io/RPG-REAL-LIFE/
 
-## Como o banco funciona
+## Arquitetura
 
-- Leitura: o site baixa `data/database.json` diretamente do GitHub.
-- Escrita: cada alteracao feita no site atualiza esse mesmo arquivo pela GitHub Contents API e cria um commit no repositorio.
-- O arquivo contem `hero`, `quests` e `historico`; portanto o historico de commits tambem e um backup/auditoria dos dados.
-- O token nunca e salvo no repositorio. Ele fica apenas no `localStorage` do navegador em que foi informado.
+- **GitHub Pages:** interface estatica.
+- **Supabase Auth:** conta e sessao da pessoa usuaria.
+- **Supabase Postgres:** tabelas `profiles`, `quests` e `history`.
+- **Row Level Security:** cada conta le e altera somente os seus proprios dados.
 
-## Primeiro uso: habilitar gravacao
+Nao ha token do GitHub nem senha do banco no navegador. A unica chave presente no codigo e a chave publica do projeto Supabase; as politicas do banco protegem os dados.
 
-1. No GitHub, abra **Settings → Developer settings → Personal access tokens → Fine-grained tokens** e crie um token.
-2. Limite o token ao repositorio `mateushenrrquenardi-jpg/RPG-REAL-LIFE`.
-3. Em **Repository permissions**, conceda **Contents: Read and write**. Nao conceda outras permissoes.
-4. Copie o token, abra o site, va em **Config**, cole-o no campo e use **Salvar token neste navegador**.
-5. Crie uma quest de teste. Ela deve aparecer como um novo commit no GitHub em poucos segundos.
+## Uso
 
-O token e necessario em cada navegador/dispositivo que possa alterar dados. Sem ele, o site continua exibindo os dados, mas bloqueia gravacoes. Para remove-lo do dispositivo, deixe o campo vazio e clique em salvar.
+1. Abra o site e crie uma conta com email e senha (minimo de seis caracteres).
+2. Confirme o email, se o Supabase solicitar.
+3. Entre com a conta criada e gerencie as quests.
 
-## Migrar dados que estavam no navegador antigo
+Cada conclusao de quest e calculada em uma unica transacao no PostgreSQL: atualiza quest, EXP, atributos, nivel e historico sem risco de conflito entre cliques.
 
-1. Antes desta atualizacao, abra o site no navegador que possui os dados antigos e use **Config → Exportar dados (JSON)**.
-2. Depois de publicar esta versao, configure o token conforme acima.
-3. Use **Config → Importar dados (JSON)** e escolha o backup. Isso substitui o conteudo de `data/database.json` por seus dados anteriores.
+## Backup
 
-## Backup e recuperacao
+Na aba **Config**, use **Exportar dados (JSON)** para baixar uma copia de seus dados. O reset afeta somente a conta logada.
 
-- **Backup manual:** use **Exportar dados (JSON)** na aba Config.
-- **Recuperar uma versao:** no GitHub, abra o historico de `data/database.json`, copie o conteudo da revisao desejada e grave-o novamente pelo site (importando um JSON), ou reverta o commit no GitHub.
-- **Resetar:** o botao da aba Config substitui todo o banco por um personagem novo. E uma operacao destrutiva, mas ainda pode ser revertida pelo historico Git.
+## Desenvolvimento
 
-## Desenvolvimento e deploy
-
-Nao ha dependencias nem build. Para testar localmente, sirva a pasta com um servidor HTTP, por exemplo `npx serve .`. O GitHub Pages publica automaticamente os commits da branch `main`.
-
-## Continuidade para outra IA ou outro dia
-
-O documento de contexto e [`CONTINUIDADE.md`](CONTINUIDADE.md). Ele inclui arquitetura, arquivos importantes, validacoes e um prompt de retomada.
+Nao ha build. Para testar localmente, sirva a pasta por HTTP. O deploy ocorre automaticamente ao enviar commits para a branch `main`.

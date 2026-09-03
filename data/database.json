@@ -24,6 +24,14 @@
       "atributo": "inteligencia",
       "status": "ativa",
       "data": "2026-09-03T03:09:36.865Z"
+    },
+    {
+      "id": "54717455-e95c-454d-8ecb-4d1159368de2",
+      "nome": "Punheta",
+      "tipo": "side",
+      "atributo": "forca",
+      "status": "ativa",
+      "data": "2026-09-03T03:10:49.536Z"
     }
   ],
   "historico": []

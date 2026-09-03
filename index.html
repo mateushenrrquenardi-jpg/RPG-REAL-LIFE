@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260902-1">
+  <link rel="stylesheet" href="styles.css?v=20260902-2">
 </head>
 <body>
   <main class="app-shell">
@@ -146,9 +146,15 @@
 
         <div class="config-info">
           <p class="state-text" style="padding: 0 0 12px;">
-            Seus dados ficam salvos neste navegador (localStorage).
-            Use export/import para backup ou para transferir entre dispositivos.
+            O banco fica em <code>data/database.json</code> neste repositorio GitHub.
+            Para alterar os dados, informe um token GitHub limitado a este repositorio.
           </p>
+          <label class="field">
+            <span>Token do GitHub (fine-grained)</span>
+            <input id="github-token" type="password" placeholder="github_pat_..." autocomplete="off">
+          </label>
+          <button id="btn-save-token" class="btn btn-secondary" type="button">Salvar token neste navegador</button>
+          <p id="github-token-status" class="state-text" style="padding: 12px 0;"></p>
         </div>
 
         <div class="config-actions">
@@ -167,7 +173,7 @@
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="db.js?v=20260902-1"></script>
-  <script src="app.js?v=20260902-1"></script>
+  <script src="db.js?v=20260902-2"></script>
+  <script src="app.js?v=20260902-2"></script>
 </body>
 </html>

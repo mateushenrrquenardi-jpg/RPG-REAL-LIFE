@@ -1,245 +1,44 @@
-/**
- * db.js — Camada de dados local usando localStorage.
- * Substitui completamente o Google Apps Script / Sheets.
- *
- * Chaves no localStorage:
- *   rpg_hero       → objeto JSON do herói
- *   rpg_quests     → array JSON de quests
- *   rpg_historico  → array JSON do histórico
- *   rpg_initialized → flag "1" indicando que os dados já foram carregados
- */
-
-const DB_KEYS = {
-  hero: "rpg_hero",
-  quests: "rpg_quests",
-  historico: "rpg_historico",
-  initialized: "rpg_initialized",
-};
-
 const db = (() => {
-  // ─── helpers internos ───────────────────────────────────────────
-
-  function read(key) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
+  const OWNER = "mateushenrrquenardi-jpg", REPO = "RPG-REAL-LIFE", BRANCH = "main";
+  const FILE = "data/database.json", TOKEN_KEY = "rpg_github_token";
+  const DEFAULT = { hero: { nivel: 1, exp_atual: 0, exp_necessaria: 100, forca: 0, magia: 0, carisma: 0, inteligencia: 0 }, quests: [], historico: [] };
+  let cache = null;
+  const copy = (value) => JSON.parse(JSON.stringify(value));
+  const normalize = (value) => ({ hero: { ...DEFAULT.hero, ...(value?.hero || {}) }, quests: Array.isArray(value?.quests) ? value.quests : [], historico: Array.isArray(value?.historico) ? value.historico : [] });
+  const rawUrl = () => `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${FILE}?v=${Date.now()}`;
+  const apiUrl = () => `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+  const getToken = () => localStorage.getItem(TOKEN_KEY) || "";
+  const hasToken = () => Boolean(getToken());
+  function setToken(token) { const clean = token.trim(); if (clean) localStorage.setItem(TOKEN_KEY, clean); else localStorage.removeItem(TOKEN_KEY); }
+  async function read() { const response = await fetch(rawUrl(), { cache: "no-store" }); if (!response.ok) throw new Error(`Nao foi possivel ler o banco (HTTP ${response.status}).`); cache = normalize(await response.json()); return copy(cache); }
+  async function readWithSha() {
+    const response = await fetch(`${apiUrl()}?ref=${BRANCH}`, { headers: { Authorization: `Bearer ${getToken()}`, Accept: "application/vnd.github+json" } });
+    if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.message || `Nao foi possivel acessar o banco (HTTP ${response.status}).`); }
+    const file = await response.json();
+    return { data: normalize(JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, "")))))), sha: file.sha };
+  }
+  const toBase64 = (text) => btoa(unescape(encodeURIComponent(text)));
+  async function mutate(message, change) {
+    if (!hasToken()) throw new Error("Configure um token do GitHub na aba Config para salvar alteracoes.");
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const { data, sha } = await readWithSha();
+      const result = change(data);
+      const response = await fetch(apiUrl(), { method: "PUT", headers: { Authorization: `Bearer ${getToken()}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" }, body: JSON.stringify({ message: `rpg: ${message}`, content: toBase64(`${JSON.stringify(data, null, 2)}\n`), sha, branch: BRANCH }) });
+      if (response.ok) { cache = normalize(data); return result; }
+      if (![409, 422].includes(response.status)) { const error = await response.json().catch(() => ({})); throw new Error(error.message || `Nao foi possivel salvar (HTTP ${response.status}).`); }
     }
+    throw new Error("O banco foi alterado em outro lugar. Tente novamente.");
   }
-
-  function write(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-
-  // ─── inicialização ─────────────────────────────────────────────
-
-  /**
-   * Carrega dados iniciais do `data/default.json` na primeira vez,
-   * ou usa os dados que já estão no localStorage.
-   */
-  async function init() {
-    if (localStorage.getItem(DB_KEYS.initialized) === "1") return;
-
-    try {
-      const resp = await fetch("data/default.json");
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const defaults = await resp.json();
-
-      write(DB_KEYS.hero, defaults.hero);
-      write(DB_KEYS.quests, defaults.quests || []);
-      write(DB_KEYS.historico, defaults.historico || []);
-      localStorage.setItem(DB_KEYS.initialized, "1");
-    } catch (err) {
-      // Se não conseguir carregar o JSON, cria dados mínimos
-      console.warn("Não foi possível carregar default.json, usando fallback.", err);
-      write(DB_KEYS.hero, {
-        nivel: 1,
-        exp_atual: 0,
-        exp_necessaria: 100,
-        forca: 0,
-        magia: 0,
-        carisma: 0,
-        inteligencia: 0,
-      });
-      write(DB_KEYS.quests, []);
-      write(DB_KEYS.historico, []);
-      localStorage.setItem(DB_KEYS.initialized, "1");
-    }
-  }
-
-  // ─── leitura ────────────────────────────────────────────────────
-
-  function getHero() {
-    return read(DB_KEYS.hero) || {
-      nivel: 1,
-      exp_atual: 0,
-      exp_necessaria: 100,
-      forca: 0,
-      magia: 0,
-      carisma: 0,
-      inteligencia: 0,
-    };
-  }
-
-  function getQuests() {
-    return read(DB_KEYS.quests) || [];
-  }
-
-  function getHistorico() {
-    const hist = read(DB_KEYS.historico) || [];
-    return hist.slice().reverse();
-  }
-
-  // ─── escrita ────────────────────────────────────────────────────
-
-  function addQuest(nome, tipo, atributo) {
-    const quests = getQuests();
-    const id = Date.now().toString();
-    const data = new Date().toLocaleString("pt-BR");
-
-    const quest = { id, nome, tipo, atributo, status: "ativa", data };
-    quests.push(quest);
-    write(DB_KEYS.quests, quests);
-
-    return { success: true, id };
-  }
-
-  function completeQuest(id) {
-    const quests = read(DB_KEYS.quests) || [];
-    const hero = getHero();
-    const historico = read(DB_KEYS.historico) || [];
-
-    const quest = quests.find((q) => q.id === id);
-    if (!quest) return { error: "Quest nao encontrada" };
-
-    // Marcar como concluída
-    quest.status = "concluida";
-    quest.data = new Date().toLocaleString("pt-BR");
-
-    // Calcular recompensas
-    const expGanho = quest.tipo === "principal" ? 30 : 10;
-    const pontosAtrib = quest.tipo === "principal" ? 3 : 1;
-
-    hero.exp_atual += expGanho;
-
-    // Incrementar atributo
-    const atrib = quest.atributo.toLowerCase();
-    if (atrib === "forca") hero.forca += pontosAtrib;
-    else if (atrib === "magia") hero.magia += pontosAtrib;
-    else if (atrib === "carisma") hero.carisma += pontosAtrib;
-    else if (atrib === "inteligencia") hero.inteligencia += pontosAtrib;
-
-    // Level-up
-    let levelUp = false;
-    while (hero.exp_atual >= hero.exp_necessaria) {
-      hero.exp_atual -= hero.exp_necessaria;
-      hero.nivel++;
-      hero.exp_necessaria = Math.round(hero.exp_necessaria * 1.2);
-      levelUp = true;
-    }
-
-    // Registrar no histórico
-    historico.push({
-      data: new Date().toLocaleString("pt-BR"),
-      acao: quest.nome,
-      exp_ganho: expGanho,
-      atributo: quest.atributo,
-      pontos: pontosAtrib,
-      nivel_atual: hero.nivel,
-    });
-
-    // Salvar tudo
-    write(DB_KEYS.quests, quests);
-    write(DB_KEYS.hero, hero);
-    write(DB_KEYS.historico, historico);
-
-    return {
-      success: true,
-      levelUp,
-      nivel: hero.nivel,
-      expAtual: hero.exp_atual,
-      expNec: hero.exp_necessaria,
-      forca: hero.forca,
-      magia: hero.magia,
-      carisma: hero.carisma,
-      inteligencia: hero.inteligencia,
-      expGanho,
-      pontosAtrib,
-      atributo: quest.atributo,
-    };
-  }
-
-  function deleteQuest(id) {
-    let quests = read(DB_KEYS.quests) || [];
-    const before = quests.length;
-    quests = quests.filter((q) => q.id !== id);
-
-    if (quests.length === before) return { error: "Quest nao encontrada" };
-
-    write(DB_KEYS.quests, quests);
-    return { success: true };
-  }
-
-  function resetDailies() {
-    const quests = read(DB_KEYS.quests) || [];
-    let resetCount = 0;
-
-    for (const quest of quests) {
-      if (quest.tipo === "diaria" && quest.status === "concluida") {
-        quest.status = "ativa";
-        resetCount++;
-      }
-    }
-
-    write(DB_KEYS.quests, quests);
-    return { success: true, resetCount };
-  }
-
-  // ─── export / import ───────────────────────────────────────────
-
-  function exportAll() {
-    return {
-      hero: getHero(),
-      quests: read(DB_KEYS.quests) || [],
-      historico: read(DB_KEYS.historico) || [],
-      exportedAt: new Date().toISOString(),
-    };
-  }
-
-  function importAll(data) {
-    if (!data || !data.hero) {
-      return { error: "Arquivo JSON invalido. Deve conter ao menos 'hero'." };
-    }
-
-    write(DB_KEYS.hero, data.hero);
-    write(DB_KEYS.quests, data.quests || []);
-    write(DB_KEYS.historico, data.historico || []);
-    localStorage.setItem(DB_KEYS.initialized, "1");
-
-    return { success: true };
-  }
-
-  function resetAll() {
-    localStorage.removeItem(DB_KEYS.hero);
-    localStorage.removeItem(DB_KEYS.quests);
-    localStorage.removeItem(DB_KEYS.historico);
-    localStorage.removeItem(DB_KEYS.initialized);
-  }
-
-  // ─── API pública ───────────────────────────────────────────────
-
-  return {
-    init,
-    getHero,
-    getQuests,
-    getHistorico,
-    addQuest,
-    completeQuest,
-    deleteQuest,
-    resetDailies,
-    exportAll,
-    importAll,
-    resetAll,
-  };
+  async function init() { await read(); }
+  async function getHero() { return copy((cache || await read()).hero); }
+  async function getQuests() { return copy((cache || await read()).quests); }
+  async function getHistorico() { return copy((cache || await read()).historico).reverse(); }
+  async function addQuest(nome, tipo, atributo) { return mutate("adiciona quest", (data) => { const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; data.quests.push({ id, nome, tipo, atributo, status: "ativa", data: new Date().toISOString() }); return { success: true, id }; }); }
+  async function completeQuest(id) { return mutate("conclui quest", (data) => { const quest = data.quests.find((item) => item.id === id); if (!quest || quest.status === "concluida") return { error: "Quest nao encontrada ou ja concluida" }; quest.status = "concluida"; quest.data = new Date().toISOString(); const expGanho = quest.tipo === "principal" ? 30 : 10, pontos = quest.tipo === "principal" ? 3 : 1, hero = data.hero; hero.exp_atual += expGanho; if (Object.hasOwn(hero, quest.atributo)) hero[quest.atributo] += pontos; let levelUp = false; while (hero.exp_atual >= hero.exp_necessaria) { hero.exp_atual -= hero.exp_necessaria; hero.nivel += 1; hero.exp_necessaria = Math.round(hero.exp_necessaria * 1.2); levelUp = true; } data.historico.push({ data: new Date().toISOString(), acao: quest.nome, exp_ganho: expGanho, atributo: quest.atributo, pontos, nivel_atual: hero.nivel }); return { success: true, levelUp, nivel: hero.nivel, expGanho }; }); }
+  async function deleteQuest(id) { return mutate("remove quest", (data) => { const before = data.quests.length; data.quests = data.quests.filter((quest) => quest.id !== id); return data.quests.length === before ? { error: "Quest nao encontrada" } : { success: true }; }); }
+  async function resetDailies() { return mutate("reseta quests diarias", (data) => { let resetCount = 0; data.quests.forEach((quest) => { if (quest.tipo === "diaria" && quest.status === "concluida") { quest.status = "ativa"; resetCount += 1; } }); return { success: true, resetCount }; }); }
+  async function exportAll() { return { ...copy(cache || await read()), exportedAt: new Date().toISOString() }; }
+  async function importAll(value) { if (!value?.hero) return { error: "Arquivo JSON invalido. Deve conter 'hero'." }; const imported = normalize(value); return mutate("importa backup", (data) => { data.hero = imported.hero; data.quests = imported.quests; data.historico = imported.historico; return { success: true }; }); }
+  async function resetAll() { return importAll(DEFAULT); }
+  return { init, getHero, getQuests, getHistorico, addQuest, completeQuest, deleteQuest, resetDailies, exportAll, importAll, resetAll, getToken, setToken, hasToken };
 })();

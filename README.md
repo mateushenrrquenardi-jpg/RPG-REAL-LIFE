@@ -1,64 +1,42 @@
 # RPG da Vida Real
 
-Aplicacao web estatica publicada no GitHub Pages, com dados salvos localmente no navegador (localStorage).
+Aplicacao estatica publicada no GitHub Pages. O banco de dados esta integralmente no proprio repositorio, no arquivo [`data/database.json`](data/database.json).
 
-**[Acesse aqui →](https://mateushenrrquenardi-jpg.github.io/RPG-REAL-LIFE/)**
+**Site:** https://mateushenrrquenardi-jpg.github.io/RPG-REAL-LIFE/
 
-## Estrutura
+## Como o banco funciona
 
-```text
-.
-├── data/
-│   └── default.json      # Dados iniciais do personagem
-├── assets/
-│   └── profile.jpg
-├── db.js                  # Camada de dados (localStorage)
-├── app.js                 # Logica da interface
-├── index.html
-├── styles.css
-├── package.json
-└── .gitignore
-```
+- Leitura: o site baixa `data/database.json` diretamente do GitHub.
+- Escrita: cada alteracao feita no site atualiza esse mesmo arquivo pela GitHub Contents API e cria um commit no repositorio.
+- O arquivo contem `hero`, `quests` e `historico`; portanto o historico de commits tambem e um backup/auditoria dos dados.
+- O token nunca e salvo no repositorio. Ele fica apenas no `localStorage` do navegador em que foi informado.
 
-## Como funciona
+## Primeiro uso: habilitar gravacao
 
-### Armazenamento
-- Os dados (heroi, quests, historico) ficam salvos no **localStorage** do navegador.
-- Na primeira abertura, os dados iniciais sao carregados de `data/default.json`.
-- Tudo e instantaneo — zero dependencia de APIs externas.
+1. No GitHub, abra **Settings → Developer settings → Personal access tokens → Fine-grained tokens** e crie um token.
+2. Limite o token ao repositorio `mateushenrrquenardi-jpg/RPG-REAL-LIFE`.
+3. Em **Repository permissions**, conceda **Contents: Read and write**. Nao conceda outras permissoes.
+4. Copie o token, abra o site, va em **Config**, cole-o no campo e use **Salvar token neste navegador**.
+5. Crie uma quest de teste. Ela deve aparecer como um novo commit no GitHub em poucos segundos.
 
-### Backup e restauracao
-- Acesse a aba **Config** no app para:
-  - **Exportar dados**: Baixa um arquivo JSON com todos os seus dados.
-  - **Importar dados**: Carrega um arquivo JSON de backup.
-  - **Resetar tudo**: Volta ao estado inicial (nivel 1, sem quests).
+O token e necessario em cada navegador/dispositivo que possa alterar dados. Sem ele, o site continua exibindo os dados, mas bloqueia gravacoes. Para remove-lo do dispositivo, deixe o campo vazio e clique em salvar.
 
-### Sistema de quests
-| Tipo | EXP | Pontos de Atributo |
-|---|---|---|
-| Side quest | +10 | +1 |
-| Missao principal | +30 | +3 |
-| Diaria | +10 | +1 |
+## Migrar dados que estavam no navegador antigo
 
-### Level-up
-- A cada nivel, a EXP necessaria aumenta em 20% (`expNecessaria *= 1.2`).
-- EXP inicial para o nivel 2: 100.
+1. Antes desta atualizacao, abra o site no navegador que possui os dados antigos e use **Config → Exportar dados (JSON)**.
+2. Depois de publicar esta versao, configure o token conforme acima.
+3. Use **Config → Importar dados (JSON)** e escolha o backup. Isso substitui o conteudo de `data/database.json` por seus dados anteriores.
 
-### Atributos
-Forca (STR), Magia (MAG), Carisma (CAR), Inteligencia (INT).
+## Backup e recuperacao
 
-## Desenvolvimento local
+- **Backup manual:** use **Exportar dados (JSON)** na aba Config.
+- **Recuperar uma versao:** no GitHub, abra o historico de `data/database.json`, copie o conteudo da revisao desejada e grave-o novamente pelo site (importando um JSON), ou reverta o commit no GitHub.
+- **Resetar:** o botao da aba Config substitui todo o banco por um personagem novo. E uma operacao destrutiva, mas ainda pode ser revertida pelo historico Git.
 
-Basta abrir `index.html` no navegador. Nao ha dependencias de servidor ou build.
+## Desenvolvimento e deploy
 
-> **Nota**: Para testar o carregamento inicial de `data/default.json`, use um servidor local (ex: `npx serve .` ou a extensao Live Server do VS Code), pois `fetch` nao funciona com `file://`.
+Nao ha dependencias nem build. Para testar localmente, sirva a pasta com um servidor HTTP, por exemplo `npx serve .`. O GitHub Pages publica automaticamente os commits da branch `main`.
 
-## Deploy
+## Continuidade para outra IA ou outro dia
 
-O projeto e publicado automaticamente pelo GitHub Pages a partir da branch `main`.
-
-## Migrar dados entre dispositivos
-
-1. No dispositivo de origem: aba **Config** → **Exportar dados**
-2. Salve o arquivo JSON
-3. No dispositivo de destino: aba **Config** → **Importar dados**
+O documento de contexto e [`CONTINUIDADE.md`](CONTINUIDADE.md). Ele inclui arquitetura, arquivos importantes, validacoes e um prompt de retomada.

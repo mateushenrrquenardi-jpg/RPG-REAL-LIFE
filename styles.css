@@ -235,7 +235,7 @@ h1 {
 
 .tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
   margin: 14px 0;
 }
@@ -453,6 +453,47 @@ select:focus {
 .toast.show {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+
+.config-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.btn-config {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+.btn-config:hover {
+  transform: translateY(-1px);
+}
+
+.btn-config-export {
+  background: rgba(69, 217, 255, 0.12);
+  border: 1px solid rgba(69, 217, 255, 0.55);
+  color: var(--cyan);
+}
+
+.btn-config-import {
+  background: rgba(141, 240, 143, 0.12);
+  border: 1px solid rgba(141, 240, 143, 0.45);
+  color: var(--green);
+}
+
+.btn-config-reset {
+  background: rgba(255, 79, 145, 0.12);
+  border: 1px solid rgba(255, 79, 145, 0.4);
+  color: var(--pink);
 }
 
 @media (min-width: 620px) {

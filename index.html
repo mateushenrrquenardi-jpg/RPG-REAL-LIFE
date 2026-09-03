@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260816-1">
+  <link rel="stylesheet" href="styles.css?v=20260902-1">
 </head>
 <body>
   <main class="app-shell">
@@ -21,7 +21,7 @@
         <div class="hero-copy">
           <p class="system-label">RPG Real Life</p>
           <h1>Mateus</h1>
-          <p id="hero-class" class="hero-class">// Sincronizando...</p>
+          <p id="hero-class" class="hero-class">// Carregando...</p>
         </div>
       </div>
 
@@ -62,6 +62,7 @@
     <nav class="tabs" aria-label="Navegacao principal">
       <button class="tab active" type="button" data-tab="quests">Quests</button>
       <button class="tab" type="button" data-tab="historico">Log</button>
+      <button class="tab" type="button" data-tab="config">Config</button>
     </nav>
 
     <section id="tab-quests" class="tab-panel active">
@@ -136,9 +137,37 @@
         </div>
       </section>
     </section>
+
+    <section id="tab-config" class="tab-panel">
+      <section class="panel" aria-label="Configuracoes">
+        <div class="panel-header">
+          <h2>Configuracoes</h2>
+        </div>
+
+        <div class="config-info">
+          <p class="state-text" style="padding: 0 0 12px;">
+            Seus dados ficam salvos neste navegador (localStorage).
+            Use export/import para backup ou para transferir entre dispositivos.
+          </p>
+        </div>
+
+        <div class="config-actions">
+          <button id="btn-export" class="btn btn-config btn-config-export" type="button">
+            &#8681; Exportar dados (JSON)
+          </button>
+          <button id="btn-import" class="btn btn-config btn-config-import" type="button">
+            &#8679; Importar dados (JSON)
+          </button>
+          <button id="btn-reset-data" class="btn btn-config btn-config-reset" type="button">
+            &#10005; Resetar tudo
+          </button>
+        </div>
+      </section>
+    </section>
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260816-1"></script>
+  <script src="db.js?v=20260902-1"></script>
+  <script src="app.js?v=20260902-1"></script>
 </body>
 </html>

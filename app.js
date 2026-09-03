@@ -1,5 +1,3 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzDrLul734wj6q58L3d1tdENJMTnlcqQ1VisLwUdEeTr4xtjHz0dV_tArCU-466M74o/exec";
-
 const TITLES = [
   [1, "Iniciante"],
   [5, "Aventureiro"],
@@ -9,11 +7,6 @@ const TITLES = [
   [30, "Lendario"],
   [50, "Mitico"],
 ];
-
-const state = {
-  quests: [],
-  loading: false,
-};
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -59,16 +52,11 @@ function setBusy(button, busy, text) {
   button.disabled = false;
 }
 
-async function callApi(params) {
-  const url = `${API_URL}?${new URLSearchParams(params)}`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Erro ${response.status}`);
-  return response.json();
-}
+// ─── dados (agora via db.js local) ───────────────────────────────
 
-async function loadHero() {
+function loadHero() {
   try {
-    const hero = await callApi({ action: "getHero" });
+    const hero = db.getHero();
     const current = Number(hero.exp_atual || 0);
     const needed = Number(hero.exp_necessaria || 1);
     const pct = Math.max(0, Math.min(100, Math.round((current / needed) * 100)));
@@ -85,10 +73,10 @@ async function loadHero() {
   }
 }
 
-async function loadQuests() {
+function loadQuests() {
   try {
-    state.quests = await callApi({ action: "getQuests" });
-    renderQuests();
+    const quests = db.getQuests();
+    renderQuests(quests);
   } catch (error) {
     $("#daily-list").innerHTML = `<p class="state-text">Erro ao carregar diarias.</p>`;
     $("#quest-list").innerHTML = `<p class="state-text">Erro ao carregar quests.</p>`;
@@ -96,9 +84,9 @@ async function loadQuests() {
   }
 }
 
-function renderQuests() {
-  const dailyQuests = state.quests.filter((quest) => quest.tipo === "diaria");
-  const activeQuests = state.quests.filter((quest) => quest.tipo !== "diaria" && quest.status === "ativa");
+function renderQuests(quests) {
+  const dailyQuests = quests.filter((quest) => quest.tipo === "diaria");
+  const activeQuests = quests.filter((quest) => quest.tipo !== "diaria" && quest.status === "ativa");
   const completedDaily = dailyQuests.filter((quest) => quest.status === "concluida").length;
 
   $("#daily-summary").textContent = dailyQuests.length
@@ -144,7 +132,7 @@ function renderQuest(quest) {
   `;
 }
 
-async function addQuest(event) {
+function addQuest(event) {
   event.preventDefault();
 
   const nameInput = $("#q-nome");
@@ -157,89 +145,70 @@ async function addQuest(event) {
     return;
   }
 
-  const button = event.submitter;
-  setBusy(button, true, "Salvando...");
-
-  try {
-    const result = await callApi({ action: "addQuest", nome, tipo, atributo });
-    if (result?.error) throw new Error(result.error);
-    nameInput.value = "";
-    showToast("Quest adicionada.");
-    await loadQuests();
-  } catch (error) {
+  const result = db.addQuest(nome, tipo, atributo);
+  if (result?.error) {
     showToast("Erro ao adicionar quest.");
-  } finally {
-    setBusy(button, false);
+    return;
   }
+
+  nameInput.value = "";
+  showToast("Quest adicionada.");
+  loadQuests();
 }
 
-async function completeQuest(id, button) {
-  setBusy(button, true, "Enviando...");
+function completeQuest(id, button) {
+  const result = db.completeQuest(id);
 
-  try {
-    const result = await callApi({ action: "completeQuest", id });
-    if (result?.error) {
-      showToast(`Erro: ${result.error}`);
-      return;
-    }
-
-    if (result?.levelUp) {
-      showToast(`Level up! NV.${result.nivel} - ${getTitle(result.nivel)}`);
-    } else {
-      showToast(`+${result.expGanho || 0} EXP`);
-    }
-
-    await Promise.all([loadHero(), loadQuests()]);
-  } catch (error) {
-    showToast("Erro ao concluir quest.");
-  } finally {
-    setBusy(button, false);
+  if (result?.error) {
+    showToast(`Erro: ${result.error}`);
+    return;
   }
+
+  if (result?.levelUp) {
+    showToast(`Level up! NV.${result.nivel} - ${getTitle(result.nivel)}`);
+  } else {
+    showToast(`+${result.expGanho || 0} EXP`);
+  }
+
+  loadHero();
+  loadQuests();
 }
 
-async function deleteQuest(id, button) {
+function deleteQuest(id, button) {
   const confirmed = window.confirm("Remover esta quest?");
   if (!confirmed) return;
 
-  setBusy(button, true, "...");
-
-  try {
-    const result = await callApi({ action: "deleteQuest", id });
-    if (result?.error) throw new Error(result.error);
-    showToast("Quest removida.");
-    await loadQuests();
-  } catch (error) {
+  const result = db.deleteQuest(id);
+  if (result?.error) {
     showToast("Erro ao remover quest.");
-  } finally {
-    setBusy(button, false);
+    return;
   }
+
+  showToast("Quest removida.");
+  loadQuests();
 }
 
-async function resetDailies(button) {
-  setBusy(button, true, "Resetando...");
+function resetDailies(button) {
+  const result = db.resetDailies();
 
-  try {
-    const result = await callApi({ action: "resetDailies" });
-    if (result?.error) throw new Error(result.error);
-    const resetCount = Number(result?.resetCount || result?.resetadas || 0);
-    const message = resetCount > 0
-      ? `${resetCount} diaria${resetCount > 1 ? "s" : ""} resetada${resetCount > 1 ? "s" : ""}.`
-      : "Diarias ja estavam pendentes.";
-    showToast(message);
-    await loadQuests();
-  } catch (error) {
+  if (result?.error) {
     showToast("Erro ao resetar diarias.");
-  } finally {
-    setBusy(button, false);
+    return;
   }
+
+  const resetCount = Number(result?.resetCount || 0);
+  const message = resetCount > 0
+    ? `${resetCount} diaria${resetCount > 1 ? "s" : ""} resetada${resetCount > 1 ? "s" : ""}.`
+    : "Diarias ja estavam pendentes.";
+  showToast(message);
+  loadQuests();
 }
 
-async function loadHistory() {
+function loadHistory() {
   const list = $("#hist-list");
-  list.innerHTML = `<p class="state-text">Carregando registros...</p>`;
 
   try {
-    const history = await callApi({ action: "getHistorico" });
+    const history = db.getHistorico();
 
     list.innerHTML = history.length
       ? history.slice(0, 50).map(renderHistoryItem).join("")
@@ -276,6 +245,74 @@ function formatDate(value) {
   }).format(date);
 }
 
+// ─── config: export / import / reset ─────────────────────────────
+
+function exportData() {
+  const data = db.exportAll();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rpg-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+  showToast("Dados exportados com sucesso.");
+}
+
+function importData() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const result = db.importAll(data);
+
+        if (result?.error) {
+          showToast(result.error);
+          return;
+        }
+
+        showToast("Dados importados com sucesso.");
+        loadHero();
+        loadQuests();
+      } catch {
+        showToast("Erro: arquivo JSON invalido.");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  input.click();
+}
+
+function resetData() {
+  const confirmed = window.confirm(
+    "ATENCAO: Isso apagara TODOS os dados (heroi, quests, historico). Deseja continuar?"
+  );
+  if (!confirmed) return;
+
+  db.resetAll();
+  showToast("Dados resetados. Recarregando...");
+
+  // Re-inicializar com dados padrão
+  db.init().then(() => {
+    loadHero();
+    loadQuests();
+  });
+}
+
+// ─── tabs e navegação ────────────────────────────────────────────
+
 function showTab(tabName) {
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.tab === tabName);
@@ -287,6 +324,8 @@ function showTab(tabName) {
 
   if (tabName === "historico") loadHistory();
 }
+
+// ─── event binding ───────────────────────────────────────────────
 
 function bindEvents() {
   $("#quest-form").addEventListener("submit", addQuest);
@@ -305,11 +344,20 @@ function bindEvents() {
     if (button.dataset.action === "complete") completeQuest(id, button);
     if (button.dataset.action === "delete") deleteQuest(id, button);
   });
+
+  // Config buttons
+  $("#btn-export").addEventListener("click", exportData);
+  $("#btn-import").addEventListener("click", importData);
+  $("#btn-reset-data").addEventListener("click", resetData);
 }
 
+// ─── inicialização ───────────────────────────────────────────────
+
 async function init() {
+  await db.init();
   bindEvents();
-  await Promise.all([loadHero(), loadQuests()]);
+  loadHero();
+  loadQuests();
 }
 
 init();

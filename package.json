@@ -1,16 +1,6 @@
 {
   "name": "rpg-real-life",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "RPG da Vida Real front-end e Google Apps Script API.",
-  "scripts": {
-    "gas:login": "clasp login",
-    "gas:open": "clasp open",
-    "gas:pull": "clasp pull",
-    "gas:push": "clasp push",
-    "gas:status": "clasp status"
-  },
-  "devDependencies": {
-    "@google/clasp": "3.3.0"
-  }
+  "description": "RPG da Vida Real — front-end estatico com dados em localStorage."
 }

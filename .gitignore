@@ -2,13 +2,6 @@ node_modules/
 .env
 .env.*
 
-# Google auth / local credentials
-.clasprc.json
-credentials.json
-token.json
-service-account*.json
-client_secret*.json
-
 # Local/editor noise
 .DS_Store
 Thumbs.db

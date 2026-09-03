@@ -1,82 +1,64 @@
 # RPG da Vida Real
 
-Aplicacao web simples publicada no GitHub Pages, com dados em Google Sheets e API em Google Apps Script.
+Aplicacao web estatica publicada no GitHub Pages, com dados salvos localmente no navegador (localStorage).
+
+**[Acesse aqui →](https://mateushenrrquenardi-jpg.github.io/RPG-REAL-LIFE/)**
 
 ## Estrutura
 
 ```text
 .
-+-- apps-script/
-|   +-- Código.js
-|   +-- appsscript.json
-+-- assets/
-|   +-- profile.jpg
-+-- app.js
-+-- index.html
-+-- styles.css
-+-- .clasp.json
-+-- .gitignore
-+-- package.json
+├── data/
+│   └── default.json      # Dados iniciais do personagem
+├── assets/
+│   └── profile.jpg
+├── db.js                  # Camada de dados (localStorage)
+├── app.js                 # Logica da interface
+├── index.html
+├── styles.css
+├── package.json
+└── .gitignore
 ```
 
-## Fluxo oficial
+## Como funciona
 
-O GitHub e a fonte oficial do codigo.
+### Armazenamento
+- Os dados (heroi, quests, historico) ficam salvos no **localStorage** do navegador.
+- Na primeira abertura, os dados iniciais sao carregados de `data/default.json`.
+- Tudo e instantaneo — zero dependencia de APIs externas.
 
-```text
-desenvolvimento local
-  -> GitHub
-  -> clasp push
-  -> Google Apps Script
-  -> Google Sheets
-```
+### Backup e restauracao
+- Acesse a aba **Config** no app para:
+  - **Exportar dados**: Baixa um arquivo JSON com todos os seus dados.
+  - **Importar dados**: Carrega um arquivo JSON de backup.
+  - **Resetar tudo**: Volta ao estado inicial (nivel 1, sem quests).
 
-Alteracoes feitas diretamente no editor do Google Apps Script devem ser sincronizadas com `clasp pull` antes de continuar o desenvolvimento local.
+### Sistema de quests
+| Tipo | EXP | Pontos de Atributo |
+|---|---|---|
+| Side quest | +10 | +1 |
+| Missao principal | +30 | +3 |
+| Diaria | +10 | +1 |
 
-## Comandos
+### Level-up
+- A cada nivel, a EXP necessaria aumenta em 20% (`expNecessaria *= 1.2`).
+- EXP inicial para o nivel 2: 100.
 
-Requisito local: Node.js 20 ou superior com npm.
+### Atributos
+Forca (STR), Magia (MAG), Carisma (CAR), Inteligencia (INT).
 
-Instale as dependencias:
+## Desenvolvimento local
 
-```bash
-npm install
-```
+Basta abrir `index.html` no navegador. Nao ha dependencias de servidor ou build.
 
-Se a instalacao falhar depois de trocar entre gerenciadores de pacote, remova `node_modules` e rode `npm install` novamente.
+> **Nota**: Para testar o carregamento inicial de `data/default.json`, use um servidor local (ex: `npx serve .` ou a extensao Live Server do VS Code), pois `fetch` nao funciona com `file://`.
 
-Faca login no Google para autorizar o clasp:
+## Deploy
 
-```bash
-npx clasp login
-```
+O projeto e publicado automaticamente pelo GitHub Pages a partir da branch `main`.
 
-Verifique diferencas entre o repositorio e o Apps Script:
+## Migrar dados entre dispositivos
 
-```bash
-npm run gas:status
-```
-
-Baixe a versao atual do Apps Script antes do primeiro push ou quando alguem editar pelo editor web:
-
-```bash
-npm run gas:pull
-```
-
-Envie alteracoes locais para o Apps Script:
-
-```bash
-npm run gas:push
-```
-
-Abra o projeto no editor do Google Apps Script:
-
-```bash
-npm run gas:open
-```
-
-## Cuidados
-
-- Nao versionar credenciais, tokens, `.env`, `credentials.json`, `token.json` ou arquivos de service account.
-- Antes do primeiro `gas:push`, execute `gas:pull` ou `gas:status` e compare o codigo remoto para evitar sobrescrever a API em producao.
-- O Web App publicado usa o Apps Script existente. O arquivo `.clasp.json` aponta para o projeto atual pelo `scriptId`.
+1. No dispositivo de origem: aba **Config** → **Exportar dados**
+2. Salve o arquivo JSON
+3. No dispositivo de destino: aba **Config** → **Importar dados**

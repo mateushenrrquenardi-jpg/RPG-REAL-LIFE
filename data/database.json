@@ -1,12 +1,12 @@
 {
   "hero": {
     "nivel": 1,
-    "exp_atual": 10,
+    "exp_atual": 20,
     "exp_necessaria": 100,
     "forca": 0,
     "magia": 1,
     "carisma": 0,
-    "inteligencia": 0
+    "inteligencia": 1
   },
   "quests": [
     {
@@ -22,8 +22,8 @@
       "nome": "Estudo Desenvolvimento pessoal",
       "tipo": "diaria",
       "atributo": "inteligencia",
-      "status": "ativa",
-      "data": "2026-09-03T03:09:36.865Z"
+      "status": "concluida",
+      "data": "2026-09-03T10:49:31.826Z"
     },
     {
       "id": "54717455-e95c-454d-8ecb-4d1159368de2",
@@ -40,6 +40,14 @@
       "acao": "Estudo Desenvolvimento Pessoal",
       "exp_ganho": 10,
       "atributo": "magia",
+      "pontos": 1,
+      "nivel_atual": 1
+    },
+    {
+      "data": "2026-09-03T10:49:31.826Z",
+      "acao": "Estudo Desenvolvimento pessoal",
+      "exp_ganho": 10,
+      "atributo": "inteligencia",
       "pontos": 1,
       "nivel_atual": 1
     }

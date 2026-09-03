@@ -1,5 +1,22 @@
 {
-  "hero": { "nivel": 1, "exp_atual": 0, "exp_necessaria": 100, "forca": 0, "magia": 0, "carisma": 0, "inteligencia": 0 },
-  "quests": [],
+  "hero": {
+    "nivel": 1,
+    "exp_atual": 0,
+    "exp_necessaria": 100,
+    "forca": 0,
+    "magia": 0,
+    "carisma": 0,
+    "inteligencia": 0
+  },
+  "quests": [
+    {
+      "id": "16125fa2-3695-4c61-815b-5701a7f64dda",
+      "nome": "Estudo Desenvolvimento Pessoal",
+      "tipo": "diaria",
+      "atributo": "magia",
+      "status": "ativa",
+      "data": "2026-09-03T03:08:11.962Z"
+    }
+  ],
   "historico": []
 }

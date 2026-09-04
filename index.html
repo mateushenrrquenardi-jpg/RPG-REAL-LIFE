@@ -79,6 +79,30 @@
     </nav>
 
     <section id="tab-quests" class="tab-panel active">
+      <section id="daily-section" class="panel daily-panel" aria-label="Quests diarias">
+        <div class="panel-header">
+          <div>
+            <h2>Diarias de hoje</h2>
+            <p id="daily-summary">Carregando protocolos diarios...</p>
+          </div>
+          <button id="btn-reset-dailies" class="btn btn-ghost" type="button">
+            Resetar diarias
+          </button>
+        </div>
+        <div id="daily-list" class="quest-list">
+          <p class="state-text">Carregando...</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Quests ativas">
+        <div class="panel-header">
+          <h2>Quests ativas</h2>
+        </div>
+        <div id="quest-list" class="quest-list">
+          <p class="state-text">Carregando missoes...</p>
+        </div>
+      </section>
+
       <section class="panel" aria-label="Adicionar quest">
         <div class="panel-header">
           <h2>Nova quest</h2>
@@ -113,30 +137,6 @@
 
           <button class="btn btn-secondary" type="submit">Adicionar quest</button>
         </form>
-      </section>
-
-      <section id="daily-section" class="panel daily-panel" aria-label="Quests diarias">
-        <div class="panel-header">
-          <div>
-            <h2>Diarias de hoje</h2>
-            <p id="daily-summary">Carregando protocolos diarios...</p>
-          </div>
-          <button id="btn-reset-dailies" class="btn btn-ghost" type="button">
-            Resetar diarias
-          </button>
-        </div>
-        <div id="daily-list" class="quest-list">
-          <p class="state-text">Carregando...</p>
-        </div>
-      </section>
-
-      <section class="panel" aria-label="Quests ativas">
-        <div class="panel-header">
-          <h2>Quests ativas</h2>
-        </div>
-        <div id="quest-list" class="quest-list">
-          <p class="state-text">Carregando missoes...</p>
-        </div>
       </section>
     </section>
 

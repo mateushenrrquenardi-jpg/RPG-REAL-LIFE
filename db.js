@@ -105,9 +105,35 @@ const db = (() => {
     return { success: true };
   }
 
+  async function getCleanDate() {
+    const user = await requireUser();
+    const metaDate = user.user_metadata?.clean_date;
+    if (metaDate) return metaDate;
+    return localStorage.getItem(`rpg_clean_date_${user.id}`) || null;
+  }
+
+  async function setCleanDate(dateStr) {
+    const user = await requireUser();
+    if (dateStr) {
+      localStorage.setItem(`rpg_clean_date_${user.id}`, dateStr);
+    } else {
+      localStorage.removeItem(`rpg_clean_date_${user.id}`);
+    }
+    const { error } = await client.auth.updateUser({
+      data: { clean_date: dateStr || null },
+    });
+    throwOnError(error);
+    return dateStr;
+  }
+
   async function exportAll() {
-    const [hero, quests, historico] = await Promise.all([getHero(), getQuests(), getHistorico()]);
-    return { hero, quests, historico, exportedAt: new Date().toISOString() };
+    const [hero, quests, historico, cleanDate] = await Promise.all([
+      getHero(),
+      getQuests(),
+      getHistorico(),
+      getCleanDate().catch(() => null),
+    ]);
+    return { hero, quests, historico, clean_date: cleanDate, exportedAt: new Date().toISOString() };
   }
 
   function onAuthChange(handler) {
@@ -118,5 +144,6 @@ const db = (() => {
     signUp, signIn, signOut, getSession, onAuthChange,
     getHero, getQuests, getHistorico, addQuest, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
+    getCleanDate, setCleanDate,
   };
 })();

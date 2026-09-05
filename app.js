@@ -3,18 +3,40 @@ const $ = (selector) => document.querySelector(selector);
 const titleFor = (level) => TITLES.reduce((current, [minimum, title]) => Number(level) >= minimum ? title : current, "Iniciante");
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 
+function calcCleanDays(dateStr) {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const start = new Date(y, m - 1, d);
+  start.setHours(0, 0, 0, 0);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+
 function toast(message) { const el = $("#toast"); el.textContent = message; el.classList.add("show"); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.remove("show"), 3500); }
 function busy(button, active, text = "Salvando...") { if (!button) return; if (active) { button.dataset.label = button.textContent; button.textContent = text; button.disabled = true; } else { button.textContent = button.dataset.label || button.textContent; button.disabled = false; } }
 function setAppVisible(signedIn) { $("#auth-screen").hidden = signedIn; $("#app-screen").hidden = !signedIn; }
 
 async function loadHero() {
-  const hero = await db.getHero();
+  const [hero, cleanDate] = await Promise.all([
+    db.getHero(),
+    db.getCleanDate().catch(() => null),
+  ]);
   const exp = Number(hero.exp_atual), need = Number(hero.exp_necessaria);
   $("#exp-fill").style.width = `${Math.max(0, Math.min(100, Math.round(exp / need * 100)))}%`;
   $("#exp-val").textContent = `${exp} / ${need}`;
-  $("#hero-class").textContent = `// ${titleFor(hero.nivel).toUpperCase()} - NV.${hero.nivel}`;
+
+  const days = calcCleanDays(cleanDate);
+  const cleanBadge = days !== null ? ` • ${days === 1 ? "1 DIA LIMPO" : `${days} DIAS LIMPO`}` : "";
+  $("#hero-class").textContent = `// ${titleFor(hero.nivel).toUpperCase()} - NV.${hero.nivel}${cleanBadge}`;
+
   $("#a-forca").textContent = hero.forca; $("#a-magia").textContent = hero.magia;
   $("#a-carisma").textContent = hero.carisma; $("#a-intel").textContent = hero.inteligencia;
+
+  const cleanInput = $("#clean-date-input");
+  if (cleanInput && cleanDate) cleanInput.value = cleanDate;
 }
 
 function questHtml(quest) {
@@ -43,6 +65,49 @@ async function resetData() { if (!confirm("ATENCAO: Isso apagara seu heroi, ques
 function showTab(name) { document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name)); document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`)); if (name === "historico") loadHistory(); }
 async function login(event) { event.preventDefault(); const button = event.submitter, email = $("#auth-email").value.trim(), password = $("#auth-password").value; busy(button, true, button.dataset.mode === "signup" ? "Criando..." : "Entrando..."); try { if (button.dataset.mode === "signup") { const data = await db.signUp(email, password); toast(data.session ? "Conta criada." : "Conta criada. Confirme o email para entrar."); } else { await db.signIn(email, password); toast("Login realizado."); } } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function boot(session) { setAppVisible(Boolean(session)); if (session) { $("#account-email").textContent = session.user.email; await refresh(); } }
-function bind() { $("#auth-form").onsubmit = login; $("#btn-signup").onclick = (event) => { event.preventDefault(); login({ preventDefault() {}, submitter: event.currentTarget }); }; $("#btn-logout").onclick = () => db.signOut(); $("#quest-form").onsubmit = addQuest; $("#btn-reset-dailies").onclick = (event) => resetDailies(event.currentTarget); $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); }; document.body.onclick = (event) => { const button = event.target.closest("[data-action]"); if (!button) return; if (button.dataset.action === "complete") completeQuest(button.dataset.id, button); else deleteQuest(button.dataset.id, button); }; $("#btn-export").onclick = exportData; $("#btn-reset-data").onclick = resetData; }
+
+async function saveCleanDate(event) {
+  event.preventDefault();
+  const dateVal = $("#clean-date-input").value;
+  if (!dateVal) return toast("Selecione uma data.");
+  const button = event.submitter || $("#clean-date-form button[type=submit]");
+  busy(button, true);
+  try {
+    await db.setCleanDate(dateVal);
+    await loadHero();
+    toast("Data dos Dias Limpo salva.");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function setCleanToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  $("#clean-date-input").value = today;
+  try {
+    await db.setCleanDate(today);
+    await loadHero();
+    toast("Contador zerado para hoje.");
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+function bind() {
+  $("#auth-form").onsubmit = login;
+  $("#btn-signup").onclick = (event) => { event.preventDefault(); login({ preventDefault() {}, submitter: event.currentTarget }); };
+  $("#btn-logout").onclick = () => db.signOut();
+  $("#quest-form").onsubmit = addQuest;
+  $("#btn-reset-dailies").onclick = (event) => resetDailies(event.currentTarget);
+  $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); };
+  document.body.onclick = (event) => { const button = event.target.closest("[data-action]"); if (!button) return; if (button.dataset.action === "complete") completeQuest(button.dataset.id, button); else deleteQuest(button.dataset.id, button); };
+  $("#btn-export").onclick = exportData;
+  $("#btn-reset-data").onclick = resetData;
+  $("#clean-date-form").onsubmit = saveCleanDate;
+  $("#btn-clean-today").onclick = setCleanToday;
+}
+
 async function init() { bind(); const session = await db.getSession(); await boot(session); db.onAuthChange((nextSession) => boot(nextSession)); }
 init().catch((error) => toast(error.message));

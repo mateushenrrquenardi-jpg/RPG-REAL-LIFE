@@ -129,7 +129,6 @@ function bind() {
   $("#quest-form").onsubmit = addQuest;
   $("#q-tipo").onchange = syncWeeklyField;
   syncWeeklyField();
-  $("#btn-reset-dailies").onclick = (event) => resetDailies(event.currentTarget);
   $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); };
   document.body.onclick = (event) => { const button = event.target.closest("[data-action]"); if (!button) return; if (button.dataset.action === "complete") completeQuest(button.dataset.id, button); else deleteQuest(button.dataset.id, button); };
   $("#btn-export").onclick = exportData;

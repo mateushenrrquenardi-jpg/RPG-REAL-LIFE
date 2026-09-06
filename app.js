@@ -3,11 +3,11 @@ const $ = (selector) => document.querySelector(selector);
 const titleFor = (level) => TITLES.reduce((current, [minimum, title]) => Number(level) >= minimum ? title : current, "Iniciante");
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 const ROUTINE_LEVELS = [
-  { name: "Sinal", days: 14, detail: "2 semanas · reconhecendo o padrao" },
-  { name: "Sincronia", days: 28, detail: "4 semanas · menos esforco consciente" },
-  { name: "Piloto", days: 56, detail: "8 semanas · protocolo automatico" },
-  { name: "Integracao", days: 91, detail: "3 meses · parte do seu sistema" },
-  { name: "Fixada", days: 182, detail: "6 meses · rotina incorporada" },
+  { name: "Reconhecendo o padrao", days: 14 },
+  { name: "Menos esforco consciente", days: 28 },
+  { name: "Protocolo automatico", days: 56 },
+  { name: "Parte do seu sistema", days: 91 },
+  { name: "Rotina incorporada", days: 182 },
 ];
 
 function calcCleanDays(dateStr) {
@@ -49,13 +49,14 @@ async function loadHero() {
 function routineHtml(quest) {
   const routine = quest.routine;
   if (!routine) return "";
-  const level = ROUTINE_LEVELS[Math.min(Math.max(Number(quest.routine_level || 1), 1), ROUTINE_LEVELS.length) - 1];
+  const levelIdx = Math.min(Math.max(Number(quest.routine_level || 1), 1), ROUTINE_LEVELS.length) - 1;
+  const level = ROUTINE_LEVELS[levelIdx];
   const days = Math.min(Number(routine.routine_days || 0), level.days);
   const pct = Math.min(100, Math.round(days / level.days * 100));
-  const weekDone = Number(routine.weekly_completed || 0);
-  const weeklyTarget = Number(quest.weekly_target || 7);
   const fixed = routine.routine_fixed;
-  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${fixed ? "ROTINA FIXADA" : `NIVEL ${quest.routine_level}: ${level.name}`}</span><span>${days}/${level.days} DIAS</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div><div class="routine-bottom"><span>${escapeHtml(level.detail)}</span><strong>${weekDone}/${weeklyTarget} ESTA SEMANA</strong></div></div>`;
+  const levelNum = String(quest.routine_level || 1).padStart(2, "0");
+  const rankLabel = fixed ? "ROTINA FIXADA" : `Nivel ${levelNum} - ${level.name}`;
+  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
 }
 
 function questHtml(quest) {

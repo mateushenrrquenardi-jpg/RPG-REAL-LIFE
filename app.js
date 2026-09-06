@@ -73,7 +73,15 @@ async function loadQuests() {
 }
 
 async function refresh() { try { await Promise.all([loadHero(), loadQuests()]); } catch (error) { toast(error.message || "Erro ao carregar dados."); } }
-async function addQuest(event) { event.preventDefault(); const name = $("#q-nome").value.trim(), button = event.submitter, type = $("#q-tipo").value, weeklyTarget = Number($("#q-semanal").value); if (!name) return toast("Digite o nome da quest."); busy(button, true); try { await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget); $("#q-nome").value = ""; await loadQuests(); toast(type === "diaria" ? "Rotina diaria adicionada." : "Quest adicionada."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
+function syncWeeklyField() {
+  const isDaily = $("#q-tipo").value === "diaria";
+  const field = $("#q-semanal-field");
+  if (!field) return;
+  field.hidden = !isDaily;
+  field.style.display = isDaily ? "grid" : "none";
+}
+
+async function addQuest(event) { event.preventDefault(); const name = $("#q-nome").value.trim(), button = event.submitter, type = $("#q-tipo").value, weeklyTarget = Number($("#q-semanal").value); if (!name) return toast("Digite o nome da quest."); busy(button, true); try { await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget); $("#q-nome").value = ""; syncWeeklyField(); await loadQuests(); toast(type === "diaria" ? "Rotina diaria adicionada." : "Quest adicionada."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function completeQuest(id, button) { busy(button, true); try { const result = await db.completeQuest(id); await refresh(); toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual` : "Quest concluida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function deleteQuest(id, button) { if (!confirm("Remover esta quest?")) return; busy(button, true); try { await db.deleteQuest(id); await loadQuests(); toast("Quest removida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function resetDailies(button) { busy(button, true); try { await db.resetDailies(); await loadQuests(); toast("Rotinas sincronizadas."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
@@ -119,7 +127,8 @@ function bind() {
   $("#btn-signup").onclick = (event) => { event.preventDefault(); login({ preventDefault() {}, submitter: event.currentTarget }); };
   $("#btn-logout").onclick = () => db.signOut();
   $("#quest-form").onsubmit = addQuest;
-  $("#q-tipo").onchange = () => { $("#q-semanal-field").hidden = $("#q-tipo").value !== "diaria"; };
+  $("#q-tipo").onchange = syncWeeklyField;
+  syncWeeklyField();
   $("#btn-reset-dailies").onclick = (event) => resetDailies(event.currentTarget);
   $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); };
   document.body.onclick = (event) => { const button = event.target.closest("[data-action]"); if (!button) return; if (button.dataset.action === "complete") completeQuest(button.dataset.id, button); else deleteQuest(button.dataset.id, button); };

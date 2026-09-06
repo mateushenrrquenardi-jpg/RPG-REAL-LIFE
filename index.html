@@ -74,7 +74,7 @@
 
     <nav class="tabs" aria-label="Navegacao principal">
       <button class="tab active" type="button" data-tab="quests">Quests</button>
-      <button class="tab" type="button" data-tab="historico">Log</button>
+      <button class="tab" type="button" data-tab="loja">Loja</button>
       <button class="tab" type="button" data-tab="config">Config</button>
     </nav>
 
@@ -140,13 +140,15 @@
       </section>
     </section>
 
-    <section id="tab-historico" class="tab-panel">
-      <section class="panel" aria-label="Historico">
+    <section id="tab-loja" class="tab-panel">
+      <section class="panel" aria-label="Loja de Recompensas">
         <div class="panel-header">
-          <h2>Log de batalhas</h2>
+          <h2>Loja de Recompensas</h2>
         </div>
-        <div id="hist-list" class="history-list">
-          <p class="state-text">Carregando registros...</p>
+        <div style="text-align: center; padding: 48px 16px;">
+          <div style="font-size: 36px; margin-bottom: 12px;">🏪</div>
+          <p class="hero-class" style="font-size: 15px; color: var(--cyan); letter-spacing: 0.12em; margin-bottom: 8px;">// EM DESENVOLVIMENTO</p>
+          <p class="state-text" style="padding: 0; max-width: 340px; margin: 0 auto;">Em breve: troque seus pontos de experiência e atributos por recompensas e itens reais.</p>
         </div>
       </section>
     </section>
@@ -173,6 +175,9 @@
         </form>
 
         <div class="config-actions">
+          <button id="btn-toggle-log" class="btn btn-config btn-config-log" type="button">
+            📜 Ver Log de batalhas
+          </button>
           <button id="btn-export" class="btn btn-config btn-config-export" type="button">
             &#8681; Exportar dados (JSON)
           </button>
@@ -183,13 +188,22 @@
             &#10140; Sair da conta
           </button>
         </div>
+
+        <section id="config-log-section" class="panel log-panel" style="margin-top: 18px; display: none;" aria-label="Historico">
+          <div class="panel-header">
+            <h2>Log de batalhas</h2>
+          </div>
+          <div id="hist-list" class="history-list">
+            <p class="state-text">Carregando registros...</p>
+          </div>
+        </section>
       </section>
     </section>
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260905-1"></script>
-  <script src="app.js?v=20260905-1"></script>
+  <script src="db.js?v=20260906-1"></script>
+  <script src="app.js?v=20260906-1"></script>
 </body>
 </html>

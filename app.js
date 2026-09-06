@@ -62,7 +62,7 @@ function formatDate(value) { const date = new Date(value); return Number.isNaN(d
 async function loadHistory() { try { const rows = await db.getHistorico(); $("#hist-list").innerHTML = rows.length ? rows.slice(0, 50).map((item) => `<article class="history-item"><div class="history-title">${escapeHtml(item.acao)}</div><div class="history-meta"><span class="badge">+${item.exp_ganho} EXP</span><span class="badge">+${item.pontos} ${escapeHtml(item.atributo.toUpperCase())}</span><span class="badge">NV.${item.nivel_atual}</span><span class="badge">${escapeHtml(formatDate(item.created_at))}</span></div></article>`).join("") : `<p class="state-text">Nenhum registro ainda.</p>`; } catch (error) { toast(error.message); } }
 async function exportData() { try { const data = await db.exportAll(), url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })), link = document.createElement("a"); link.href = url; link.download = `rpg-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url); toast("Backup exportado."); } catch (error) { toast(error.message); } }
 async function resetData() { if (!confirm("ATENCAO: Isso apagara seu heroi, quests e log. Deseja continuar?")) return; try { await db.resetAll(); await refresh(); toast("Dados resetados."); } catch (error) { toast(error.message); } }
-function showTab(name) { document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name)); document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`)); if (name === "historico") loadHistory(); }
+function showTab(name) { document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name)); document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`)); }
 async function login(event) { event.preventDefault(); const button = event.submitter, email = $("#auth-email").value.trim(), password = $("#auth-password").value; busy(button, true, button.dataset.mode === "signup" ? "Criando..." : "Entrando..."); try { if (button.dataset.mode === "signup") { const data = await db.signUp(email, password); toast(data.session ? "Conta criada." : "Conta criada. Confirme o email para entrar."); } else { await db.signIn(email, password); toast("Login realizado."); } } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function boot(session) { setAppVisible(Boolean(session)); if (session) { $("#account-email").textContent = session.user.email; await refresh(); } }
 
@@ -107,6 +107,13 @@ function bind() {
   $("#btn-reset-data").onclick = resetData;
   $("#clean-date-form").onsubmit = saveCleanDate;
   $("#btn-clean-today").onclick = setCleanToday;
+  $("#btn-toggle-log").onclick = () => {
+    const logSection = $("#config-log-section");
+    const isHidden = logSection.style.display === "none";
+    logSection.style.display = isHidden ? "block" : "none";
+    $("#btn-toggle-log").textContent = isHidden ? "📜 Ocultar Log de batalhas" : "📜 Ver Log de batalhas";
+    if (isHidden) loadHistory();
+  };
 }
 
 async function init() { bind(); const session = await db.getSession(); await boot(session); db.onAuthChange((nextSession) => boot(nextSession)); }

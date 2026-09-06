@@ -59,9 +59,16 @@ const db = (() => {
 
   async function getQuests() {
     await requireUser();
-    const { data, error } = await client.from("quests").select("*").order("created_at", { ascending: true });
+    const { error: refreshError } = await client.rpc("refresh_daily_routines");
+    throwOnError(refreshError);
+    const [{ data, error }, { data: routineState, error: stateError }] = await Promise.all([
+      client.from("quests").select("*").order("created_at", { ascending: true }),
+      client.rpc("get_daily_routine_state"),
+    ]);
     throwOnError(error);
-    return data;
+    throwOnError(stateError);
+    const stateByQuest = new Map((routineState || []).map((state) => [state.quest_id, state]));
+    return data.map((quest) => ({ ...quest, routine: stateByQuest.get(quest.id) || null }));
   }
 
   async function getHistorico() {
@@ -71,10 +78,10 @@ const db = (() => {
     return data;
   }
 
-  async function addQuest(nome, tipo, atributo) {
+  async function addQuest(nome, tipo, atributo, weeklyTarget = 7) {
     const { data, error } = await client
       .from("quests")
-      .insert({ nome, tipo, atributo })
+      .insert({ nome, tipo, atributo, weekly_target: tipo === "diaria" ? weeklyTarget : 7 })
       .select("id")
       .single();
     throwOnError(error);

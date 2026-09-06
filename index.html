@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260903-1">
+  <link rel="stylesheet" href="styles.css?v=20260906-2">
 </head>
 <body>
   <main id="auth-screen" class="app-shell">
@@ -86,7 +86,7 @@
             <p id="daily-summary">Carregando protocolos diarios...</p>
           </div>
           <button id="btn-reset-dailies" class="btn btn-ghost" type="button">
-            Resetar diarias
+            Sincronizar rotinas
           </button>
         </div>
         <div id="daily-list" class="quest-list">
@@ -131,6 +131,18 @@
                 <option value="magia">Magia</option>
                 <option value="carisma">Carisma</option>
                 <option value="inteligencia">Inteligencia</option>
+              </select>
+            </label>
+            <label id="q-semanal-field" class="field" hidden>
+              <span>Minimo por semana</span>
+              <select id="q-semanal">
+                <option value="7">Todos os dias (7x)</option>
+                <option value="6">6 vezes</option>
+                <option value="5">5 vezes</option>
+                <option value="4">4 vezes</option>
+                <option value="3">3 vezes</option>
+                <option value="2">2 vezes</option>
+                <option value="1">1 vez</option>
               </select>
             </label>
           </div>
@@ -203,7 +215,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260906-1"></script>
-  <script src="app.js?v=20260906-1"></script>
+  <script src="db.js?v=20260906-2"></script>
+  <script src="app.js?v=20260906-2"></script>
 </body>
 </html>

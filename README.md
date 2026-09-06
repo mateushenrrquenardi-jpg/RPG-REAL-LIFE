@@ -21,6 +21,16 @@ Nao ha token do GitHub nem senha do banco no navegador. A unica chave presente n
 
 Cada conclusao de quest e calculada em uma unica transacao no PostgreSQL: atualiza quest, EXP, atributos, nivel e historico sem risco de conflito entre cliques.
 
+## Rotinas diarias
+
+Uma quest do tipo **Diaria** pode ter uma meta de 1 a 7 execucoes por semana. A semana inicia no domingo.
+
+- Para meta de 7x, deixar de concluir um dia reinicia apenas o contador do nivel atual.
+- Para metas de 1x a 6x, a verificacao ocorre ao iniciar uma nova semana: se a meta anterior nao foi atingida, o contador do nivel atual reinicia.
+- A barra mostra dias efetivamente concluidos no ciclo e o progresso semanal. Os niveis sao Sinal (14), Sincronia (28), Piloto (56), Integracao (91) e Fixada (182 dias).
+
+O banco necessario para o recurso esta documentado em [supabase/20260906_daily_routines.sql](supabase/20260906_daily_routines.sql). Esse arquivo deve ser executado uma unica vez no SQL Editor do projeto Supabase antes de publicar uma interface que use rotinas.
+
 ## Backup
 
 Na aba **Config**, use **Exportar dados (JSON)** para baixar uma copia de seus dados. O reset afeta somente a conta logada.

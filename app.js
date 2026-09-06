@@ -2,6 +2,13 @@ const TITLES = [[1, "Iniciante"], [5, "Aventureiro"], [10, "Guerreiro"], [15, "C
 const $ = (selector) => document.querySelector(selector);
 const titleFor = (level) => TITLES.reduce((current, [minimum, title]) => Number(level) >= minimum ? title : current, "Iniciante");
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+const ROUTINE_LEVELS = [
+  { name: "Sinal", days: 14, detail: "2 semanas · reconhecendo o padrao" },
+  { name: "Sincronia", days: 28, detail: "4 semanas · menos esforco consciente" },
+  { name: "Piloto", days: 56, detail: "8 semanas · protocolo automatico" },
+  { name: "Integracao", days: 91, detail: "3 meses · parte do seu sistema" },
+  { name: "Fixada", days: 182, detail: "6 meses · rotina incorporada" },
+];
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -39,25 +46,37 @@ async function loadHero() {
   if (cleanInput && cleanDate) cleanInput.value = cleanDate;
 }
 
+function routineHtml(quest) {
+  const routine = quest.routine;
+  if (!routine) return "";
+  const level = ROUTINE_LEVELS[Math.min(Math.max(Number(quest.routine_level || 1), 1), ROUTINE_LEVELS.length) - 1];
+  const days = Math.min(Number(routine.routine_days || 0), level.days);
+  const pct = Math.min(100, Math.round(days / level.days * 100));
+  const weekDone = Number(routine.weekly_completed || 0);
+  const weeklyTarget = Number(quest.weekly_target || 7);
+  const fixed = routine.routine_fixed;
+  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${fixed ? "ROTINA FIXADA" : `NIVEL ${quest.routine_level}: ${level.name}`}</span><span>${days}/${level.days} DIAS</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div><div class="routine-bottom"><span>${escapeHtml(level.detail)}</span><strong>${weekDone}/${weeklyTarget} ESTA SEMANA</strong></div></div>`;
+}
+
 function questHtml(quest) {
   const done = quest.status === "concluida", daily = quest.tipo === "diaria";
   const label = quest.tipo === "principal" ? "Principal" : daily ? "Diaria" : "Side";
   const style = quest.tipo === "principal" ? "badge-main" : daily ? "badge-daily" : "";
-  return `<article class="quest-item ${done ? "done" : ""}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div></div><div class="quest-actions"><button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
+  return `<article class="quest-item ${done ? "done" : ""}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div>${daily ? routineHtml(quest) : ""}</div><div class="quest-actions"><button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
 }
 
 async function loadQuests() {
   const quests = await db.getQuests(), daily = quests.filter((q) => q.tipo === "diaria"), active = quests.filter((q) => q.tipo !== "diaria" && q.status === "ativa");
-  $("#daily-summary").textContent = daily.length ? `${daily.filter((q) => q.status === "concluida").length}/${daily.length} concluidas hoje` : "Nenhuma diaria cadastrada ainda.";
+  $("#daily-summary").textContent = daily.length ? `${daily.filter((q) => q.status === "concluida").length}/${daily.length} concluidas hoje · ciclo semanal inicia domingo` : "Nenhuma diaria cadastrada ainda.";
   $("#daily-list").innerHTML = daily.length ? daily.map(questHtml).join("") : `<p class="state-text">Cadastre uma quest como diaria para ela aparecer aqui.</p>`;
   $("#quest-list").innerHTML = active.length ? active.map(questHtml).join("") : `<p class="state-text">Nenhuma quest ativa.</p>`;
 }
 
 async function refresh() { try { await Promise.all([loadHero(), loadQuests()]); } catch (error) { toast(error.message || "Erro ao carregar dados."); } }
-async function addQuest(event) { event.preventDefault(); const name = $("#q-nome").value.trim(), button = event.submitter; if (!name) return toast("Digite o nome da quest."); busy(button, true); try { await db.addQuest(name, $("#q-tipo").value, $("#q-atrib").value); $("#q-nome").value = ""; await loadQuests(); toast("Quest adicionada."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
+async function addQuest(event) { event.preventDefault(); const name = $("#q-nome").value.trim(), button = event.submitter, type = $("#q-tipo").value, weeklyTarget = Number($("#q-semanal").value); if (!name) return toast("Digite o nome da quest."); busy(button, true); try { await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget); $("#q-nome").value = ""; await loadQuests(); toast(type === "diaria" ? "Rotina diaria adicionada." : "Quest adicionada."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function completeQuest(id, button) { busy(button, true); try { const result = await db.completeQuest(id); await refresh(); toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual` : "Quest concluida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function deleteQuest(id, button) { if (!confirm("Remover esta quest?")) return; busy(button, true); try { await db.deleteQuest(id); await loadQuests(); toast("Quest removida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
-async function resetDailies(button) { busy(button, true); try { const result = await db.resetDailies(); await loadQuests(); toast(result.resetCount ? `${result.resetCount} diaria(s) resetada(s).` : "Diarias ja estavam pendentes."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
+async function resetDailies(button) { busy(button, true); try { await db.resetDailies(); await loadQuests(); toast("Rotinas sincronizadas."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }).format(date); }
 async function loadHistory() { try { const rows = await db.getHistorico(); $("#hist-list").innerHTML = rows.length ? rows.slice(0, 50).map((item) => `<article class="history-item"><div class="history-title">${escapeHtml(item.acao)}</div><div class="history-meta"><span class="badge">+${item.exp_ganho} EXP</span><span class="badge">+${item.pontos} ${escapeHtml(item.atributo.toUpperCase())}</span><span class="badge">NV.${item.nivel_atual}</span><span class="badge">${escapeHtml(formatDate(item.created_at))}</span></div></article>`).join("") : `<p class="state-text">Nenhum registro ainda.</p>`; } catch (error) { toast(error.message); } }
 async function exportData() { try { const data = await db.exportAll(), url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })), link = document.createElement("a"); link.href = url; link.download = `rpg-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url); toast("Backup exportado."); } catch (error) { toast(error.message); } }
@@ -100,6 +119,7 @@ function bind() {
   $("#btn-signup").onclick = (event) => { event.preventDefault(); login({ preventDefault() {}, submitter: event.currentTarget }); };
   $("#btn-logout").onclick = () => db.signOut();
   $("#quest-form").onsubmit = addQuest;
+  $("#q-tipo").onchange = () => { $("#q-semanal-field").hidden = $("#q-tipo").value !== "diaria"; };
   $("#btn-reset-dailies").onclick = (event) => resetDailies(event.currentTarget);
   $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); };
   document.body.onclick = (event) => { const button = event.target.closest("[data-action]"); if (!button) return; if (button.dataset.action === "complete") completeQuest(button.dataset.id, button); else deleteQuest(button.dataset.id, button); };

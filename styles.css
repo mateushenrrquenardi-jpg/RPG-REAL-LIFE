@@ -411,7 +411,7 @@ select:focus {
 
 .quest-actions {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 8px;
 }
 
@@ -472,12 +472,43 @@ select:focus {
   color: var(--green);
 }
 
+.btn-edit {
+  width: 44px;
+  padding: 0;
+  background: rgba(69, 217, 255, 0.12);
+  border: 1px solid rgba(69, 217, 255, 0.45);
+  color: var(--cyan);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
 .btn-delete {
   width: 44px;
   padding: 0;
   background: rgba(255, 79, 145, 0.12);
   border: 1px solid rgba(255, 79, 145, 0.4);
   color: var(--pink);
+}
+
+.modal-dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  width: min(560px, 92vw);
+  border-radius: 8px;
+}
+
+.modal-dialog::backdrop {
+  background: rgba(8, 7, 11, 0.85);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  margin: 0;
+  border: 1px solid rgba(69, 217, 255, 0.45);
+  box-shadow: 0 0 35px rgba(69, 217, 255, 0.15), var(--shadow);
 }
 
 .state-text {
@@ -510,7 +541,6 @@ select:focus {
   opacity: 1;
   transform: translate(-50%, 0);
 }
-
 
 .config-actions {
   display: grid;
@@ -575,7 +605,7 @@ select:focus {
   }
 
   .quest-item {
-    grid-template-columns: minmax(0, 1fr) 220px;
+    grid-template-columns: minmax(0, 1fr) 270px;
     align-items: center;
   }
 }

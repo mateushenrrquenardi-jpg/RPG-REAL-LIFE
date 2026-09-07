@@ -210,9 +210,64 @@
     </section>
   </main>
 
+  <dialog id="edit-quest-modal" class="modal-dialog">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <h2>Editar Quest</h2>
+        <button id="btn-close-edit-modal" class="btn btn-delete" type="button" style="width: 32px; min-height: 32px; font-size: 11px;">X</button>
+      </div>
+
+      <form id="edit-quest-form" class="quest-form">
+        <input id="edit-q-id" type="hidden">
+        <label class="field">
+          <span>Nome</span>
+          <input id="edit-q-nome" type="text" placeholder="Nome da quest..." autocomplete="off" required>
+        </label>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Tipo</span>
+            <select id="edit-q-tipo">
+              <option value="side">Side quest (+10 EXP, +1)</option>
+              <option value="principal">Missao principal (+30 EXP, +3)</option>
+              <option value="diaria">Diaria (+10 EXP, +1)</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Atributo</span>
+            <select id="edit-q-atrib">
+              <option value="forca">Forca</option>
+              <option value="magia">Magia</option>
+              <option value="carisma">Carisma</option>
+              <option value="inteligencia">Inteligencia</option>
+            </select>
+          </label>
+          <label id="edit-q-semanal-field" class="field" style="display: none;" hidden>
+            <span>Minimo por semana</span>
+            <select id="edit-q-semanal">
+              <option value="7">Todos os dias (7x)</option>
+              <option value="6">6 vezes</option>
+              <option value="5">5 vezes</option>
+              <option value="4">4 vezes</option>
+              <option value="3">3 vezes</option>
+              <option value="2">2 vezes</option>
+              <option value="1">1 vez</option>
+            </select>
+          </label>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+          <button class="btn btn-secondary" type="submit">Salvar</button>
+          <button id="btn-cancel-edit" class="btn btn-ghost" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260906-4"></script>
-  <script src="app.js?v=20260906-4"></script>
+  <script src="db.js?v=20260906-5"></script>
+  <script src="app.js?v=20260906-5"></script>
 </body>
 </html>

@@ -59,8 +59,6 @@ const db = (() => {
 
   async function getQuests() {
     await requireUser();
-    const { error: refreshError } = await client.rpc("refresh_daily_routines");
-    throwOnError(refreshError);
     const [{ data, error }, { data: routineState, error: stateError }] = await Promise.all([
       client.from("quests").select("*").order("created_at", { ascending: true }),
       client.rpc("get_daily_routine_state"),
@@ -86,6 +84,22 @@ const db = (() => {
       .single();
     throwOnError(error);
     return { success: true, id: data.id };
+  }
+
+  async function updateQuest(id, { nome, tipo, atributo, weeklyTarget = 7 }) {
+    const { data, error } = await client
+      .from("quests")
+      .update({
+        nome,
+        tipo,
+        atributo,
+        weekly_target: tipo === "diaria" ? weeklyTarget : 7,
+      })
+      .eq("id", id)
+      .select("*")
+      .single();
+    throwOnError(error);
+    return { success: true, quest: data };
   }
 
   async function completeQuest(id) {
@@ -149,7 +163,7 @@ const db = (() => {
 
   return {
     signUp, signIn, signOut, getSession, onAuthChange,
-    getHero, getQuests, getHistorico, addQuest, completeQuest,
+    getHero, getQuests, getHistorico, addQuest, updateQuest, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
     getCleanDate, setCleanDate,
   };

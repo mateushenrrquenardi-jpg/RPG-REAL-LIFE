@@ -10,6 +10,8 @@ const ROUTINE_LEVELS = [
   { name: "Rotina incorporada", days: 182 },
 ];
 
+let loadedQuests = [];
+
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -63,23 +65,75 @@ function questHtml(quest) {
   const done = quest.status === "concluida", daily = quest.tipo === "diaria";
   const label = quest.tipo === "principal" ? "Principal" : daily ? "Diaria" : "Side";
   const style = quest.tipo === "principal" ? "badge-main" : daily ? "badge-daily" : "";
-  return `<article class="quest-item ${done ? "done" : ""}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div>${daily ? routineHtml(quest) : ""}</div><div class="quest-actions"><button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
+  return `<article class="quest-item ${done ? "done" : ""}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div>${daily ? routineHtml(quest) : ""}</div><div class="quest-actions"><button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-edit" type="button" data-action="edit" data-id="${quest.id}" aria-label="Editar quest">✏️</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
 }
 
 async function loadQuests() {
   const quests = await db.getQuests(), daily = quests.filter((q) => q.tipo === "diaria"), active = quests.filter((q) => q.tipo !== "diaria" && q.status === "ativa");
+  loadedQuests = quests;
   $("#daily-summary").textContent = daily.length ? `${daily.filter((q) => q.status === "concluida").length}/${daily.length} concluidas hoje · ciclo semanal inicia domingo` : "Nenhuma diaria cadastrada ainda.";
   $("#daily-list").innerHTML = daily.length ? daily.map(questHtml).join("") : `<p class="state-text">Cadastre uma quest como diaria para ela aparecer aqui.</p>`;
   $("#quest-list").innerHTML = active.length ? active.map(questHtml).join("") : `<p class="state-text">Nenhuma quest ativa.</p>`;
 }
 
 async function refresh() { try { await Promise.all([loadHero(), loadQuests()]); } catch (error) { toast(error.message || "Erro ao carregar dados."); } }
+
 function syncWeeklyField() {
   const isDaily = $("#q-tipo").value === "diaria";
   const field = $("#q-semanal-field");
   if (!field) return;
   field.hidden = !isDaily;
   field.style.display = isDaily ? "grid" : "none";
+}
+
+function syncEditWeeklyField() {
+  const isDaily = $("#edit-q-tipo").value === "diaria";
+  const field = $("#edit-q-semanal-field");
+  if (!field) return;
+  field.hidden = !isDaily;
+  field.style.display = isDaily ? "grid" : "none";
+}
+
+function openEditModal(id) {
+  const quest = loadedQuests.find((q) => String(q.id) === String(id));
+  if (!quest) return toast("Quest nao encontrada.");
+  $("#edit-q-id").value = quest.id;
+  $("#edit-q-nome").value = quest.nome;
+  $("#edit-q-tipo").value = quest.tipo;
+  $("#edit-q-atrib").value = quest.atributo;
+  $("#edit-q-semanal").value = String(quest.weekly_target || 7);
+  syncEditWeeklyField();
+  const modal = $("#edit-quest-modal");
+  if (modal.showModal) modal.showModal();
+  else modal.setAttribute("open", "");
+}
+
+function closeEditModal() {
+  const modal = $("#edit-quest-modal");
+  if (modal.close) modal.close();
+  else modal.removeAttribute("open");
+}
+
+async function saveQuestEdit(event) {
+  event.preventDefault();
+  const id = $("#edit-q-id").value;
+  const name = $("#edit-q-nome").value.trim();
+  const type = $("#edit-q-tipo").value;
+  const atrib = $("#edit-q-atrib").value;
+  const weeklyTarget = Number($("#edit-q-semanal").value);
+  const button = event.submitter || $("#edit-quest-form button[type=submit]");
+  if (!name) return toast("Digite o nome da quest.");
+  busy(button, true, "Salvando...");
+  try {
+    await db.updateQuest(id, { nome: name, tipo: type, atributo: atrib, weeklyTarget });
+    closeEditModal();
+    await loadQuests();
+    toast("Quest atualizada.");
+  } catch (error) {
+    toast(error.message || "Erro ao atualizar quest.");
+  } finally {
+    busy(button, false);
+  }
 }
 
 async function addQuest(event) { event.preventDefault(); const name = $("#q-nome").value.trim(), button = event.submitter, type = $("#q-tipo").value, weeklyTarget = Number($("#q-semanal").value); if (!name) return toast("Digite o nome da quest."); busy(button, true); try { await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget); $("#q-nome").value = ""; syncWeeklyField(); await loadQuests(); toast(type === "diaria" ? "Rotina diaria adicionada." : "Quest adicionada."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
@@ -131,7 +185,20 @@ function bind() {
   $("#q-tipo").onchange = syncWeeklyField;
   syncWeeklyField();
   $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); };
-  document.body.onclick = (event) => { const button = event.target.closest("[data-action]"); if (!button) return; if (button.dataset.action === "complete") completeQuest(button.dataset.id, button); else deleteQuest(button.dataset.id, button); };
+  document.body.onclick = (event) => {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+    if (button.dataset.action === "complete") completeQuest(button.dataset.id, button);
+    else if (button.dataset.action === "edit") openEditModal(button.dataset.id);
+    else if (button.dataset.action === "delete") deleteQuest(button.dataset.id, button);
+  };
+  $("#edit-q-tipo").onchange = syncEditWeeklyField;
+  $("#edit-quest-form").onsubmit = saveQuestEdit;
+  $("#btn-close-edit-modal").onclick = closeEditModal;
+  $("#btn-cancel-edit").onclick = closeEditModal;
+  $("#edit-quest-modal").onclick = (event) => {
+    if (event.target === $("#edit-quest-modal")) closeEditModal();
+  };
   $("#btn-export").onclick = exportData;
   $("#btn-reset-data").onclick = resetData;
   $("#clean-date-form").onsubmit = saveCleanDate;

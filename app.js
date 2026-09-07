@@ -14,6 +14,80 @@ let loadedQuests = [];
 let pendingAvatarData = null;
 let currentProgressQuest = null;
 
+function calcCleanDays(dateStr) {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const start = new Date(y, m - 1, d);
+  start.setHours(0, 0, 0, 0);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+
+function toast(message) {
+  const el = $("#toast");
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove("show"), 3500);
+}
+
+function busy(button, active, text = "Salvando...") {
+  if (!button) return;
+  if (active) {
+    button.dataset.label = button.textContent;
+    button.textContent = text;
+    button.disabled = true;
+  } else {
+    button.textContent = button.dataset.label || button.textContent;
+    button.disabled = false;
+  }
+}
+
+function setAppVisible(signedIn) {
+  const authScreen = $("#auth-screen");
+  const appScreen = $("#app-screen");
+  if (authScreen) authScreen.hidden = signedIn;
+  if (appScreen) appScreen.hidden = !signedIn;
+}
+
+async function loadHero() {
+  const [hero, cleanDate, avatar] = await Promise.all([
+    db.getHero(),
+    db.getCleanDate().catch(() => null),
+    db.getAvatar().catch(() => null),
+  ]);
+  const exp = Number(hero.exp_atual), need = Number(hero.exp_necessaria);
+  const expFill = $("#exp-fill");
+  const expVal = $("#exp-val");
+  if (expFill) expFill.style.width = `${Math.max(0, Math.min(100, Math.round((exp / need) * 100)))}%`;
+  if (expVal) expVal.textContent = `${exp} / ${need}`;
+
+  const days = calcCleanDays(cleanDate);
+  const cleanBadge = days !== null ? ` • ${days === 1 ? "1 DIA LIMPO" : `${days} DIAS LIMPO`}` : "";
+  const heroClass = $("#hero-class");
+  if (heroClass) heroClass.textContent = `// ${titleFor(hero.nivel).toUpperCase()} - NV.${hero.nivel}${cleanBadge}`;
+
+  const f = $("#a-forca"), m = $("#a-magia"), c = $("#a-carisma"), i = $("#a-intel");
+  if (f) f.textContent = hero.forca;
+  if (m) m.textContent = hero.magia;
+  if (c) c.textContent = hero.carisma;
+  if (i) i.textContent = hero.inteligencia;
+
+  const defaultAvatar = "assets/profile.jpg?v=20260904-1";
+  const currentAvatarSrc = avatar || defaultAvatar;
+  const heroAvatar = $("#hero-avatar");
+  if (heroAvatar) heroAvatar.src = currentAvatarSrc;
+  const preview = $("#avatar-modal-preview");
+  if (preview) preview.src = currentAvatarSrc;
+
+  const cleanInput = $("#clean-date-input");
+  if (cleanInput && cleanDate) cleanInput.value = cleanDate;
+}
+
 function goalUnitLabel(unit, count) {
   if (unit === "paginas") return count === 1 ? "página" : "páginas";
   if (unit === "aulas") return count === 1 ? "aula" : "aulas";
@@ -35,6 +109,19 @@ function goalHtml(quest) {
   return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><div class="goal-title-wrap"><span class="goal-title-text">${targetName} — <strong>${escapeHtml(progressText)}</strong></span>${isComplete ? '<span class="badge badge-goal-done">Meta Concluída</span>' : ""}</div><span class="goal-values">${pct}%</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
 }
 
+function routineHtml(quest) {
+  const routine = quest.routine;
+  if (!routine) return "";
+  const levelIdx = Math.min(Math.max(Number(quest.routine_level || 1), 1), ROUTINE_LEVELS.length) - 1;
+  const level = ROUTINE_LEVELS[levelIdx];
+  const days = Math.min(Number(routine.routine_days || 0), level.days);
+  const pct = Math.min(100, Math.round((days / level.days) * 100));
+  const fixed = routine.routine_fixed;
+  const levelNum = String(quest.routine_level || 1).padStart(2, "0");
+  const rankLabel = fixed ? "ROTINA FIXADA" : `Nivel ${levelNum} - ${level.name}`;
+  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
+}
+
 function questHtml(quest) {
   const done = quest.status === "concluida", daily = quest.tipo === "diaria", principal = quest.tipo === "principal";
   const hasGoal = principal && Boolean(quest.goal_type) && Boolean(quest.goal_total);
@@ -51,7 +138,13 @@ async function loadQuests() {
   $("#quest-list").innerHTML = active.length ? active.map(questHtml).join("") : `<p class="state-text">Nenhuma quest ativa.</p>`;
 }
 
-async function refresh() { try { await Promise.all([loadHero(), loadQuests()]); } catch (error) { toast(error.message || "Erro ao carregar dados."); } }
+async function refresh() {
+  try {
+    await Promise.all([loadHero(), loadQuests()]);
+  } catch (error) {
+    toast(error.message || "Erro ao carregar dados.");
+  }
+}
 
 function syncWeeklyField() {
   const isDaily = $("#q-tipo").value === "diaria";
@@ -272,101 +365,6 @@ async function saveQuestEdit(event) {
     busy(button, false);
   }
 }
-function processImageFile(file) {
-  return new Promise((resolve, reject) => {
-    if (!file.type.startsWith("image/")) {
-      return reject(new Error("Por favor, selecione um arquivo de imagem valido."));
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxDim = 320;
-        let w = img.width, h = img.height;
-        if (w > h) {
-          if (w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
-        } else {
-          if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-        resolve(dataUrl);
-      };
-      img.onerror = () => reject(new Error("Erro ao processar imagem."));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error("Erro ao ler arquivo."));
-    reader.readAsDataURL(file);
-  });
-}
-
-function openAvatarModal() {
-  pendingAvatarData = null;
-  const currentSrc = $("#hero-avatar") ? $("#hero-avatar").src : "assets/profile.jpg?v=20260904-1";
-  $("#avatar-modal-preview").src = currentSrc;
-  $("#avatar-url-input").value = "";
-  $("#avatar-file-input").value = "";
-  const modal = $("#avatar-modal");
-  if (modal.showModal) modal.showModal();
-  else modal.setAttribute("open", "");
-}
-
-function closeAvatarModal() {
-  const modal = $("#avatar-modal");
-  if (modal.close) modal.close();
-  else modal.removeAttribute("open");
-}
-
-async function handleAvatarFileSelect(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-  try {
-    const dataUrl = await processImageFile(file);
-    pendingAvatarData = dataUrl;
-    $("#avatar-modal-preview").src = dataUrl;
-    $("#avatar-url-input").value = "";
-    toast("Imagem carregada. Clique em Salvar Foto.");
-  } catch (error) {
-    toast(error.message);
-  }
-}
-
-async function saveAvatar() {
-  const urlVal = $("#avatar-url-input").value.trim();
-  const finalAvatar = urlVal || pendingAvatarData;
-  if (!finalAvatar) return toast("Escolha uma imagem ou informe um link.");
-  const button = $("#btn-save-avatar");
-  busy(button, true, "Salvando...");
-  try {
-    await db.setAvatar(finalAvatar);
-    await loadHero();
-    closeAvatarModal();
-    toast("Foto de perfil atualizada!");
-  } catch (error) {
-    toast(error.message || "Erro ao salvar foto.");
-  } finally {
-    busy(button, false);
-  }
-}
-
-async function resetAvatarDefault() {
-  const button = $("#btn-reset-avatar-default");
-  busy(button, true, "Restaurando...");
-  try {
-    await db.setAvatar(null);
-    await loadHero();
-    closeAvatarModal();
-    toast("Foto padrão restaurada!");
-  } catch (error) {
-    toast(error.message || "Erro ao restaurar foto padrão.");
-  } finally {
-    busy(button, false);
-  }
-}
 
 function openProgressModal(id) {
   const quest = loadedQuests.find((q) => String(q.id) === String(id));
@@ -526,6 +524,102 @@ async function saveQuestProgress(event) {
   }
 }
 
+function processImageFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      return reject(new Error("Por favor, selecione um arquivo de imagem valido."));
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 320;
+        let w = img.width, h = img.height;
+        if (w > h) {
+          if (w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
+        } else {
+          if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error("Erro ao processar imagem."));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error("Erro ao ler arquivo."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function openAvatarModal() {
+  pendingAvatarData = null;
+  const currentSrc = $("#hero-avatar") ? $("#hero-avatar").src : "assets/profile.jpg?v=20260904-1";
+  $("#avatar-modal-preview").src = currentSrc;
+  $("#avatar-url-input").value = "";
+  $("#avatar-file-input").value = "";
+  const modal = $("#avatar-modal");
+  if (modal.showModal) modal.showModal();
+  else modal.setAttribute("open", "");
+}
+
+function closeAvatarModal() {
+  const modal = $("#avatar-modal");
+  if (modal.close) modal.close();
+  else modal.removeAttribute("open");
+}
+
+async function handleAvatarFileSelect(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await processImageFile(file);
+    pendingAvatarData = dataUrl;
+    $("#avatar-modal-preview").src = dataUrl;
+    $("#avatar-url-input").value = "";
+    toast("Imagem carregada. Clique em Salvar Foto.");
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+async function saveAvatar() {
+  const urlVal = $("#avatar-url-input").value.trim();
+  const finalAvatar = urlVal || pendingAvatarData;
+  if (!finalAvatar) return toast("Escolha uma imagem ou informe um link.");
+  const button = $("#btn-save-avatar");
+  busy(button, true, "Salvando...");
+  try {
+    await db.setAvatar(finalAvatar);
+    await loadHero();
+    closeAvatarModal();
+    toast("Foto de perfil atualizada!");
+  } catch (error) {
+    toast(error.message || "Erro ao salvar foto.");
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function resetAvatarDefault() {
+  const button = $("#btn-reset-avatar-default");
+  busy(button, true, "Restaurando...");
+  try {
+    await db.setAvatar(null);
+    await loadHero();
+    closeAvatarModal();
+    toast("Foto padrão restaurada!");
+  } catch (error) {
+    toast(error.message || "Erro ao restaurar foto padrão.");
+  } finally {
+    busy(button, false);
+  }
+}
+
 async function addQuest(event) {
   event.preventDefault();
   const name = $("#q-nome").value.trim();
@@ -564,16 +658,141 @@ async function addQuest(event) {
   }
 }
 
-async function completeQuest(id, button) { busy(button, true); try { const result = await db.completeQuest(id); await refresh(); toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual` : "Quest concluida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
-async function deleteQuest(id, button) { if (!confirm("Remover esta quest?")) return; busy(button, true); try { await db.deleteQuest(id); await loadQuests(); toast("Quest removida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
-async function resetDailies(button) { busy(button, true); try { await db.resetDailies(); await loadQuests(); toast("Rotinas sincronizadas."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
-function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }).format(date); }
-async function loadHistory() { try { const rows = await db.getHistorico(); $("#hist-list").innerHTML = rows.length ? rows.slice(0, 50).map((item) => `<article class="history-item"><div class="history-title">${escapeHtml(item.acao)}</div><div class="history-meta"><span class="badge">+${item.exp_ganho} EXP</span><span class="badge">+${item.pontos} ${escapeHtml(item.atributo.toUpperCase())}</span><span class="badge">NV.${item.nivel_atual}</span><span class="badge">${escapeHtml(formatDate(item.created_at))}</span></div></article>`).join("") : `<p class="state-text">Nenhum registro ainda.</p>`; } catch (error) { toast(error.message); } }
-async function exportData() { try { const data = await db.exportAll(), url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })), link = document.createElement("a"); link.href = url; link.download = `rpg-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url); toast("Backup exportado."); } catch (error) { toast(error.message); } }
-async function resetData() { if (!confirm("ATENCAO: Isso apagara seu heroi, quests e log. Deseja continuar?")) return; try { await db.resetAll(); await refresh(); toast("Dados resetados."); } catch (error) { toast(error.message); } }
-function showTab(name) { document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name)); document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`)); }
-async function login(event) { event.preventDefault(); const button = event.submitter, email = $("#auth-email").value.trim(), password = $("#auth-password").value; busy(button, true, button.dataset.mode === "signup" ? "Criando..." : "Entrando..."); try { if (button.dataset.mode === "signup") { const data = await db.signUp(email, password); toast(data.session ? "Conta criada." : "Conta criada. Confirme o email para entrar."); } else { await db.signIn(email, password); toast("Login realizado."); } } catch (error) { toast(error.message); } finally { busy(button, false); } }
-async function boot(session) { setAppVisible(Boolean(session)); if (session) { $("#account-email").textContent = session.user.email; await refresh(); } }
+async function completeQuest(id, button) {
+  busy(button, true);
+  try {
+    const result = await db.completeQuest(id);
+    await refresh();
+    toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual` : "Quest concluida.");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function deleteQuest(id, button) {
+  if (!confirm("Remover esta quest?")) return;
+  busy(button, true);
+  try {
+    await db.deleteQuest(id);
+    await loadQuests();
+    toast("Quest removida.");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function resetDailies(button) {
+  busy(button, true);
+  try {
+    await db.resetDailies();
+    await loadQuests();
+    toast("Rotinas sincronizadas.");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    busy(button, false);
+  }
+}
+
+function formatDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date);
+}
+
+async function loadHistory() {
+  try {
+    const rows = await db.getHistorico();
+    $("#hist-list").innerHTML = rows.length
+      ? rows
+          .slice(0, 50)
+          .map(
+            (item) =>
+              `<article class="history-item"><div class="history-title">${escapeHtml(
+                item.acao
+              )}</div><div class="history-meta"><span class="badge">+${item.exp_ganho} EXP</span><span class="badge">+${
+                item.pontos
+              } ${escapeHtml(item.atributo.toUpperCase())}</span><span class="badge">NV.${
+                item.nivel_atual
+              }</span><span class="badge">${escapeHtml(formatDate(item.created_at))}</span></div></article>`
+          )
+          .join("")
+      : `<p class="state-text">Nenhum registro ainda.</p>`;
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+async function exportData() {
+  try {
+    const data = await db.exportAll(),
+      url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })),
+      link = document.createElement("a");
+    link.href = url;
+    link.download = `rpg-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast("Backup exportado.");
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+async function resetData() {
+  if (!confirm("ATENCAO: Isso apagara seu heroi, quests e log. Deseja continuar?")) return;
+  try {
+    await db.resetAll();
+    await refresh();
+    toast("Dados resetados.");
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name));
+  document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`));
+}
+
+async function login(event) {
+  event.preventDefault();
+  const button = event.submitter || $("#auth-form button[type=submit]");
+  const email = $("#auth-email").value.trim();
+  const password = $("#auth-password").value;
+  busy(button, true, button.dataset?.mode === "signup" ? "Criando..." : "Entrando...");
+  try {
+    if (button.dataset?.mode === "signup") {
+      const data = await db.signUp(email, password);
+      toast(data.session ? "Conta criada." : "Conta criada. Confirme o email para entrar.");
+    } else {
+      await db.signIn(email, password);
+      toast("Login realizado.");
+    }
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function boot(session) {
+  setAppVisible(Boolean(session));
+  if (session) {
+    $("#account-email").textContent = session.user.email;
+    await refresh();
+  }
+}
 
 async function saveCleanDate(event) {
   event.preventDefault();
@@ -606,16 +825,26 @@ async function setCleanToday() {
 
 function bind() {
   $("#auth-form").onsubmit = login;
-  $("#btn-signup").onclick = (event) => { event.preventDefault(); login({ preventDefault() {}, submitter: event.currentTarget }); };
+  $("#btn-signup").onclick = (event) => {
+    event.preventDefault();
+    login({ preventDefault() {}, submitter: event.currentTarget });
+  };
   $("#btn-logout").onclick = () => db.signOut();
   $("#quest-form").onsubmit = addQuest;
-  $("#q-tipo").onchange = () => { syncWeeklyField(); syncGoalFields(); };
+  $("#q-tipo").onchange = () => {
+    syncWeeklyField();
+    syncGoalFields();
+  };
   $("#q-goal-type").onchange = syncGoalFields;
   $("#q-goal-curso-unit").onchange = syncGoalFields;
   syncWeeklyField();
   syncGoalFields();
 
-  $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); };
+  $(".tabs").onclick = (event) => {
+    const tab = event.target.closest("[data-tab]");
+    if (tab) showTab(tab.dataset.tab);
+  };
+
   document.body.onclick = (event) => {
     const button = event.target.closest("[data-action]");
     if (!button) return;
@@ -625,7 +854,10 @@ function bind() {
     else if (button.dataset.action === "progress") openProgressModal(button.dataset.id);
   };
 
-  $("#edit-q-tipo").onchange = () => { syncEditWeeklyField(); syncEditGoalFields(); };
+  $("#edit-q-tipo").onchange = () => {
+    syncEditWeeklyField();
+    syncEditGoalFields();
+  };
   $("#edit-q-goal-type").onchange = syncEditGoalFields;
   $("#edit-q-goal-curso-unit").onchange = syncEditGoalFields;
   $("#edit-quest-form").onsubmit = saveQuestEdit;
@@ -673,5 +905,11 @@ function bind() {
   };
 }
 
-async function init() { bind(); const session = await db.getSession(); await boot(session); db.onAuthChange((nextSession) => boot(nextSession)); }
+async function init() {
+  bind();
+  const session = await db.getSession();
+  await boot(session);
+  db.onAuthChange((nextSession) => boot(nextSession));
+}
+
 init().catch((error) => toast(error.message));

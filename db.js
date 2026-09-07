@@ -147,14 +147,36 @@ const db = (() => {
     return dateStr;
   }
 
+  async function getAvatar() {
+    const user = await requireUser();
+    const metaAvatar = user.user_metadata?.custom_avatar;
+    if (metaAvatar) return metaAvatar;
+    return localStorage.getItem(`rpg_avatar_${user.id}`) || null;
+  }
+
+  async function setAvatar(avatarUrlOrBase64) {
+    const user = await requireUser();
+    if (avatarUrlOrBase64) {
+      localStorage.setItem(`rpg_avatar_${user.id}`, avatarUrlOrBase64);
+    } else {
+      localStorage.removeItem(`rpg_avatar_${user.id}`);
+    }
+    const { error } = await client.auth.updateUser({
+      data: { custom_avatar: avatarUrlOrBase64 || null },
+    });
+    throwOnError(error);
+    return avatarUrlOrBase64;
+  }
+
   async function exportAll() {
-    const [hero, quests, historico, cleanDate] = await Promise.all([
+    const [hero, quests, historico, cleanDate, avatar] = await Promise.all([
       getHero(),
       getQuests(),
       getHistorico(),
       getCleanDate().catch(() => null),
+      getAvatar().catch(() => null),
     ]);
-    return { hero, quests, historico, clean_date: cleanDate, exportedAt: new Date().toISOString() };
+    return { hero, quests, historico, clean_date: cleanDate, avatar, exportedAt: new Date().toISOString() };
   }
 
   function onAuthChange(handler) {
@@ -165,6 +187,6 @@ const db = (() => {
     signUp, signIn, signOut, getSession, onAuthChange,
     getHero, getQuests, getHistorico, addQuest, updateQuest, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
-    getCleanDate, setCleanDate,
+    getCleanDate, setCleanDate, getAvatar, setAvatar,
   };
 })();

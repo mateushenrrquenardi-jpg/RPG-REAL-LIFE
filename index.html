@@ -27,7 +27,7 @@
     <section class="hero-panel" aria-label="Status do personagem">
       <div class="hero-grid">
         <div class="avatar-frame">
-          <img src="assets/profile.jpg?v=20260904-1" alt="Avatar de Mateus" class="avatar">
+          <img id="hero-avatar" src="assets/profile.jpg?v=20260904-1" alt="Avatar de Mateus" class="avatar">
           <span class="scanline"></span>
         </div>
 
@@ -184,6 +184,9 @@
         </form>
 
         <div class="config-actions">
+          <button id="btn-change-avatar" class="btn btn-config btn-config-avatar" type="button">
+            🖼️ Alterar Foto de Perfil
+          </button>
           <button id="btn-toggle-log" class="btn btn-config btn-config-log" type="button">
             📜 Ver Log de batalhas
           </button>
@@ -209,6 +212,38 @@
       </section>
     </section>
   </main>
+
+  <dialog id="avatar-modal" class="modal-dialog">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <h2>Foto de Perfil</h2>
+        <button id="btn-close-avatar-modal" class="btn btn-delete" type="button" style="width: 32px; min-height: 32px; font-size: 11px;">X</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 12px 0;">
+        <div class="avatar-frame" style="width: 100px; height: 100px;">
+          <img id="avatar-modal-preview" src="assets/profile.jpg?v=20260904-1" alt="Preview do avatar" class="avatar">
+          <span class="scanline"></span>
+        </div>
+
+        <input id="avatar-file-input" type="file" accept="image/*" style="display: none;">
+
+        <button id="btn-select-avatar-file" class="btn btn-secondary" type="button" style="width: 100%;">
+          📁 Escolher imagem do aparelho
+        </button>
+
+        <label class="field" style="width: 100%;">
+          <span>Ou link direto da imagem (URL)</span>
+          <input id="avatar-url-input" type="url" placeholder="https://exemplo.com/foto.jpg" autocomplete="off">
+        </label>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 4px;">
+          <button id="btn-save-avatar" class="btn btn-secondary" type="button">Salvar Foto</button>
+          <button id="btn-reset-avatar-default" class="btn btn-ghost" type="button">Foto padrão</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="edit-quest-modal" class="modal-dialog">
     <div class="modal-content panel">
@@ -267,7 +302,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260906-5"></script>
-  <script src="app.js?v=20260906-5"></script>
+  <script src="db.js?v=20260906-6"></script>
+  <script src="app.js?v=20260906-6"></script>
 </body>
 </html>

@@ -564,6 +564,12 @@ select:focus {
   transform: translateY(-1px);
 }
 
+.btn-config-avatar {
+  background: rgba(69, 217, 255, 0.12);
+  border: 1px solid rgba(69, 217, 255, 0.55);
+  color: var(--cyan);
+}
+
 .btn-config-log {
   background: rgba(141, 240, 143, 0.12);
   border: 1px solid rgba(141, 240, 143, 0.45);

@@ -11,6 +11,7 @@ const ROUTINE_LEVELS = [
 ];
 
 let loadedQuests = [];
+let pendingAvatarData = null;
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -29,9 +30,10 @@ function busy(button, active, text = "Salvando...") { if (!button) return; if (a
 function setAppVisible(signedIn) { $("#auth-screen").hidden = signedIn; $("#app-screen").hidden = !signedIn; }
 
 async function loadHero() {
-  const [hero, cleanDate] = await Promise.all([
+  const [hero, cleanDate, avatar] = await Promise.all([
     db.getHero(),
     db.getCleanDate().catch(() => null),
+    db.getAvatar().catch(() => null),
   ]);
   const exp = Number(hero.exp_atual), need = Number(hero.exp_necessaria);
   $("#exp-fill").style.width = `${Math.max(0, Math.min(100, Math.round(exp / need * 100)))}%`;
@@ -43,6 +45,13 @@ async function loadHero() {
 
   $("#a-forca").textContent = hero.forca; $("#a-magia").textContent = hero.magia;
   $("#a-carisma").textContent = hero.carisma; $("#a-intel").textContent = hero.inteligencia;
+
+  const defaultAvatar = "assets/profile.jpg?v=20260904-1";
+  const currentAvatarSrc = avatar || defaultAvatar;
+  const heroAvatar = $("#hero-avatar");
+  if (heroAvatar) heroAvatar.src = currentAvatarSrc;
+  const preview = $("#avatar-modal-preview");
+  if (preview) preview.src = currentAvatarSrc;
 
   const cleanInput = $("#clean-date-input");
   if (cleanInput && cleanDate) cleanInput.value = cleanDate;
@@ -136,6 +145,102 @@ async function saveQuestEdit(event) {
   }
 }
 
+function processImageFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      return reject(new Error("Por favor, selecione um arquivo de imagem valido."));
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 320;
+        let w = img.width, h = img.height;
+        if (w > h) {
+          if (w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
+        } else {
+          if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error("Erro ao processar imagem."));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error("Erro ao ler arquivo."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function openAvatarModal() {
+  pendingAvatarData = null;
+  const currentSrc = $("#hero-avatar") ? $("#hero-avatar").src : "assets/profile.jpg?v=20260904-1";
+  $("#avatar-modal-preview").src = currentSrc;
+  $("#avatar-url-input").value = "";
+  $("#avatar-file-input").value = "";
+  const modal = $("#avatar-modal");
+  if (modal.showModal) modal.showModal();
+  else modal.setAttribute("open", "");
+}
+
+function closeAvatarModal() {
+  const modal = $("#avatar-modal");
+  if (modal.close) modal.close();
+  else modal.removeAttribute("open");
+}
+
+async function handleAvatarFileSelect(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await processImageFile(file);
+    pendingAvatarData = dataUrl;
+    $("#avatar-modal-preview").src = dataUrl;
+    $("#avatar-url-input").value = "";
+    toast("Imagem carregada. Clique em Salvar Foto.");
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+async function saveAvatar() {
+  const urlVal = $("#avatar-url-input").value.trim();
+  const finalAvatar = urlVal || pendingAvatarData;
+  if (!finalAvatar) return toast("Escolha uma imagem ou informe um link.");
+  const button = $("#btn-save-avatar");
+  busy(button, true, "Salvando...");
+  try {
+    await db.setAvatar(finalAvatar);
+    await loadHero();
+    closeAvatarModal();
+    toast("Foto de perfil atualizada!");
+  } catch (error) {
+    toast(error.message || "Erro ao salvar foto.");
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function resetAvatarDefault() {
+  const button = $("#btn-reset-avatar-default");
+  busy(button, true, "Restaurando...");
+  try {
+    await db.setAvatar(null);
+    await loadHero();
+    closeAvatarModal();
+    toast("Foto padrão restaurada!");
+  } catch (error) {
+    toast(error.message || "Erro ao restaurar foto padrão.");
+  } finally {
+    busy(button, false);
+  }
+}
+
 async function addQuest(event) { event.preventDefault(); const name = $("#q-nome").value.trim(), button = event.submitter, type = $("#q-tipo").value, weeklyTarget = Number($("#q-semanal").value); if (!name) return toast("Digite o nome da quest."); busy(button, true); try { await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget); $("#q-nome").value = ""; syncWeeklyField(); await loadQuests(); toast(type === "diaria" ? "Rotina diaria adicionada." : "Quest adicionada."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function completeQuest(id, button) { busy(button, true); try { const result = await db.completeQuest(id); await refresh(); toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual` : "Quest concluida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function deleteQuest(id, button) { if (!confirm("Remover esta quest?")) return; busy(button, true); try { await db.deleteQuest(id); await loadQuests(); toast("Quest removida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
@@ -199,6 +304,24 @@ function bind() {
   $("#edit-quest-modal").onclick = (event) => {
     if (event.target === $("#edit-quest-modal")) closeEditModal();
   };
+
+  $("#btn-change-avatar").onclick = openAvatarModal;
+  $("#btn-close-avatar-modal").onclick = closeAvatarModal;
+  $("#btn-select-avatar-file").onclick = () => $("#avatar-file-input").click();
+  $("#avatar-file-input").onchange = handleAvatarFileSelect;
+  $("#avatar-url-input").oninput = () => {
+    const url = $("#avatar-url-input").value.trim();
+    if (url) {
+      pendingAvatarData = null;
+      $("#avatar-modal-preview").src = url;
+    }
+  };
+  $("#btn-save-avatar").onclick = saveAvatar;
+  $("#btn-reset-avatar-default").onclick = resetAvatarDefault;
+  $("#avatar-modal").onclick = (event) => {
+    if (event.target === $("#avatar-modal")) closeAvatarModal();
+  };
+
   $("#btn-export").onclick = exportData;
   $("#btn-reset-data").onclick = resetData;
   $("#clean-date-form").onsubmit = saveCleanDate;

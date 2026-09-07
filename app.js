@@ -133,9 +133,12 @@ function questHtml(quest) {
 async function loadQuests() {
   const quests = await db.getQuests(), daily = quests.filter((q) => q.tipo === "diaria"), active = quests.filter((q) => q.tipo !== "diaria" && q.status === "ativa");
   loadedQuests = quests;
-  $("#daily-summary").textContent = daily.length ? `${daily.filter((q) => q.status === "concluida").length}/${daily.length} concluidas hoje · ciclo semanal inicia domingo` : "Nenhuma diaria cadastrada ainda.";
-  $("#daily-list").innerHTML = daily.length ? daily.map(questHtml).join("") : `<p class="state-text">Cadastre uma quest como diaria para ela aparecer aqui.</p>`;
-  $("#quest-list").innerHTML = active.length ? active.map(questHtml).join("") : `<p class="state-text">Nenhuma quest ativa.</p>`;
+  const dailySummary = $("#daily-summary");
+  if (dailySummary) dailySummary.textContent = daily.length ? `${daily.filter((q) => q.status === "concluida").length}/${daily.length} concluidas hoje · ciclo semanal inicia domingo` : "Nenhuma diaria cadastrada ainda.";
+  const dailyList = $("#daily-list");
+  if (dailyList) dailyList.innerHTML = daily.length ? daily.map(questHtml).join("") : `<p class="state-text">Cadastre uma quest como diaria para ela aparecer aqui.</p>`;
+  const questList = $("#quest-list");
+  if (questList) questList.innerHTML = active.length ? active.map(questHtml).join("") : `<p class="state-text">Nenhuma quest ativa.</p>`;
 }
 
 async function refresh() {
@@ -775,9 +778,11 @@ async function login(event) {
     if (button.dataset?.mode === "signup") {
       const data = await db.signUp(email, password);
       toast(data.session ? "Conta criada." : "Conta criada. Confirme o email para entrar.");
+      if (data.session) await boot(data.session);
     } else {
-      await db.signIn(email, password);
+      const data = await db.signIn(email, password);
       toast("Login realizado.");
+      if (data.session) await boot(data.session);
     }
   } catch (error) {
     toast(error.message);
@@ -789,7 +794,8 @@ async function login(event) {
 async function boot(session) {
   setAppVisible(Boolean(session));
   if (session) {
-    $("#account-email").textContent = session.user.email;
+    const accEmail = $("#account-email");
+    if (accEmail) accEmail.textContent = session.user.email;
     await refresh();
   }
 }
@@ -829,7 +835,10 @@ function bind() {
     event.preventDefault();
     login({ preventDefault() {}, submitter: event.currentTarget });
   };
-  $("#btn-logout").onclick = () => db.signOut();
+  $("#btn-logout").onclick = async () => {
+    await db.signOut();
+    setAppVisible(false);
+  };
   $("#quest-form").onsubmit = addQuest;
   $("#q-tipo").onchange = () => {
     syncWeeklyField();

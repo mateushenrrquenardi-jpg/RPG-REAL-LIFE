@@ -59,8 +59,6 @@ const db = (() => {
 
   async function getQuests() {
     await requireUser();
-    const { error: refreshError } = await client.rpc("refresh_daily_routines");
-    throwOnError(refreshError);
     const [{ data, error }, { data: routineState, error: stateError }] = await Promise.all([
       client.from("quests").select("*").order("created_at", { ascending: true }),
       client.rpc("get_daily_routine_state"),

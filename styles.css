@@ -409,32 +409,111 @@ select:focus {
   color: var(--amber);
 }
 
-.quest-actions {
+.form-grid-2 {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
-.routine-card {
+.goal-form-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 12px;
+  border: 1px dashed rgba(69, 217, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(69, 217, 255, 0.025);
+}
+
+.goal-subfields {
+  display: grid;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.quest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.quest-actions .btn-complete {
+  flex: 1 1 90px;
+}
+
+.quest-actions .btn-progress {
+  flex: 1 1 90px;
+}
+
+.quest-actions .btn-edit,
+.quest-actions .btn-delete {
+  flex: 0 0 44px;
+}
+
+.routine-card,
+.goal-card {
   display: grid;
   gap: 7px;
   margin-top: 12px;
   padding: 10px;
-  border: 1px solid rgba(69, 217, 255, 0.28);
   border-radius: 6px;
-  background: rgba(69, 217, 255, 0.035);
   font-family: "Share Tech Mono", monospace;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.05em;
+  transition: border-color 200ms ease, background 200ms ease, box-shadow 200ms ease;
+}
+
+.routine-card {
+  border: 1px solid rgba(69, 217, 255, 0.28);
+  background: rgba(69, 217, 255, 0.035);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.goal-card {
+  border: 1px solid rgba(255, 79, 145, 0.35);
+  background: rgba(255, 79, 145, 0.04);
   color: var(--muted);
 }
 
 .routine-top,
-.routine-bottom {
+.routine-bottom,
+.goal-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.goal-top {
+  flex-wrap: wrap;
+}
+
+.goal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.goal-title-text {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.goal-title-text strong {
+  color: var(--pink);
+  font-weight: 700;
+}
+
+.goal-values {
+  color: var(--cyan);
+  white-space: nowrap;
+  font-size: 11px;
 }
 
 .routine-rank,
@@ -443,17 +522,30 @@ select:focus {
   font-weight: 400;
 }
 
-.routine-track {
-  height: 6px;
+.routine-track,
+.goal-track {
+  height: 7px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.goal-track {
+  height: 8px;
 }
 
 .routine-fill {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--cyan), var(--green));
+  transition: width 500ms ease;
+}
+
+.goal-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pink), var(--cyan));
   transition: width 500ms ease;
 }
 
@@ -466,10 +558,41 @@ select:focus {
   color: var(--green);
 }
 
+.goal-complete {
+  border-color: rgba(141, 240, 143, 0.65);
+  background: rgba(141, 240, 143, 0.065);
+  box-shadow: 0 0 20px rgba(141, 240, 143, 0.12);
+}
+
+.goal-complete .goal-title-text strong,
+.goal-complete .goal-values {
+  color: var(--green);
+}
+
+.goal-complete .goal-fill {
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  box-shadow: 0 0 10px rgba(141, 240, 143, 0.45);
+}
+
+.badge-goal-done {
+  color: var(--green);
+  border: 1px solid rgba(141, 240, 143, 0.45);
+  background: rgba(141, 240, 143, 0.12);
+  font-size: 10px;
+  padding: 0 6px;
+  min-height: 20px;
+}
+
 .btn-complete {
   background: rgba(141, 240, 143, 0.15);
   border: 1px solid rgba(141, 240, 143, 0.45);
   color: var(--green);
+}
+
+.btn-progress {
+  background: rgba(69, 217, 255, 0.12);
+  border: 1px solid rgba(69, 217, 255, 0.45);
+  color: var(--cyan);
 }
 
 .btn-edit {
@@ -490,6 +613,32 @@ select:focus {
   background: rgba(255, 79, 145, 0.12);
   border: 1px solid rgba(255, 79, 145, 0.4);
   color: var(--pink);
+}
+
+.prog-summary {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.prog-summary strong {
+  color: var(--pink);
+}
+
+.prog-hint {
+  margin: -4px 0 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-family: "Share Tech Mono", monospace;
+}
+
+.prog-preview-wrap {
+  margin-top: 2px;
 }
 
 .modal-dialog {
@@ -611,7 +760,7 @@ select:focus {
   }
 
   .quest-item {
-    grid-template-columns: minmax(0, 1fr) 270px;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
   }
 }

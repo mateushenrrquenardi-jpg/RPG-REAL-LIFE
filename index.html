@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260906-3">
+  <link rel="stylesheet" href="styles.css?v=20260907-1">
 </head>
 <body>
   <main id="auth-screen" class="app-shell">
@@ -142,6 +142,57 @@
                 <option value="1">1 vez</option>
               </select>
             </label>
+          <div id="q-goal-section" class="goal-form-section" style="display: none;" hidden>
+            <label class="field">
+              <span>Meta mensurável (Opcional)</span>
+              <select id="q-goal-type">
+                <option value="">Sem meta</option>
+                <option value="livro">Livro / Leitura</option>
+                <option value="curso">Curso</option>
+              </select>
+            </label>
+
+            <div id="q-goal-livro-fields" class="goal-subfields" style="display: none;" hidden>
+              <label class="field">
+                <span>Nome do livro</span>
+                <input id="q-goal-livro-nome" type="text" placeholder="Ex: Hábitos Atômicos" autocomplete="off">
+              </label>
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Total de páginas</span>
+                  <input id="q-goal-livro-total" type="number" min="1" placeholder="Ex: 320">
+                </label>
+                <label class="field">
+                  <span>Páginas já lidas</span>
+                  <input id="q-goal-livro-current" type="number" min="0" value="0" placeholder="0">
+                </label>
+              </div>
+            </div>
+
+            <div id="q-goal-curso-fields" class="goal-subfields" style="display: none;" hidden>
+              <label class="field">
+                <span>Nome do curso</span>
+                <input id="q-goal-curso-nome" type="text" placeholder="Ex: Curso de JavaScript" autocomplete="off">
+              </label>
+              <label class="field">
+                <span>Unidade de progresso</span>
+                <select id="q-goal-curso-unit">
+                  <option value="aulas">Aulas / Módulos concluídos</option>
+                  <option value="porcentagem">Porcentagem (%)</option>
+                  <option value="horas">Horas estudadas</option>
+                </select>
+              </label>
+              <div class="form-grid-2">
+                <label id="q-goal-curso-total-field" class="field">
+                  <span id="q-goal-curso-total-label">Total de aulas</span>
+                  <input id="q-goal-curso-total" type="number" min="1" step="any" placeholder="Ex: 12">
+                </label>
+                <label class="field">
+                  <span id="q-goal-curso-current-label">Progresso inicial</span>
+                  <input id="q-goal-curso-current" type="number" min="0" step="any" value="0" placeholder="0">
+                </label>
+              </div>
+            </div>
           </div>
 
           <button class="btn btn-secondary" type="submit">Adicionar quest</button>
@@ -292,6 +343,59 @@
           </label>
         </div>
 
+        <div id="edit-q-goal-section" class="goal-form-section" style="display: none;" hidden>
+          <label class="field">
+            <span>Meta mensurável (Opcional)</span>
+            <select id="edit-q-goal-type">
+              <option value="">Sem meta</option>
+              <option value="livro">Livro / Leitura</option>
+              <option value="curso">Curso</option>
+            </select>
+          </label>
+
+          <div id="edit-q-goal-livro-fields" class="goal-subfields" style="display: none;" hidden>
+            <label class="field">
+              <span>Nome do livro</span>
+              <input id="edit-q-goal-livro-nome" type="text" placeholder="Ex: Hábitos Atômicos" autocomplete="off">
+            </label>
+            <div class="form-grid-2">
+              <label class="field">
+                <span>Total de páginas</span>
+                <input id="edit-q-goal-livro-total" type="number" min="1" placeholder="Ex: 320">
+              </label>
+              <label class="field">
+                <span>Páginas já lidas</span>
+                <input id="edit-q-goal-livro-current" type="number" min="0" value="0" placeholder="0">
+              </label>
+            </div>
+          </div>
+
+          <div id="edit-q-goal-curso-fields" class="goal-subfields" style="display: none;" hidden>
+            <label class="field">
+              <span>Nome do curso</span>
+              <input id="edit-q-goal-curso-nome" type="text" placeholder="Ex: Curso de JavaScript" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Unidade de progresso</span>
+              <select id="edit-q-goal-curso-unit">
+                <option value="aulas">Aulas / Módulos concluídos</option>
+                <option value="porcentagem">Porcentagem (%)</option>
+                <option value="horas">Horas estudadas</option>
+              </select>
+            </label>
+            <div class="form-grid-2">
+              <label id="edit-q-goal-curso-total-field" class="field">
+                <span id="edit-q-goal-curso-total-label">Total de aulas</span>
+                <input id="edit-q-goal-curso-total" type="number" min="1" step="any" placeholder="Ex: 12">
+              </label>
+              <label class="field">
+                <span id="edit-q-goal-curso-current-label">Progresso atual</span>
+                <input id="edit-q-goal-curso-current" type="number" min="0" step="any" value="0" placeholder="0">
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
           <button class="btn btn-secondary" type="submit">Salvar</button>
           <button id="btn-cancel-edit" class="btn btn-ghost" type="button">Cancelar</button>
@@ -300,9 +404,36 @@
     </div>
   </dialog>
 
+  <dialog id="progress-quest-modal" class="modal-dialog">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <h2>Atualizar Progresso</h2>
+        <button id="btn-close-progress-modal" class="btn btn-delete" type="button" style="width: 32px; min-height: 32px; font-size: 11px;">X</button>
+      </div>
+
+      <form id="progress-quest-form" class="quest-form">
+        <input id="prog-q-id" type="hidden">
+        <div id="prog-quest-summary" class="prog-summary"></div>
+
+        <label class="field">
+          <span id="prog-input-label">Quantidade lida/estudada</span>
+          <input id="prog-input-value" type="number" min="0" step="any" required autocomplete="off">
+        </label>
+        <p id="prog-hint" class="prog-hint"></p>
+
+        <div id="prog-preview-card" class="prog-preview-wrap"></div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+          <button class="btn btn-secondary" type="submit">Salvar progresso</button>
+          <button id="btn-cancel-progress" class="btn btn-ghost" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260906-7"></script>
-  <script src="app.js?v=20260906-7"></script>
+  <script src="db.js?v=20260907-1"></script>
+  <script src="app.js?v=20260907-1"></script>
 </body>
 </html>

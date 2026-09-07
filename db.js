@@ -78,24 +78,70 @@ const db = (() => {
     return data;
   }
 
-  async function addQuest(nome, tipo, atributo, weeklyTarget = 7) {
+  async function addQuest(nome, tipo, atributo, weeklyTarget = 7, goal = null) {
+    const payload = {
+      nome,
+      tipo,
+      atributo,
+      weekly_target: tipo === "diaria" ? weeklyTarget : 7,
+    };
+    if (tipo === "principal" && goal && goal.type) {
+      payload.goal_type = goal.type;
+      payload.goal_target_name = goal.targetName || null;
+      payload.goal_unit = goal.unit || null;
+      payload.goal_total = goal.total != null ? Number(goal.total) : null;
+      payload.goal_current = goal.current != null ? Number(goal.current) : 0;
+    } else {
+      payload.goal_type = null;
+      payload.goal_target_name = null;
+      payload.goal_unit = null;
+      payload.goal_total = null;
+      payload.goal_current = 0;
+    }
     const { data, error } = await client
       .from("quests")
-      .insert({ nome, tipo, atributo, weekly_target: tipo === "diaria" ? weeklyTarget : 7 })
+      .insert(payload)
       .select("id")
       .single();
     throwOnError(error);
     return { success: true, id: data.id };
   }
 
-  async function updateQuest(id, { nome, tipo, atributo, weeklyTarget = 7 }) {
+  async function updateQuest(id, { nome, tipo, atributo, weeklyTarget = 7, goal = null }) {
+    const payload = {
+      nome,
+      tipo,
+      atributo,
+      weekly_target: tipo === "diaria" ? weeklyTarget : 7,
+    };
+    if (tipo === "principal" && goal && goal.type) {
+      payload.goal_type = goal.type;
+      payload.goal_target_name = goal.targetName || null;
+      payload.goal_unit = goal.unit || null;
+      payload.goal_total = goal.total != null ? Number(goal.total) : null;
+      payload.goal_current = goal.current != null ? Number(goal.current) : 0;
+    } else {
+      payload.goal_type = null;
+      payload.goal_target_name = null;
+      payload.goal_unit = null;
+      payload.goal_total = null;
+      payload.goal_current = 0;
+    }
+    const { data, error } = await client
+      .from("quests")
+      .update(payload)
+      .eq("id", id)
+      .select("*")
+      .single();
+    throwOnError(error);
+    return { success: true, quest: data };
+  }
+
+  async function updateQuestProgress(id, currentProgress) {
     const { data, error } = await client
       .from("quests")
       .update({
-        nome,
-        tipo,
-        atributo,
-        weekly_target: tipo === "diaria" ? weeklyTarget : 7,
+        goal_current: Number(currentProgress),
       })
       .eq("id", id)
       .select("*")
@@ -187,7 +233,7 @@ const db = (() => {
 
   return {
     signUp, signIn, signOut, getSession, onAuthChange,
-    getHero, getQuests, getHistorico, addQuest, updateQuest, completeQuest,
+    getHero, getQuests, getHistorico, addQuest, updateQuest, updateQuestProgress, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
     getCleanDate, setCleanDate, getAvatar, setAvatar,
   };

@@ -12,69 +12,35 @@ const ROUTINE_LEVELS = [
 
 let loadedQuests = [];
 let pendingAvatarData = null;
+let currentProgressQuest = null;
 
-function calcCleanDays(dateStr) {
-  if (!dateStr) return null;
-  const [y, m, d] = dateStr.split("-").map(Number);
-  if (!y || !m || !d) return null;
-  const start = new Date(y, m - 1, d);
-  start.setHours(0, 0, 0, 0);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(0, diffDays);
+function goalUnitLabel(unit, count) {
+  if (unit === "paginas") return count === 1 ? "página" : "páginas";
+  if (unit === "aulas") return count === 1 ? "aula" : "aulas";
+  if (unit === "horas") return count === 1 ? "hora" : "horas";
+  if (unit === "porcentagem") return "%";
+  return "";
 }
 
-function toast(message) { const el = $("#toast"); el.textContent = message; el.classList.add("show"); clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.remove("show"), 3500); }
-function busy(button, active, text = "Salvando...") { if (!button) return; if (active) { button.dataset.label = button.textContent; button.textContent = text; button.disabled = true; } else { button.textContent = button.dataset.label || button.textContent; button.disabled = false; } }
-function setAppVisible(signedIn) { $("#auth-screen").hidden = signedIn; $("#app-screen").hidden = !signedIn; }
-
-async function loadHero() {
-  const [hero, cleanDate, avatar] = await Promise.all([
-    db.getHero(),
-    db.getCleanDate().catch(() => null),
-    db.getAvatar().catch(() => null),
-  ]);
-  const exp = Number(hero.exp_atual), need = Number(hero.exp_necessaria);
-  $("#exp-fill").style.width = `${Math.max(0, Math.min(100, Math.round(exp / need * 100)))}%`;
-  $("#exp-val").textContent = `${exp} / ${need}`;
-
-  const days = calcCleanDays(cleanDate);
-  const cleanBadge = days !== null ? ` • ${days === 1 ? "1 DIA LIMPO" : `${days} DIAS LIMPO`}` : "";
-  $("#hero-class").textContent = `// ${titleFor(hero.nivel).toUpperCase()} - NV.${hero.nivel}${cleanBadge}`;
-
-  $("#a-forca").textContent = hero.forca; $("#a-magia").textContent = hero.magia;
-  $("#a-carisma").textContent = hero.carisma; $("#a-intel").textContent = hero.inteligencia;
-
-  const defaultAvatar = "assets/profile.jpg?v=20260904-1";
-  const currentAvatarSrc = avatar || defaultAvatar;
-  const heroAvatar = $("#hero-avatar");
-  if (heroAvatar) heroAvatar.src = currentAvatarSrc;
-  const preview = $("#avatar-modal-preview");
-  if (preview) preview.src = currentAvatarSrc;
-
-  const cleanInput = $("#clean-date-input");
-  if (cleanInput && cleanDate) cleanInput.value = cleanDate;
-}
-
-function routineHtml(quest) {
-  const routine = quest.routine;
-  if (!routine) return "";
-  const levelIdx = Math.min(Math.max(Number(quest.routine_level || 1), 1), ROUTINE_LEVELS.length) - 1;
-  const level = ROUTINE_LEVELS[levelIdx];
-  const days = Math.min(Number(routine.routine_days || 0), level.days);
-  const pct = Math.min(100, Math.round(days / level.days * 100));
-  const fixed = routine.routine_fixed;
-  const levelNum = String(quest.routine_level || 1).padStart(2, "0");
-  const rankLabel = fixed ? "ROTINA FIXADA" : `Nivel ${levelNum} - ${level.name}`;
-  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
+function goalHtml(quest) {
+  if (quest.tipo !== "principal" || !quest.goal_type || !quest.goal_total) return "";
+  const total = Number(quest.goal_total);
+  const current = Number(quest.goal_current || 0);
+  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+  const isComplete = current >= total;
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const targetName = escapeHtml(quest.goal_target_name || quest.nome);
+  const unitLabel = goalUnitLabel(unit, total);
+  const progressText = unit === "porcentagem" ? `${current} / ${total}%` : `${current} / ${total} ${unitLabel}`;
+  return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><div class="goal-title-wrap"><span class="goal-title-text">${targetName} — <strong>${escapeHtml(progressText)}</strong></span>${isComplete ? '<span class="badge badge-goal-done">Meta Concluída</span>' : ""}</div><span class="goal-values">${pct}%</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
 }
 
 function questHtml(quest) {
-  const done = quest.status === "concluida", daily = quest.tipo === "diaria";
-  const label = quest.tipo === "principal" ? "Principal" : daily ? "Diaria" : "Side";
-  const style = quest.tipo === "principal" ? "badge-main" : daily ? "badge-daily" : "";
-  return `<article class="quest-item ${done ? "done" : ""}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div>${daily ? routineHtml(quest) : ""}</div><div class="quest-actions"><button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-edit" type="button" data-action="edit" data-id="${quest.id}" aria-label="Editar quest">✏️</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
+  const done = quest.status === "concluida", daily = quest.tipo === "diaria", principal = quest.tipo === "principal";
+  const hasGoal = principal && Boolean(quest.goal_type) && Boolean(quest.goal_total);
+  const label = principal ? "Principal" : daily ? "Diaria" : "Side";
+  const style = principal ? "badge-main" : daily ? "badge-daily" : "";
+  return `<article class="quest-item ${done ? "done" : ""}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div>${daily ? routineHtml(quest) : hasGoal ? goalHtml(quest) : ""}</div><div class="quest-actions">${hasGoal && !done ? `<button class="btn btn-progress" type="button" data-action="progress" data-id="${quest.id}">Progresso</button>` : ""}<button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-edit" type="button" data-action="edit" data-id="${quest.id}" aria-label="Editar quest">✏️</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
 }
 
 async function loadQuests() {
@@ -95,12 +61,136 @@ function syncWeeklyField() {
   field.style.display = isDaily ? "grid" : "none";
 }
 
+function syncGoalFields() {
+  const isPrincipal = $("#q-tipo").value === "principal";
+  const section = $("#q-goal-section");
+  if (!section) return;
+  section.hidden = !isPrincipal;
+  section.style.display = isPrincipal ? "grid" : "none";
+  if (!isPrincipal) return;
+
+  const goalType = $("#q-goal-type").value;
+  const livroFields = $("#q-goal-livro-fields");
+  const cursoFields = $("#q-goal-curso-fields");
+
+  livroFields.hidden = goalType !== "livro";
+  livroFields.style.display = goalType === "livro" ? "grid" : "none";
+
+  cursoFields.hidden = goalType !== "curso";
+  cursoFields.style.display = goalType === "curso" ? "grid" : "none";
+
+  if (goalType === "curso") {
+    const unit = $("#q-goal-curso-unit").value;
+    const totalLabel = $("#q-goal-curso-total-label");
+    const totalInput = $("#q-goal-curso-total");
+    if (unit === "porcentagem") {
+      totalLabel.textContent = "Total (%)";
+      totalInput.value = "100";
+      totalInput.readOnly = true;
+    } else if (unit === "aulas") {
+      totalLabel.textContent = "Total de aulas";
+      totalInput.placeholder = "Ex: 12";
+      totalInput.step = "1";
+      totalInput.readOnly = false;
+      if (totalInput.value === "100") totalInput.value = "";
+    } else if (unit === "horas") {
+      totalLabel.textContent = "Total de horas";
+      totalInput.placeholder = "Ex: 20";
+      totalInput.step = "any";
+      totalInput.readOnly = false;
+      if (totalInput.value === "100") totalInput.value = "";
+    }
+  }
+}
+
 function syncEditWeeklyField() {
   const isDaily = $("#edit-q-tipo").value === "diaria";
   const field = $("#edit-q-semanal-field");
   if (!field) return;
   field.hidden = !isDaily;
   field.style.display = isDaily ? "grid" : "none";
+}
+
+function syncEditGoalFields() {
+  const isPrincipal = $("#edit-q-tipo").value === "principal";
+  const section = $("#edit-q-goal-section");
+  if (!section) return;
+  section.hidden = !isPrincipal;
+  section.style.display = isPrincipal ? "grid" : "none";
+  if (!isPrincipal) return;
+
+  const goalType = $("#edit-q-goal-type").value;
+  const livroFields = $("#edit-q-goal-livro-fields");
+  const cursoFields = $("#edit-q-goal-curso-fields");
+
+  livroFields.hidden = goalType !== "livro";
+  livroFields.style.display = goalType === "livro" ? "grid" : "none";
+
+  cursoFields.hidden = goalType !== "curso";
+  cursoFields.style.display = goalType === "curso" ? "grid" : "none";
+
+  if (goalType === "curso") {
+    const unit = $("#edit-q-goal-curso-unit").value;
+    const totalLabel = $("#edit-q-goal-curso-total-label");
+    const totalInput = $("#edit-q-goal-curso-total");
+    if (unit === "porcentagem") {
+      totalLabel.textContent = "Total (%)";
+      totalInput.value = "100";
+      totalInput.readOnly = true;
+    } else if (unit === "aulas") {
+      totalLabel.textContent = "Total de aulas";
+      totalInput.placeholder = "Ex: 12";
+      totalInput.step = "1";
+      totalInput.readOnly = false;
+    } else if (unit === "horas") {
+      totalLabel.textContent = "Total de horas";
+      totalInput.placeholder = "Ex: 20";
+      totalInput.step = "any";
+      totalInput.readOnly = false;
+    }
+  }
+}
+
+function getGoalFromForm(prefix) {
+  const typeSelect = $(`#${prefix}-tipo`);
+  if (!typeSelect || typeSelect.value !== "principal") return null;
+  const goalType = $(`#${prefix}-goal-type`).value;
+  if (!goalType) return null;
+
+  if (goalType === "livro") {
+    const targetName = $(`#${prefix}-goal-livro-nome`).value.trim();
+    const totalVal = $(`#${prefix}-goal-livro-total`).value;
+    const total = Number(totalVal);
+    const currentVal = $(`#${prefix}-goal-livro-current`).value;
+    const current = currentVal !== "" ? Number(currentVal) : 0;
+
+    if (!targetName) throw new Error("Informe o nome do livro.");
+    if (!totalVal || isNaN(total) || total <= 0) throw new Error("Informe um total de páginas válido (maior que 0).");
+    if (isNaN(current) || current < 0) throw new Error("O progresso de páginas não pode ser negativo.");
+    if (current > total) throw new Error("O progresso inicial não pode ser maior que o total de páginas.");
+
+    return { type: "livro", targetName, unit: "paginas", total, current };
+  }
+
+  if (goalType === "curso") {
+    const targetName = $(`#${prefix}-goal-curso-nome`).value.trim();
+    const unit = $(`#${prefix}-goal-curso-unit`).value || "aulas";
+    const totalVal = $(`#${prefix}-goal-curso-total`).value;
+    const total = unit === "porcentagem" ? 100 : Number(totalVal);
+    const currentVal = $(`#${prefix}-goal-curso-current`).value;
+    const current = currentVal !== "" ? Number(currentVal) : 0;
+
+    if (!targetName) throw new Error("Informe o nome do curso.");
+    if (unit !== "porcentagem" && (!totalVal || isNaN(total) || total <= 0)) {
+      throw new Error("Informe um total válido maior que 0 para o curso.");
+    }
+    if (isNaN(current) || current < 0) throw new Error("O progresso não pode ser negativo.");
+    if (current > total) throw new Error("O progresso inicial não pode ser maior que o total do curso.");
+
+    return { type: "curso", targetName, unit, total, current };
+  }
+
+  return null;
 }
 
 function openEditModal(id) {
@@ -111,7 +201,37 @@ function openEditModal(id) {
   $("#edit-q-tipo").value = quest.tipo;
   $("#edit-q-atrib").value = quest.atributo;
   $("#edit-q-semanal").value = String(quest.weekly_target || 7);
+
+  const goalType = quest.goal_type || "";
+  $("#edit-q-goal-type").value = goalType;
+  if (goalType === "livro") {
+    $("#edit-q-goal-livro-nome").value = quest.goal_target_name || quest.nome || "";
+    $("#edit-q-goal-livro-total").value = quest.goal_total || "";
+    $("#edit-q-goal-livro-current").value = quest.goal_current != null ? quest.goal_current : 0;
+    $("#edit-q-goal-curso-nome").value = "";
+    $("#edit-q-goal-curso-unit").value = "aulas";
+    $("#edit-q-goal-curso-total").value = "";
+    $("#edit-q-goal-curso-current").value = "0";
+  } else if (goalType === "curso") {
+    $("#edit-q-goal-curso-nome").value = quest.goal_target_name || quest.nome || "";
+    $("#edit-q-goal-curso-unit").value = quest.goal_unit || "aulas";
+    $("#edit-q-goal-curso-total").value = quest.goal_unit === "porcentagem" ? 100 : (quest.goal_total || "");
+    $("#edit-q-goal-curso-current").value = quest.goal_current != null ? quest.goal_current : 0;
+    $("#edit-q-goal-livro-nome").value = "";
+    $("#edit-q-goal-livro-total").value = "";
+    $("#edit-q-goal-livro-current").value = "0";
+  } else {
+    $("#edit-q-goal-livro-nome").value = "";
+    $("#edit-q-goal-livro-total").value = "";
+    $("#edit-q-goal-livro-current").value = "0";
+    $("#edit-q-goal-curso-nome").value = "";
+    $("#edit-q-goal-curso-unit").value = "aulas";
+    $("#edit-q-goal-curso-total").value = "";
+    $("#edit-q-goal-curso-current").value = "0";
+  }
+
   syncEditWeeklyField();
+  syncEditGoalFields();
   const modal = $("#edit-quest-modal");
   if (modal.showModal) modal.showModal();
   else modal.setAttribute("open", "");
@@ -132,9 +252,17 @@ async function saveQuestEdit(event) {
   const weeklyTarget = Number($("#edit-q-semanal").value);
   const button = event.submitter || $("#edit-quest-form button[type=submit]");
   if (!name) return toast("Digite o nome da quest.");
+
+  let goal = null;
+  try {
+    goal = getGoalFromForm("edit-q");
+  } catch (err) {
+    return toast(err.message);
+  }
+
   busy(button, true, "Salvando...");
   try {
-    await db.updateQuest(id, { nome: name, tipo: type, atributo: atrib, weeklyTarget });
+    await db.updateQuest(id, { nome: name, tipo: type, atributo: atrib, weeklyTarget, goal });
     closeEditModal();
     await loadQuests();
     toast("Quest atualizada.");
@@ -144,7 +272,6 @@ async function saveQuestEdit(event) {
     busy(button, false);
   }
 }
-
 function processImageFile(file) {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith("image/")) {
@@ -241,7 +368,202 @@ async function resetAvatarDefault() {
   }
 }
 
-async function addQuest(event) { event.preventDefault(); const name = $("#q-nome").value.trim(), button = event.submitter, type = $("#q-tipo").value, weeklyTarget = Number($("#q-semanal").value); if (!name) return toast("Digite o nome da quest."); busy(button, true); try { await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget); $("#q-nome").value = ""; syncWeeklyField(); await loadQuests(); toast(type === "diaria" ? "Rotina diaria adicionada." : "Quest adicionada."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
+function openProgressModal(id) {
+  const quest = loadedQuests.find((q) => String(q.id) === String(id));
+  if (!quest || quest.tipo !== "principal" || !quest.goal_type) return toast("Meta não encontrada.");
+  currentProgressQuest = quest;
+  $("#prog-q-id").value = quest.id;
+
+  const total = Number(quest.goal_total || 0);
+  const current = Number(quest.goal_current || 0);
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const targetName = escapeHtml(quest.goal_target_name || quest.nome);
+  const unitLabel = goalUnitLabel(unit, total);
+  const currentText = unit === "porcentagem" ? `${current} / ${total}%` : `${current} / ${total} ${unitLabel}`;
+  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+
+  $("#prog-quest-summary").innerHTML = `
+    <div style="margin-bottom: 4px;">
+      <span class="system-label" style="font-size: 11px;">Missão Principal</span>
+      <div style="font-size: 15px; font-weight: 700; color: var(--text);">${escapeHtml(quest.nome)}</div>
+    </div>
+    <div>Meta: <strong>${targetName}</strong></div>
+    <div style="margin-top: 4px; color: var(--muted); font-size: 12px;">Progresso atual: <strong style="color: var(--cyan);">${escapeHtml(currentText)}</strong> (${pct}%)</div>
+  `;
+
+  const input = $("#prog-input-value");
+  const label = $("#prog-input-label");
+  const hint = $("#prog-hint");
+
+  if (quest.goal_type === "livro") {
+    label.textContent = "Quantas páginas você leu agora? (será somado)";
+    const remaining = Math.max(0, total - current);
+    hint.textContent = remaining > 0 ? `Máximo para atingir a meta: +${remaining} páginas.` : "Meta já atingida!";
+    input.min = "0";
+    input.max = String(remaining);
+    input.step = "1";
+    input.value = "";
+    input.placeholder = remaining > 0 ? `Ex: ${Math.min(10, remaining)}` : "0";
+  } else if (quest.goal_type === "curso") {
+    if (unit === "aulas") {
+      label.textContent = "Quantas aulas concluídas agora? (será somado)";
+      const remaining = Math.max(0, total - current);
+      hint.textContent = remaining > 0 ? `Máximo para atingir a meta: +${remaining} aulas.` : "Meta já atingida!";
+      input.min = "0";
+      input.max = String(remaining);
+      input.step = "1";
+      input.value = "";
+      input.placeholder = remaining > 0 ? "Ex: 1" : "0";
+    } else if (unit === "horas") {
+      label.textContent = "Quantas horas estudadas agora? (será somado)";
+      const remaining = Math.max(0, Number((total - current).toFixed(2)));
+      hint.textContent = remaining > 0 ? `Máximo para atingir a meta: +${remaining} horas.` : "Meta já atingida!";
+      input.min = "0";
+      input.max = String(remaining);
+      input.step = "any";
+      input.value = "";
+      input.placeholder = remaining > 0 ? "Ex: 1.5" : "0";
+    } else if (unit === "porcentagem") {
+      label.textContent = "Novo percentual concluído do curso (%)";
+      hint.textContent = `Informe a porcentagem atual do curso (Atual: ${current}% / Meta: 100%).`;
+      input.min = "0";
+      input.max = "100";
+      input.step = "any";
+      input.value = current || "";
+      input.placeholder = `Ex: ${Math.min(100, current + 10)}`;
+    }
+  }
+
+  updateProgressPreview();
+  const modal = $("#progress-quest-modal");
+  if (modal.showModal) modal.showModal();
+  else modal.setAttribute("open", "");
+}
+
+function updateProgressPreview() {
+  if (!currentProgressQuest) return;
+  const quest = currentProgressQuest;
+  const total = Number(quest.goal_total || 0);
+  const current = Number(quest.goal_current || 0);
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const rawVal = $("#prog-input-value").value;
+  const inputNum = rawVal !== "" ? Number(rawVal) : 0;
+
+  let newCurrent = current;
+  if (unit === "porcentagem") {
+    newCurrent = rawVal !== "" ? inputNum : current;
+  } else {
+    newCurrent = current + (rawVal !== "" ? inputNum : 0);
+  }
+
+  newCurrent = Math.max(0, Math.min(total, newCurrent));
+  const pct = total > 0 ? Math.min(100, Math.round((newCurrent / total) * 100)) : 0;
+  const isComplete = newCurrent >= total;
+  const unitLabel = goalUnitLabel(unit, total);
+  const text = unit === "porcentagem" ? `${newCurrent} / ${total}%` : `${newCurrent} / ${total} ${unitLabel}`;
+
+  const preview = $("#prog-preview-card");
+  preview.innerHTML = `
+    <div class="goal-card ${isComplete ? "goal-complete" : ""}">
+      <div class="goal-top">
+        <div class="goal-title-wrap">
+          <span class="goal-title-text">Prévia: <strong>${escapeHtml(text)}</strong></span>
+          ${isComplete ? '<span class="badge badge-goal-done">Meta Concluída</span>' : ""}
+        </div>
+        <span class="goal-values">${pct}%</span>
+      </div>
+      <div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div>
+    </div>
+  `;
+}
+
+function closeProgressModal() {
+  currentProgressQuest = null;
+  const modal = $("#progress-quest-modal");
+  if (modal.close) modal.close();
+  else modal.removeAttribute("open");
+}
+
+async function saveQuestProgress(event) {
+  event.preventDefault();
+  if (!currentProgressQuest) return;
+  const quest = currentProgressQuest;
+  const total = Number(quest.goal_total || 0);
+  const current = Number(quest.goal_current || 0);
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const rawVal = $("#prog-input-value").value;
+  const button = event.submitter || $("#progress-quest-form button[type=submit]");
+
+  if (rawVal === "") return toast("Informe um valor para atualizar.");
+  const inputVal = Number(rawVal);
+  if (isNaN(inputVal) || inputVal < 0) return toast("Informe um valor positivo válido.");
+
+  let newCurrent = current;
+  if (unit === "porcentagem") {
+    newCurrent = inputVal;
+  } else {
+    newCurrent = current + inputVal;
+  }
+
+  if (newCurrent > total) {
+    return toast(`O progresso não pode ultrapassar o total de ${total}.`);
+  }
+
+  busy(button, true, "Salvando...");
+  try {
+    await db.updateQuestProgress(quest.id, newCurrent);
+    closeProgressModal();
+    await loadQuests();
+    if (newCurrent >= total) {
+      toast("Parabéns! Meta concluída com sucesso! 🏆");
+    } else {
+      toast("Progresso atualizado com sucesso!");
+    }
+  } catch (error) {
+    toast(error.message || "Erro ao salvar progresso.");
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function addQuest(event) {
+  event.preventDefault();
+  const name = $("#q-nome").value.trim();
+  const button = event.submitter || $("#quest-form button[type=submit]");
+  const type = $("#q-tipo").value;
+  const weeklyTarget = Number($("#q-semanal").value);
+  if (!name) return toast("Digite o nome da quest.");
+
+  let goal = null;
+  try {
+    goal = getGoalFromForm("q");
+  } catch (err) {
+    return toast(err.message);
+  }
+
+  busy(button, true);
+  try {
+    await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget, goal);
+    $("#q-nome").value = "";
+    $("#q-goal-type").value = "";
+    $("#q-goal-livro-nome").value = "";
+    $("#q-goal-livro-total").value = "";
+    $("#q-goal-livro-current").value = "0";
+    $("#q-goal-curso-nome").value = "";
+    $("#q-goal-curso-unit").value = "aulas";
+    $("#q-goal-curso-total").value = "";
+    $("#q-goal-curso-current").value = "0";
+    syncWeeklyField();
+    syncGoalFields();
+    await loadQuests();
+    toast(type === "diaria" ? "Rotina diaria adicionada." : "Quest adicionada.");
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    busy(button, false);
+  }
+}
+
 async function completeQuest(id, button) { busy(button, true); try { const result = await db.completeQuest(id); await refresh(); toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual` : "Quest concluida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function deleteQuest(id, button) { if (!confirm("Remover esta quest?")) return; busy(button, true); try { await db.deleteQuest(id); await loadQuests(); toast("Quest removida."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
 async function resetDailies(button) { busy(button, true); try { await db.resetDailies(); await loadQuests(); toast("Rotinas sincronizadas."); } catch (error) { toast(error.message); } finally { busy(button, false); } }
@@ -287,8 +609,12 @@ function bind() {
   $("#btn-signup").onclick = (event) => { event.preventDefault(); login({ preventDefault() {}, submitter: event.currentTarget }); };
   $("#btn-logout").onclick = () => db.signOut();
   $("#quest-form").onsubmit = addQuest;
-  $("#q-tipo").onchange = syncWeeklyField;
+  $("#q-tipo").onchange = () => { syncWeeklyField(); syncGoalFields(); };
+  $("#q-goal-type").onchange = syncGoalFields;
+  $("#q-goal-curso-unit").onchange = syncGoalFields;
   syncWeeklyField();
+  syncGoalFields();
+
   $(".tabs").onclick = (event) => { const tab = event.target.closest("[data-tab]"); if (tab) showTab(tab.dataset.tab); };
   document.body.onclick = (event) => {
     const button = event.target.closest("[data-action]");
@@ -296,13 +622,25 @@ function bind() {
     if (button.dataset.action === "complete") completeQuest(button.dataset.id, button);
     else if (button.dataset.action === "edit") openEditModal(button.dataset.id);
     else if (button.dataset.action === "delete") deleteQuest(button.dataset.id, button);
+    else if (button.dataset.action === "progress") openProgressModal(button.dataset.id);
   };
-  $("#edit-q-tipo").onchange = syncEditWeeklyField;
+
+  $("#edit-q-tipo").onchange = () => { syncEditWeeklyField(); syncEditGoalFields(); };
+  $("#edit-q-goal-type").onchange = syncEditGoalFields;
+  $("#edit-q-goal-curso-unit").onchange = syncEditGoalFields;
   $("#edit-quest-form").onsubmit = saveQuestEdit;
   $("#btn-close-edit-modal").onclick = closeEditModal;
   $("#btn-cancel-edit").onclick = closeEditModal;
   $("#edit-quest-modal").onclick = (event) => {
     if (event.target === $("#edit-quest-modal")) closeEditModal();
+  };
+
+  $("#progress-quest-form").onsubmit = saveQuestProgress;
+  $("#prog-input-value").oninput = updateProgressPreview;
+  $("#btn-close-progress-modal").onclick = closeProgressModal;
+  $("#btn-cancel-progress").onclick = closeProgressModal;
+  $("#progress-quest-modal").onclick = (event) => {
+    if (event.target === $("#progress-quest-modal")) closeProgressModal();
   };
 
   $("#btn-change-avatar").onclick = openAvatarModal;

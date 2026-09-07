@@ -6,20 +6,27 @@ O site e GitHub Pages; os dados estao no projeto Supabase `eddapoexxzlxicqkvxts`
 
 | Item | Papel |
 | --- | --- |
-| `db.js` | Cliente Supabase, autenticacao e operacoes do banco. |
-| `app.js` | Interface assincrona e login. |
+| `db.js` | Cliente Supabase, autenticacao e operacoes do banco (CRUD quests, metas e progresso). |
+| `app.js` | Interface assincrona, login, rotinas e metas de missoes principais. |
 | `profiles`, `quests`, `history` | Tabelas do banco. |
 | `complete_quest` | Transacao atomica para concluir quest, EXP, atributos e log. |
+| `updateQuestProgress` | Atualizacao do progresso da meta mensuravel na tabela `quests`. |
 | `reset_daily_quests`, `reset_rpg` | Operacoes atomicas de reset. |
 
 RLS esta habilitado nas tres tabelas. Nunca use nem versione uma `secret key`; somente a publishable key pode estar no frontend.
+
+## Migrations SQL (pasta `supabase/`)
+- `20260906_daily_routines.sql`: Sistema de rotinas com ciclos semanais.
+- `20260906_fix_routine_timezone.sql`: Ajuste de fuso para America/Manaus.
+- `20260907_main_quest_goals.sql`: Colunas de meta mensuravel para missoes principais (`goal_type`, `goal_target_name`, `goal_unit`, `goal_total`, `goal_current`).
 
 ## Validacao
 
 1. `node --check db.js` e `node --check app.js`.
 2. Crie uma conta no site e entre.
 3. Crie, conclua, remova e resete uma quest diaria.
-4. Confira que outro usuario nao consegue ler os dados da primeira conta.
+4. Crie uma Missao Principal com meta de Livro ou Curso, atualize o progresso via modal e conclua.
+5. Confira que outro usuario nao consegue ler os dados da primeira conta.
 
 ## Prompt de retomada
 

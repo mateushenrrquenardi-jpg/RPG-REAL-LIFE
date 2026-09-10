@@ -765,7 +765,7 @@ async function completeQuest(id, button) {
     const isDaily = quest && quest.tipo === "diaria";
     const result = await db.completeQuest(id);
     await refresh();
-    const goldBonus = isDaily ? " • +7 GOLD 🪙" : "";
+    const goldBonus = isDaily ? " • +7 GOLD" : "";
     toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual${goldBonus}` : `Quest concluida.${goldBonus}`);
   } catch (error) {
     toast(error.message);

@@ -111,16 +111,11 @@ button {
   background: linear-gradient(135deg, rgba(255, 200, 87, 0.16), rgba(255, 200, 87, 0.05));
   border: 1px solid rgba(255, 200, 87, 0.4);
   box-shadow: 0 0 10px rgba(255, 200, 87, 0.15);
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 14px;
   font-family: "Share Tech Mono", monospace;
   color: var(--amber);
   user-select: none;
-}
-
-.gold-badge .gold-icon {
-  font-size: 13px;
-  filter: drop-shadow(0 0 3px rgba(255, 200, 87, 0.6));
 }
 
 .gold-badge .gold-val {
@@ -133,7 +128,7 @@ button {
 .gold-badge .gold-label {
   font-size: 11px;
   color: var(--amber);
-  opacity: 0.85;
+  opacity: 0.9;
   letter-spacing: 0.08em;
 }
 

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260910-1">
+  <link rel="stylesheet" href="styles.css?v=20260910-2">
 </head>
 <body>
   <main id="auth-screen" class="app-shell">
@@ -32,7 +32,14 @@
         </div>
 
         <div class="hero-copy">
-          <p class="system-label">RPG Real Life</p>
+          <div class="hero-header-row">
+            <p class="system-label">RPG Real Life</p>
+            <div class="gold-badge" aria-label="Saldo de Gold">
+              <span class="gold-icon">🪙</span>
+              <strong id="hero-gold" class="gold-val">0</strong>
+              <span class="gold-label">GOLD</span>
+            </div>
+          </div>
           <h1>Mateus</h1>
           <p id="hero-class" class="hero-class">// Carregando...</p>
         </div>
@@ -225,8 +232,8 @@
         </div>
         <div style="text-align: center; padding: 48px 16px;">
           <div style="font-size: 36px; margin-bottom: 12px;">🏪</div>
-          <p class="hero-class" style="font-size: 15px; color: var(--cyan); letter-spacing: 0.12em; margin-bottom: 8px;">// EM DESENVOLVIMENTO</p>
-          <p class="state-text" style="padding: 0; max-width: 340px; margin: 0 auto;">Em breve: troque seus pontos de experiência e atributos por recompensas e itens reais.</p>
+          <p class="hero-class" style="font-size: 15px; color: var(--amber); letter-spacing: 0.12em; margin-bottom: 8px;">// SALDO ATUAL: <span id="shop-gold" style="font-weight: 700; color: #fff4d1;">0</span> GOLD</p>
+          <p class="state-text" style="padding: 0; max-width: 340px; margin: 0 auto;">Em breve: troque seu GOLD acumulado por recompensas e itens reais.</p>
         </div>
       </section>
     </section>
@@ -469,7 +476,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260910-1"></script>
-  <script src="app.js?v=20260910-1"></script>
+  <script src="db.js?v=20260910-2"></script>
+  <script src="app.js?v=20260910-2"></script>
 </body>
 </html>

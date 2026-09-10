@@ -19,6 +19,8 @@ RLS esta habilitado nas tres tabelas. Nunca use nem versione uma `secret key`; s
 - `20260906_daily_routines.sql`: Sistema de rotinas com ciclos semanais.
 - `20260906_fix_routine_timezone.sql`: Ajuste de fuso para America/Manaus.
 - `20260907_main_quest_goals.sql`: Colunas de meta mensuravel para missoes principais (`goal_type`, `goal_target_name`, `goal_unit`, `goal_total`, `goal_current`).
+- `20260910_goal_compra.sql`: Tipo de meta 'compra' e unidade 'reais'.
+- `20260910_gold_rewards.sql`: Sistema de recompensas financeiras em GOLD (+7 GOLD por diaria concluida).
 
 ## Validacao
 

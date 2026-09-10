@@ -71,6 +71,12 @@ async function loadHero() {
   const heroClass = $("#hero-class");
   if (heroClass) heroClass.textContent = `// ${titleFor(hero.nivel).toUpperCase()} - NV.${hero.nivel}${cleanBadge}`;
 
+  const gold = Number(hero.gold != null ? hero.gold : 0);
+  const heroGold = $("#hero-gold");
+  if (heroGold) heroGold.textContent = gold;
+  const shopGold = $("#shop-gold");
+  if (shopGold) shopGold.textContent = gold;
+
   const f = $("#a-forca"), m = $("#a-magia"), c = $("#a-carisma"), i = $("#a-intel");
   if (f) f.textContent = hero.forca;
   if (m) m.textContent = hero.magia;
@@ -755,9 +761,12 @@ async function addQuest(event) {
 async function completeQuest(id, button) {
   busy(button, true);
   try {
+    const quest = loadedQuests.find((q) => String(q.id) === String(id));
+    const isDaily = quest && quest.tipo === "diaria";
     const result = await db.completeQuest(id);
     await refresh();
-    toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual` : "Quest concluida.");
+    const goldBonus = isDaily ? " • +7 GOLD 🪙" : "";
+    toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual${goldBonus}` : `Quest concluida.${goldBonus}`);
   } catch (error) {
     toast(error.message);
   } finally {

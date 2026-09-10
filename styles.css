@@ -96,6 +96,47 @@ button {
   min-width: 0;
 }
 
+.hero-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.gold-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, rgba(255, 200, 87, 0.16), rgba(255, 200, 87, 0.05));
+  border: 1px solid rgba(255, 200, 87, 0.4);
+  box-shadow: 0 0 10px rgba(255, 200, 87, 0.15);
+  padding: 3px 9px;
+  border-radius: 14px;
+  font-family: "Share Tech Mono", monospace;
+  color: var(--amber);
+  user-select: none;
+}
+
+.gold-badge .gold-icon {
+  font-size: 13px;
+  filter: drop-shadow(0 0 3px rgba(255, 200, 87, 0.6));
+}
+
+.gold-badge .gold-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff4d1;
+  text-shadow: 0 0 6px rgba(255, 200, 87, 0.5);
+}
+
+.gold-badge .gold-label {
+  font-size: 11px;
+  color: var(--amber);
+  opacity: 0.85;
+  letter-spacing: 0.08em;
+}
+
 .system-label,
 .hero-class,
 .xp-row,
@@ -107,7 +148,7 @@ button {
 }
 
 .system-label {
-  margin: 0 0 3px;
+  margin: 0;
   color: var(--cyan);
   font-size: 12px;
   letter-spacing: 0.16em;

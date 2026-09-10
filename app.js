@@ -93,7 +93,12 @@ function goalUnitLabel(unit, count) {
   if (unit === "aulas") return count === 1 ? "aula" : "aulas";
   if (unit === "horas") return count === 1 ? "hora" : "horas";
   if (unit === "porcentagem") return "%";
+  if (unit === "reais") return "R$";
   return "";
+}
+
+function formatReais(value) {
+  return Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function goalHtml(quest) {
@@ -102,10 +107,17 @@ function goalHtml(quest) {
   const current = Number(quest.goal_current || 0);
   const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
   const isComplete = current >= total;
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
   const targetName = escapeHtml(quest.goal_target_name || quest.nome);
-  const unitLabel = goalUnitLabel(unit, total);
-  const progressText = unit === "porcentagem" ? `${current} / ${total}%` : `${current} / ${total} ${unitLabel}`;
+  let progressText;
+  if (unit === "porcentagem") {
+    progressText = `${current} / ${total}%`;
+  } else if (unit === "reais") {
+    progressText = `R$ ${formatReais(current)} / R$ ${formatReais(total)}`;
+  } else {
+    const unitLabel = goalUnitLabel(unit, total);
+    progressText = `${current} / ${total} ${unitLabel}`;
+  }
   return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><div class="goal-title-wrap"><span class="goal-title-text">${targetName} — <strong>${escapeHtml(progressText)}</strong></span>${isComplete ? '<span class="badge badge-goal-done">Meta Concluída</span>' : ""}</div><span class="goal-values">${pct}%</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
 }
 
@@ -168,12 +180,16 @@ function syncGoalFields() {
   const goalType = $("#q-goal-type").value;
   const livroFields = $("#q-goal-livro-fields");
   const cursoFields = $("#q-goal-curso-fields");
+  const compraFields = $("#q-goal-compra-fields");
 
   livroFields.hidden = goalType !== "livro";
   livroFields.style.display = goalType === "livro" ? "grid" : "none";
 
   cursoFields.hidden = goalType !== "curso";
   cursoFields.style.display = goalType === "curso" ? "grid" : "none";
+
+  compraFields.hidden = goalType !== "compra";
+  compraFields.style.display = goalType === "compra" ? "grid" : "none";
 
   if (goalType === "curso") {
     const unit = $("#q-goal-curso-unit").value;
@@ -218,12 +234,16 @@ function syncEditGoalFields() {
   const goalType = $("#edit-q-goal-type").value;
   const livroFields = $("#edit-q-goal-livro-fields");
   const cursoFields = $("#edit-q-goal-curso-fields");
+  const compraFields = $("#edit-q-goal-compra-fields");
 
   livroFields.hidden = goalType !== "livro";
   livroFields.style.display = goalType === "livro" ? "grid" : "none";
 
   cursoFields.hidden = goalType !== "curso";
   cursoFields.style.display = goalType === "curso" ? "grid" : "none";
+
+  compraFields.hidden = goalType !== "compra";
+  compraFields.style.display = goalType === "compra" ? "grid" : "none";
 
   if (goalType === "curso") {
     const unit = $("#edit-q-goal-curso-unit").value;
@@ -286,6 +306,21 @@ function getGoalFromForm(prefix) {
     return { type: "curso", targetName, unit, total, current };
   }
 
+  if (goalType === "compra") {
+    const targetName = $(`#${prefix}-goal-compra-nome`).value.trim();
+    const totalVal = $(`#${prefix}-goal-compra-total`).value;
+    const total = Number(totalVal);
+    const currentVal = $(`#${prefix}-goal-compra-current`).value;
+    const current = currentVal !== "" ? Number(currentVal) : 0;
+
+    if (!targetName) throw new Error("Informe o nome do item que deseja comprar.");
+    if (!totalVal || isNaN(total) || total <= 0) throw new Error("Informe o preço total do item (maior que 0).");
+    if (isNaN(current) || current < 0) throw new Error("O valor já guardado não pode ser negativo.");
+    if (current > total) throw new Error("O valor já guardado não pode ser maior que o preço total.");
+
+    return { type: "compra", targetName, unit: "reais", total, current };
+  }
+
   return null;
 }
 
@@ -308,6 +343,9 @@ function openEditModal(id) {
     $("#edit-q-goal-curso-unit").value = "aulas";
     $("#edit-q-goal-curso-total").value = "";
     $("#edit-q-goal-curso-current").value = "0";
+    $("#edit-q-goal-compra-nome").value = "";
+    $("#edit-q-goal-compra-total").value = "";
+    $("#edit-q-goal-compra-current").value = "0";
   } else if (goalType === "curso") {
     $("#edit-q-goal-curso-nome").value = quest.goal_target_name || quest.nome || "";
     $("#edit-q-goal-curso-unit").value = quest.goal_unit || "aulas";
@@ -316,6 +354,20 @@ function openEditModal(id) {
     $("#edit-q-goal-livro-nome").value = "";
     $("#edit-q-goal-livro-total").value = "";
     $("#edit-q-goal-livro-current").value = "0";
+    $("#edit-q-goal-compra-nome").value = "";
+    $("#edit-q-goal-compra-total").value = "";
+    $("#edit-q-goal-compra-current").value = "0";
+  } else if (goalType === "compra") {
+    $("#edit-q-goal-compra-nome").value = quest.goal_target_name || quest.nome || "";
+    $("#edit-q-goal-compra-total").value = quest.goal_total || "";
+    $("#edit-q-goal-compra-current").value = quest.goal_current != null ? quest.goal_current : 0;
+    $("#edit-q-goal-livro-nome").value = "";
+    $("#edit-q-goal-livro-total").value = "";
+    $("#edit-q-goal-livro-current").value = "0";
+    $("#edit-q-goal-curso-nome").value = "";
+    $("#edit-q-goal-curso-unit").value = "aulas";
+    $("#edit-q-goal-curso-total").value = "";
+    $("#edit-q-goal-curso-current").value = "0";
   } else {
     $("#edit-q-goal-livro-nome").value = "";
     $("#edit-q-goal-livro-total").value = "";
@@ -324,6 +376,9 @@ function openEditModal(id) {
     $("#edit-q-goal-curso-unit").value = "aulas";
     $("#edit-q-goal-curso-total").value = "";
     $("#edit-q-goal-curso-current").value = "0";
+    $("#edit-q-goal-compra-nome").value = "";
+    $("#edit-q-goal-compra-total").value = "";
+    $("#edit-q-goal-compra-current").value = "0";
   }
 
   syncEditWeeklyField();
@@ -377,10 +432,17 @@ function openProgressModal(id) {
 
   const total = Number(quest.goal_total || 0);
   const current = Number(quest.goal_current || 0);
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
   const targetName = escapeHtml(quest.goal_target_name || quest.nome);
-  const unitLabel = goalUnitLabel(unit, total);
-  const currentText = unit === "porcentagem" ? `${current} / ${total}%` : `${current} / ${total} ${unitLabel}`;
+  let currentText;
+  if (unit === "porcentagem") {
+    currentText = `${current} / ${total}%`;
+  } else if (unit === "reais") {
+    currentText = `R$ ${formatReais(current)} / R$ ${formatReais(total)}`;
+  } else {
+    const unitLabel = goalUnitLabel(unit, total);
+    currentText = `${current} / ${total} ${unitLabel}`;
+  }
   const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
 
   $("#prog-quest-summary").innerHTML = `
@@ -405,6 +467,15 @@ function openProgressModal(id) {
     input.step = "1";
     input.value = "";
     input.placeholder = remaining > 0 ? `Ex: ${Math.min(10, remaining)}` : "0";
+  } else if (quest.goal_type === "compra") {
+    label.textContent = "Quanto você guardou agora? (R$) — será somado ao total";
+    const remaining = Math.max(0, Number((total - current).toFixed(2)));
+    hint.textContent = remaining > 0 ? `Faltam R$ ${formatReais(remaining)} para atingir a meta.` : "Meta já atingida!";
+    input.min = "0";
+    input.max = String(remaining);
+    input.step = "0.01";
+    input.value = "";
+    input.placeholder = remaining > 0 ? `Ex: ${Math.min(100, remaining).toFixed(2)}` : "0";
   } else if (quest.goal_type === "curso") {
     if (unit === "aulas") {
       label.textContent = "Quantas aulas concluídas agora? (será somado)";
@@ -446,7 +517,7 @@ function updateProgressPreview() {
   const quest = currentProgressQuest;
   const total = Number(quest.goal_total || 0);
   const current = Number(quest.goal_current || 0);
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
   const rawVal = $("#prog-input-value").value;
   const inputNum = rawVal !== "" ? Number(rawVal) : 0;
 
@@ -460,8 +531,15 @@ function updateProgressPreview() {
   newCurrent = Math.max(0, Math.min(total, newCurrent));
   const pct = total > 0 ? Math.min(100, Math.round((newCurrent / total) * 100)) : 0;
   const isComplete = newCurrent >= total;
-  const unitLabel = goalUnitLabel(unit, total);
-  const text = unit === "porcentagem" ? `${newCurrent} / ${total}%` : `${newCurrent} / ${total} ${unitLabel}`;
+  let text;
+  if (unit === "porcentagem") {
+    text = `${newCurrent} / ${total}%`;
+  } else if (unit === "reais") {
+    text = `R$ ${formatReais(newCurrent)} / R$ ${formatReais(total)}`;
+  } else {
+    const unitLabel = goalUnitLabel(unit, total);
+    text = `${newCurrent} / ${total} ${unitLabel}`;
+  }
 
   const preview = $("#prog-preview-card");
   preview.innerHTML = `
@@ -491,7 +569,7 @@ async function saveQuestProgress(event) {
   const quest = currentProgressQuest;
   const total = Number(quest.goal_total || 0);
   const current = Number(quest.goal_current || 0);
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : "aulas");
+  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
   const rawVal = $("#prog-input-value").value;
   const button = event.submitter || $("#progress-quest-form button[type=submit]");
 
@@ -650,6 +728,9 @@ async function addQuest(event) {
     $("#q-goal-curso-unit").value = "aulas";
     $("#q-goal-curso-total").value = "";
     $("#q-goal-curso-current").value = "0";
+    $("#q-goal-compra-nome").value = "";
+    $("#q-goal-compra-total").value = "";
+    $("#q-goal-compra-current").value = "0";
     syncWeeklyField();
     syncGoalFields();
     await loadQuests();

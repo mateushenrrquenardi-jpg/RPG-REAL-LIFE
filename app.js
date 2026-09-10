@@ -143,6 +143,16 @@ function questHtml(quest) {
 }
 
 async function loadQuests() {
+  // Reset automático das diárias quando o dia virar
+  const todayKey = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  const lastSeenDay = localStorage.getItem("rpg_last_seen_day");
+  if (lastSeenDay !== todayKey) {
+    try {
+      await db.resetDailies();
+    } catch (_) { /* silencioso — não bloqueia o carregamento */ }
+    localStorage.setItem("rpg_last_seen_day", todayKey);
+  }
+
   const quests = await db.getQuests(), daily = quests.filter((q) => q.tipo === "diaria"), active = quests.filter((q) => q.tipo !== "diaria" && q.status === "ativa");
   loadedQuests = quests;
   const dailySummary = $("#daily-summary");

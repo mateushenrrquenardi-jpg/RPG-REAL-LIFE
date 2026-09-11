@@ -117,14 +117,19 @@ function goalHtml(quest) {
   const targetName = escapeHtml(quest.goal_target_name || quest.nome);
   let progressText;
   if (unit === "porcentagem") {
-    progressText = `${current} / ${total}%`;
+    progressText = `${current}/${total}%`;
   } else if (unit === "reais") {
     progressText = `R$ ${formatReais(current)} / R$ ${formatReais(total)}`;
+  } else if (unit === "paginas") {
+    progressText = `${current}/${total} PÁGINAS`;
+  } else if (unit === "aulas") {
+    progressText = `${current}/${total} AULAS`;
+  } else if (unit === "horas") {
+    progressText = `${current}/${total} HORAS`;
   } else {
-    const unitLabel = goalUnitLabel(unit, total);
-    progressText = `${current} / ${total} ${unitLabel}`;
+    progressText = `${current}/${total}`;
   }
-  return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><div class="goal-title-wrap"><span class="goal-title-text">${targetName} — <strong>${escapeHtml(progressText)}</strong></span>${isComplete ? '<span class="badge badge-goal-done">Meta Concluída</span>' : ""}</div><span class="goal-values">${pct}%</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
+  return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><span class="goal-rank">${targetName}</span><span>${escapeHtml(progressText)}</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
 }
 
 function routineHtml(quest) {
@@ -549,23 +554,25 @@ function updateProgressPreview() {
   const isComplete = newCurrent >= total;
   let text;
   if (unit === "porcentagem") {
-    text = `${newCurrent} / ${total}%`;
+    text = `${newCurrent}/${total}%`;
   } else if (unit === "reais") {
     text = `R$ ${formatReais(newCurrent)} / R$ ${formatReais(total)}`;
+  } else if (unit === "paginas") {
+    text = `${newCurrent}/${total} PÁGINAS`;
+  } else if (unit === "aulas") {
+    text = `${newCurrent}/${total} AULAS`;
+  } else if (unit === "horas") {
+    text = `${newCurrent}/${total} HORAS`;
   } else {
-    const unitLabel = goalUnitLabel(unit, total);
-    text = `${newCurrent} / ${total} ${unitLabel}`;
+    text = `${newCurrent}/${total}`;
   }
 
   const preview = $("#prog-preview-card");
   preview.innerHTML = `
     <div class="goal-card ${isComplete ? "goal-complete" : ""}">
       <div class="goal-top">
-        <div class="goal-title-wrap">
-          <span class="goal-title-text">Prévia: <strong>${escapeHtml(text)}</strong></span>
-          ${isComplete ? '<span class="badge badge-goal-done">Meta Concluída</span>' : ""}
-        </div>
-        <span class="goal-values">${pct}%</span>
+        <span class="goal-rank">Prévia: ${escapeHtml(quest.goal_target_name || quest.nome)}</span>
+        <span>${escapeHtml(text)}</span>
       </div>
       <div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div>
     </div>

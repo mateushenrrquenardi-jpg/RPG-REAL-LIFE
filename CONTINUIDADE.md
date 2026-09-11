@@ -21,6 +21,7 @@ RLS esta habilitado nas tres tabelas. Nunca use nem versione uma `secret key`; s
 - `20260907_main_quest_goals.sql`: Colunas de meta mensuravel para missoes principais (`goal_type`, `goal_target_name`, `goal_unit`, `goal_total`, `goal_current`).
 - `20260910_goal_compra.sql`: Tipo de meta 'compra' e unidade 'reais'.
 - `20260910_gold_rewards.sql`: Sistema de recompensas financeiras em GOLD (+7 GOLD por diaria concluida).
+- `20260910_gold_side_quests.sql`: Recompensa de +3 GOLD ao concluir side quests.
 
 ## Validacao
 

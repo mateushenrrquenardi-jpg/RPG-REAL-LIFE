@@ -137,7 +137,7 @@ function routineHtml(quest) {
   const fixed = routine.routine_fixed;
   const levelNum = String(quest.routine_level || 1).padStart(2, "0");
   const rankLabel = fixed ? "ROTINA FIXADA" : `Nivel ${levelNum} - ${level.name}`;
-  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><div class="routine-title-wrap"><span class="routine-rank">${rankLabel} — <strong>${days} / ${level.days} dias</strong></span></div><span class="routine-values">${pct}%</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
+  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
 }
 
 function questHtml(quest) {

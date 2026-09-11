@@ -526,6 +526,7 @@ select:focus {
   flex-wrap: wrap;
 }
 
+.routine-title-wrap,
 .goal-title-wrap {
   display: flex;
   align-items: center;
@@ -552,7 +553,25 @@ select:focus {
   font-size: 11px;
 }
 
-.routine-rank,
+.routine-rank {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.routine-rank strong {
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+.routine-values {
+  color: var(--green);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .routine-bottom strong {
   color: var(--cyan);
   font-weight: 400;

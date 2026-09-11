@@ -119,15 +119,15 @@ function goalHtml(quest) {
   if (unit === "porcentagem") {
     progressText = `${current}/${total}%`;
   } else if (unit === "reais") {
-    progressText = `R$ ${formatReais(current)} / R$ ${formatReais(total)}`;
+    progressText = `R$ ${formatReais(current)} / R$ ${formatReais(total)} · ${pct}%`;
   } else if (unit === "paginas") {
-    progressText = `${current}/${total} PÁGINAS`;
+    progressText = `${current}/${total} PÁGINAS · ${pct}%`;
   } else if (unit === "aulas") {
-    progressText = `${current}/${total} AULAS`;
+    progressText = `${current}/${total} AULAS · ${pct}%`;
   } else if (unit === "horas") {
-    progressText = `${current}/${total} HORAS`;
+    progressText = `${current}/${total} HORAS · ${pct}%`;
   } else {
-    progressText = `${current}/${total}`;
+    progressText = `${current}/${total} · ${pct}%`;
   }
   return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><span class="goal-rank">${targetName}</span><span>${escapeHtml(progressText)}</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
 }
@@ -142,7 +142,7 @@ function routineHtml(quest) {
   const fixed = routine.routine_fixed;
   const levelNum = String(quest.routine_level || 1).padStart(2, "0");
   const rankLabel = fixed ? "ROTINA FIXADA" : `Nivel ${levelNum} - ${level.name}`;
-  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
+  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS · ${pct}%</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
 }
 
 function questHtml(quest) {
@@ -556,15 +556,15 @@ function updateProgressPreview() {
   if (unit === "porcentagem") {
     text = `${newCurrent}/${total}%`;
   } else if (unit === "reais") {
-    text = `R$ ${formatReais(newCurrent)} / R$ ${formatReais(total)}`;
+    text = `R$ ${formatReais(newCurrent)} / R$ ${formatReais(total)} · ${pct}%`;
   } else if (unit === "paginas") {
-    text = `${newCurrent}/${total} PÁGINAS`;
+    text = `${newCurrent}/${total} PÁGINAS · ${pct}%`;
   } else if (unit === "aulas") {
-    text = `${newCurrent}/${total} AULAS`;
+    text = `${newCurrent}/${total} AULAS · ${pct}%`;
   } else if (unit === "horas") {
-    text = `${newCurrent}/${total} HORAS`;
+    text = `${newCurrent}/${total} HORAS · ${pct}%`;
   } else {
-    text = `${newCurrent}/${total}`;
+    text = `${newCurrent}/${total} · ${pct}%`;
   }
 
   const preview = $("#prog-preview-card");

@@ -13,6 +13,7 @@ const ROUTINE_LEVELS = [
 let loadedQuests = [];
 let pendingAvatarData = null;
 let currentProgressQuest = null;
+let currentHero = null;
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -60,6 +61,7 @@ async function loadHero() {
     db.getCleanDate().catch(() => null),
     db.getAvatar().catch(() => null),
   ]);
+  currentHero = hero;
   const exp = Number(hero.exp_atual), need = Number(hero.exp_necessaria);
   const expFill = $("#exp-fill");
   const expVal = $("#exp-val");
@@ -771,11 +773,21 @@ async function completeQuest(id, button) {
     const quest = loadedQuests.find((q) => String(q.id) === String(id));
     const isDaily = quest && quest.tipo === "diaria";
     const isSide = quest && quest.tipo === "side";
+    const prevLevel = currentHero ? Number(currentHero.nivel) : 1;
     const result = await db.completeQuest(id);
     await refresh();
-    const goldEarned = isDaily ? 7 : isSide ? 3 : 0;
-    const goldBonus = goldEarned > 0 ? ` • +${goldEarned} GOLD` : "";
-    toast(result.hero.nivel > 1 ? `Quest concluida: +${result.hero.exp_atual} EXP atual${goldBonus}` : `Quest concluida.${goldBonus}`);
+    
+    const newLevel = Number(result.hero.nivel);
+    const leveledUp = newLevel > prevLevel;
+    const questGold = isDaily ? 7 : isSide ? 3 : 0;
+    
+    if (leveledUp) {
+      toast(`🏆 LEVEL UP! Nível ${newLevel}! Recompensa em GOLD do Level Up recebida!`);
+    } else {
+      const expEarned = isDaily || isSide ? 10 : 30;
+      const goldBonus = questGold > 0 ? ` • +${questGold} GOLD` : "";
+      toast(`Quest concluída: +${expEarned} EXP${goldBonus}`);
+    }
   } catch (error) {
     toast(error.message);
   } finally {

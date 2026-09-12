@@ -214,7 +214,7 @@ async function loadQuests() {
     localStorage.setItem("rpg_last_seen_day", todayKey);
   }
 
-  const quests = await db.getQuests(), daily = quests.filter((q) => q.tipo === "diaria"), active = quests.filter((q) => q.tipo !== "diaria" && q.status === "ativa");
+  const quests = await db.getQuests(), daily = quests.filter((q) => q.tipo === "diaria").sort((a, b) => Number(a.status === "concluida") - Number(b.status === "concluida")), active = quests.filter((q) => q.tipo !== "diaria" && q.status === "ativa");
   loadedQuests = quests;
   const dailySummary = $("#daily-summary");
   if (dailySummary) dailySummary.textContent = daily.length ? `${daily.filter((q) => q.status === "concluida").length}/${daily.length} concluidas hoje · ciclo semanal inicia domingo` : "Nenhuma diaria cadastrada ainda.";

@@ -487,6 +487,34 @@ select:focus {
   flex: 0 0 44px;
 }
 
+/* Diárias: fluxo de leitura à esquerda e área de ação estável à direita.
+   Evita que os três botões quebrem em linhas diferentes no desktop. */
+#daily-list .quest-item {
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 250px);
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+}
+
+#daily-list .quest-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px 44px;
+  gap: 8px;
+  width: 100%;
+}
+
+#daily-list .quest-actions .btn-complete,
+#daily-list .quest-actions .btn-edit,
+#daily-list .quest-actions .btn-delete {
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+}
+
+#daily-list .routine-card {
+  margin-top: 10px;
+}
+
 .routine-card,
 .goal-card {
   display: grid;
@@ -799,6 +827,21 @@ select:focus {
 @media (min-width: 620px) {
   .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .shop-custom-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 619px) {
+  #daily-list .quest-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  #daily-list .quest-actions {
+    grid-template-columns: minmax(0, 1fr) 44px 44px;
+  }
+
+  #daily-list .routine-top {
+    align-items: flex-start;
+  }
 }
 
 @media (min-width: 620px) {

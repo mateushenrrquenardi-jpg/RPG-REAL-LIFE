@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260911-2">
+  <link rel="stylesheet" href="styles.css?v=20260911-shop-1">
   <style>
     /* Ajustes de organização: classes que substituem estilos inline do arquivo original.
        Nenhum valor visual foi alterado, exceto onde comentado (normalizações minimas). */
@@ -245,13 +245,35 @@
     <section id="tab-loja" class="tab-panel">
       <section class="panel" aria-label="Loja de Recompensas">
         <div class="panel-header">
-          <h2>Loja de Recompensas</h2>
+          <div>
+            <h2>Loja de Recompensas</h2>
+            <p class="shop-balance-line">// SALDO DISPONÍVEL: <strong id="shop-gold" class="shop-balance-value">0</strong> GOLD</p>
+          </div>
         </div>
-        <div class="shop-empty">
-          <div class="shop-empty-icon">🏪</div>
-          <p class="hero-class shop-balance-line">// SALDO ATUAL: <span id="shop-gold" class="shop-balance-value">0</span> GOLD</p>
-          <p class="state-text shop-empty-text">Em breve: troque seu GOLD acumulado por recompensas e itens reais.</p>
+        <div id="shop-categories" class="shop-categories" aria-label="Categorias da loja"></div>
+      </section>
+
+      <section class="panel" aria-label="Contrato personalizado">
+        <div class="panel-header"><div><h2>Custom Contract</h2><p>Configure uma recompensa pessoal; o progresso usa seu saldo atual de GOLD.</p></div></div>
+        <form id="custom-reward-form" class="quest-form">
+          <label class="field"><span>Nome da recompensa</span><input id="custom-reward-name" type="text" maxlength="80" placeholder="Ex: Jantar especial" required></label>
+          <label class="field"><span>Descrição</span><input id="custom-reward-description" type="text" maxlength="240" placeholder="O que será resgatado?"></label>
+          <div class="form-grid-2">
+            <label class="field"><span>Valor real estimado (R$)</span><input id="custom-reward-real-value" type="number" min="0" step="0.01" placeholder="Opcional"></label>
+            <label class="field"><span>Preço em GOLD</span><input id="custom-reward-gold-price" type="number" min="1" step="1" placeholder="Ex: 500" required></label>
+          </div>
+          <label class="field"><span>Raridade</span><select id="custom-reward-rarity"><option value="Common">Common</option><option value="Rare">Rare</option><option value="Epic">Epic</option><option value="Legendary">Legendary</option></select></label>
+          <button class="btn btn-secondary" type="submit">Criar contrato</button>
+        </form>
+        <div id="custom-rewards-list" class="shop-grid shop-custom-list"><p class="state-text">Carregando contratos...</p></div>
+      </section>
+
+      <section class="panel" aria-label="Histórico de GOLD">
+        <div class="panel-header">
+          <div><h2>Extrato de GOLD</h2><p>Créditos e resgates registrados no seu livro-caixa.</p></div>
+          <label class="field shop-filter"><span>Filtro</span><select id="gold-history-filter"><option value="all">Todos</option><option value="credit">Entradas</option><option value="debit">Resgates</option></select></label>
         </div>
+        <div id="gold-history-list" class="history-list"><p class="state-text">Carregando movimentações...</p></div>
       </section>
     </section>
 

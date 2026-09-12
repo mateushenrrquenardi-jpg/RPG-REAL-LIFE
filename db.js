@@ -76,6 +76,39 @@ const db = (() => {
     return data;
   }
 
+  async function getGoldHistory() {
+    await requireUser();
+    const { data, error } = await client.from("gold_transactions").select("*").order("created_at", { ascending: false });
+    throwOnError(error);
+    return data || [];
+  }
+
+  async function getCustomRewards() {
+    await requireUser();
+    const { data, error } = await client.from("custom_rewards").select("*").order("created_at", { ascending: false });
+    throwOnError(error);
+    return data || [];
+  }
+
+  async function addCustomReward({ name, description, realValue, goldPrice, rarity }) {
+    await requireUser();
+    const { data, error } = await client.from("custom_rewards").insert({ name, description: description || null, real_value: realValue, gold_price: goldPrice, rarity }).select("*").single();
+    throwOnError(error);
+    return data;
+  }
+
+  async function deleteCustomReward(id) {
+    await requireUser();
+    const { error } = await client.from("custom_rewards").delete().eq("id", id);
+    throwOnError(error);
+  }
+
+  async function redeemReward({ name, category, goldPrice, description, realValue = null, rarity, customRewardId = null }) {
+    const { data, error } = await client.rpc("redeem_gold_reward", { p_reward_name: name, p_category: category, p_gold_price: Number(goldPrice), p_description: description || null, p_real_value: realValue == null ? null : Number(realValue), p_rarity: rarity, p_custom_reward_id: customRewardId });
+    throwOnError(error);
+    return data;
+  }
+
   async function addQuest(nome, tipo, atributo, weeklyTarget = 7, goal = null) {
     const payload = {
       nome,
@@ -215,14 +248,16 @@ const db = (() => {
   }
 
   async function exportAll() {
-    const [hero, quests, historico, cleanDate, avatar] = await Promise.all([
+    const [hero, quests, historico, goldHistory, customRewards, cleanDate, avatar] = await Promise.all([
       getHero(),
       getQuests(),
       getHistorico(),
+      getGoldHistory(),
+      getCustomRewards(),
       getCleanDate().catch(() => null),
       getAvatar().catch(() => null),
     ]);
-    return { hero, quests, historico, clean_date: cleanDate, avatar, exportedAt: new Date().toISOString() };
+    return { hero, quests, historico, gold_history: goldHistory, custom_rewards: customRewards, clean_date: cleanDate, avatar, exportedAt: new Date().toISOString() };
   }
 
   function onAuthChange(handler) {
@@ -231,7 +266,7 @@ const db = (() => {
 
   return {
     signUp, signIn, signOut, getSession, onAuthChange,
-    getHero, getQuests, getHistorico, addQuest, updateQuest, updateQuestProgress, completeQuest,
+    getHero, getQuests, getHistorico, getGoldHistory, getCustomRewards, addCustomReward, deleteCustomReward, redeemReward, addQuest, updateQuest, updateQuestProgress, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
     getCleanDate, setCleanDate, getAvatar, setAvatar,
   };

@@ -14,6 +14,19 @@ let loadedQuests = [];
 let pendingAvatarData = null;
 let currentProgressQuest = null;
 let currentHero = null;
+const SHOP_PRODUCTS = [
+  { id: "neural-brew", name: "Café especial", code: "Neural Brew", category: "Recovery", price: 60, description: "Uma recarga curta para restaurar o foco.", rarity: "Common" },
+  { id: "system-pause", name: "1h de lazer livre", code: "System Pause", category: "Recovery", price: 70, description: "Uma hora sem culpa, fora do protocolo.", rarity: "Common" },
+  { id: "night-protocol", name: "Noite de filme/série", code: "Night Protocol", category: "Recovery", price: 100, description: "Sessão de descanso audiovisual liberada.", rarity: "Rare" },
+  { id: "street-fuel", name: "Lanche/delivery", code: "Street Fuel", category: "Consumables", price: 160, description: "Combustível de rua para uma refeição especial.", rarity: "Rare" },
+  { id: "personal-cache", name: "Compra pessoal", code: "Personal Cache", category: "Consumables", price: 220, description: "Compra pessoal com limite real de até R$ 30,00.", realValue: 30, rarity: "Rare" },
+  { id: "knowledge-chip", name: "Livro/ebook", code: "Knowledge Chip", category: "Upgrades", price: 300, description: "Novo módulo de conhecimento para o inventário.", rarity: "Epic" },
+  { id: "family-run", name: "Passeio familiar", code: "Family Run", category: "Upgrades", price: 350, description: "Tempo de qualidade em uma missão com a família.", rarity: "Epic" },
+  { id: "upgrade-pack", name: "Compra pessoal", code: "Upgrade Pack", category: "High-Tier", price: 650, description: "Compra pessoal com limite real de até R$ 100,00.", realValue: 100, rarity: "Epic" },
+  { id: "tech-module", name: "Acessório tech/música", code: "Tech Module", category: "High-Tier", price: 1200, description: "Upgrade para seu ecossistema tech ou musical.", rarity: "Legendary" },
+  { id: "prime-upgrade", name: "Compra maior planejada", code: "Prime Upgrade", category: "High-Tier", price: 2000, description: "Resgate de alto nível para uma compra planejada.", rarity: "Legendary" },
+];
+const SHOP_CATEGORIES = ["Recovery", "Consumables", "Upgrades", "High-Tier"];
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -95,6 +108,41 @@ async function loadHero() {
   const cleanInput = $("#clean-date-input");
   if (cleanInput && cleanDate) cleanInput.value = cleanDate;
 }
+
+function formatGold(value) { return Number(value || 0).toLocaleString("pt-BR"); }
+function rarityClass(rarity) { return `rarity-${String(rarity || "Common").toLowerCase()}`; }
+function rewardCardHtml(reward, { custom = false } = {}) {
+  const gold = Number(currentHero?.gold || 0), price = Number(reward.price ?? reward.gold_price), realValue = reward.realValue ?? reward.real_value;
+  const pct = price > 0 ? Math.min(100, Math.round((gold / price) * 100)) : 0, canBuy = gold >= price;
+  const realText = realValue != null ? `<span class="badge">LIMITE: R$ ${formatReais(realValue)}</span>` : "";
+  return `<article class="reward-card"><div class="reward-card-top"><div><div class="reward-name">${escapeHtml(reward.name)}</div><div class="reward-code">// ${escapeHtml(reward.code || "Custom Contract")}</div></div><span class="badge ${rarityClass(reward.rarity)}">${escapeHtml(reward.rarity || "Common")}</span></div><p class="reward-description">${escapeHtml(reward.description || "Recompensa personalizada.")}</p><div class="reward-detail-row"><span class="badge">${escapeHtml(reward.category || "Custom")}</span>${realText}<span class="badge reward-price">${formatGold(price)} GOLD</span></div>${custom ? `<div class="goal-card shop-progress"><div class="goal-top"><span class="goal-rank">Progresso do contrato</span><span>${formatGold(Math.min(gold, price))}/${formatGold(price)} GOLD · ${pct}%</span></div><div class="goal-track"><div class="goal-fill" style="width:${pct}%"></div></div></div>` : ""}<div class="reward-detail-row"><button class="btn reward-buy" type="button" data-action="redeem" data-product-id="${escapeHtml(reward.id || "")}" data-custom-id="${custom ? escapeHtml(reward.id) : ""}" ${canBuy ? "" : "disabled"}>${canBuy ? "Resgatar recompensa" : `Faltam ${formatGold(price - gold)} GOLD`}</button>${custom ? `<button class="btn btn-delete" type="button" data-action="delete-custom-reward" data-custom-id="${escapeHtml(reward.id)}" aria-label="Remover contrato">X</button>` : ""}</div></article>`;
+}
+function renderGoldHistory(rows) {
+  const list = $("#gold-history-list"), filter = $("#gold-history-filter")?.value || "all", filtered = filter === "all" ? rows : rows.filter((item) => item.transaction_type === filter);
+  if (list) list.innerHTML = filtered.length ? filtered.slice(0, 50).map((item) => `<article class="history-item"><div class="history-title">${escapeHtml(item.description || item.origin || "Movimentação GOLD")}</div><div class="history-meta"><span class="badge ${item.transaction_type === "credit" ? "gold-credit" : "gold-debit"}">${item.transaction_type === "credit" ? "+" : "-"}${formatGold(item.amount)} GOLD</span><span class="badge">${escapeHtml(item.origin || "Sistema")}</span><span class="badge">SALDO: ${formatGold(item.balance_after)}</span><span class="badge">${escapeHtml(formatDate(item.created_at))}</span></div></article>`).join("") : `<p class="state-text">Nenhuma movimentação neste filtro.</p>`;
+}
+function renderShop(products, customRewards, transactions) {
+  const categories = $("#shop-categories"), customList = $("#custom-rewards-list");
+  if (categories) categories.innerHTML = SHOP_CATEGORIES.map((category) => { const items = products.filter((product) => product.category === category); return `<section><h3 class="shop-category-title">${category}<small>${items.length} recompensas</small></h3><div class="shop-grid">${items.map((product) => rewardCardHtml(product)).join("")}</div></section>`; }).join("");
+  if (customList) customList.innerHTML = customRewards.length ? customRewards.map((reward) => rewardCardHtml(reward, { custom: true })).join("") : `<p class="state-text">Nenhum contrato personalizado ativo.</p>`;
+  renderGoldHistory(transactions);
+}
+async function loadShop() { try { const [customRewards, transactions] = await Promise.all([db.getCustomRewards(), db.getGoldHistory()]); renderShop(SHOP_PRODUCTS, customRewards, transactions); } catch (error) { toast(error.message || "Erro ao carregar a loja."); } }
+async function redeemShopReward(button) {
+  const customId = button.dataset.customId, product = customId ? (await db.getCustomRewards()).find((item) => String(item.id) === String(customId)) : SHOP_PRODUCTS.find((item) => item.id === button.dataset.productId);
+  if (!product) return toast("Recompensa não encontrada.");
+  const price = Number(product.price ?? product.gold_price), name = product.name;
+  if (!confirm(`Resgatar “${name}” por ${formatGold(price)} GOLD?`)) return;
+  busy(button, true, "Resgatando...");
+  try { const result = await db.redeemReward({ name, category: product.category || "Custom", goldPrice: price, description: product.description, realValue: product.realValue ?? product.real_value, rarity: product.rarity, customRewardId: customId || null }); await loadHero(); await loadShop(); toast(`${name} resgatado. Saldo atual: ${formatGold(result.gold)} GOLD.`); } catch (error) { toast(error.message || "Não foi possível resgatar a recompensa."); } finally { busy(button, false); }
+}
+async function createCustomReward(event) {
+  event.preventDefault(); const button = event.submitter || $("#custom-reward-form button[type=submit]"), name = $("#custom-reward-name").value.trim(), description = $("#custom-reward-description").value.trim(), rawPrice = $("#custom-reward-gold-price").value, rawRealValue = $("#custom-reward-real-value").value, goldPrice = Number(rawPrice), realValue = rawRealValue === "" ? null : Number(rawRealValue);
+  if (!name || !rawPrice || !Number.isInteger(goldPrice) || goldPrice <= 0) return toast("Informe nome e um preço inteiro em GOLD maior que zero.");
+  if (realValue != null && (!Number.isFinite(realValue) || realValue < 0)) return toast("Informe um valor real estimado válido.");
+  busy(button, true); try { await db.addCustomReward({ name, description, realValue, goldPrice, rarity: $("#custom-reward-rarity").value }); event.currentTarget.reset(); await loadShop(); toast("Custom Contract criado."); } catch (error) { toast(error.message || "Erro ao criar contrato."); } finally { busy(button, false); }
+}
+async function removeCustomReward(button) { if (!confirm("Remover este Custom Contract? Isso não altera o saldo de GOLD.")) return; busy(button, true, "Removendo..."); try { await db.deleteCustomReward(button.dataset.customId); await loadShop(); toast("Contrato removido."); } catch (error) { toast(error.message || "Erro ao remover contrato."); } finally { busy(button, false); } }
 
 function goalUnitLabel(unit, count) {
   if (unit === "paginas") return count === 1 ? "página" : "páginas";
@@ -178,7 +226,8 @@ async function loadQuests() {
 
 async function refresh() {
   try {
-    await Promise.all([loadHero(), loadQuests()]);
+    await loadHero();
+    await Promise.all([loadQuests(), loadShop()]);
   } catch (error) {
     toast(error.message || "Erro ao carregar dados.");
   }
@@ -977,7 +1026,10 @@ function bind() {
 
   $(".tabs").onclick = (event) => {
     const tab = event.target.closest("[data-tab]");
-    if (tab) showTab(tab.dataset.tab);
+    if (tab) {
+      showTab(tab.dataset.tab);
+      if (tab.dataset.tab === "loja") loadShop();
+    }
   };
 
   document.body.onclick = (event) => {
@@ -987,7 +1039,12 @@ function bind() {
     else if (button.dataset.action === "edit") openEditModal(button.dataset.id);
     else if (button.dataset.action === "delete") deleteQuest(button.dataset.id, button);
     else if (button.dataset.action === "progress") openProgressModal(button.dataset.id);
+    else if (button.dataset.action === "redeem") redeemShopReward(button);
+    else if (button.dataset.action === "delete-custom-reward") removeCustomReward(button);
   };
+
+  $("#custom-reward-form").onsubmit = createCustomReward;
+  $("#gold-history-filter").onchange = loadShop;
 
   $("#edit-q-tipo").onchange = () => {
     syncEditWeeklyField();

@@ -756,6 +756,51 @@ select:focus {
   color: var(--amber);
 }
 
+.shop-categories {
+  display: grid;
+  gap: 20px;
+}
+
+.shop-category-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 9px;
+  color: var(--cyan);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.shop-category-title small { color: var(--muted); font-size: 10px; }
+.shop-grid { display: grid; gap: 10px; }
+.reward-card { display: grid; gap: 10px; padding: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2); }
+.reward-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.reward-name { color: var(--text); font-size: 16px; font-weight: 700; }
+.reward-code { margin-top: 2px; color: var(--cyan); font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.reward-description { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.reward-detail-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rarity-common { color: var(--muted); }
+.rarity-rare { color: var(--cyan); }
+.rarity-epic { color: var(--pink); }
+.rarity-legendary { color: var(--amber); }
+.reward-price { color: #fff4d1; border-color: rgba(255, 200, 87, 0.38); }
+.reward-buy { width: 100%; background: rgba(255, 200, 87, 0.1); border-color: rgba(255, 200, 87, 0.5); color: var(--amber); }
+.reward-buy:disabled { opacity: 0.45; cursor: not-allowed; }
+.shop-progress { margin-top: 0; }
+.shop-progress .goal-rank { color: var(--cyan); }
+.shop-custom-list { margin-top: 16px; }
+.shop-filter { min-width: 125px; }
+.gold-credit { color: var(--green); border-color: rgba(141, 240, 143, 0.32); }
+.gold-debit { color: var(--pink); border-color: rgba(255, 79, 145, 0.35); }
+
+@media (min-width: 620px) {
+  .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shop-custom-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (min-width: 620px) {
   .app-shell {
     padding-top: 28px;

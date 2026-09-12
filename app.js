@@ -5,9 +5,9 @@ const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").repla
 const ROUTINE_LEVELS = [
   { name: "Reconhecendo o padrao", days: 14 },
   { name: "Menos esforco consciente", days: 28 },
-  { name: "Protocolo automatico", days: 56 },
-  { name: "Parte do seu sistema", days: 91 },
-  { name: "Rotina incorporada", days: 182 },
+  { name: "Protocolo automatico", days: 60 },
+  { name: "Parte do seu sistema", days: 90 },
+  { name: "Rotina incorporada", days: 180 },
 ];
 
 let loadedQuests = [];
@@ -774,18 +774,23 @@ async function completeQuest(id, button) {
     const isDaily = quest && quest.tipo === "diaria";
     const isSide = quest && quest.tipo === "side";
     const prevLevel = currentHero ? Number(currentHero.nivel) : 1;
+    const prevGold = currentHero ? Number(currentHero.gold || 0) : 0;
     const result = await db.completeQuest(id);
     await refresh();
     
     const newLevel = Number(result.hero.nivel);
+    const newGold = Number(result.hero.gold || 0);
+    const goldGained = Math.max(0, newGold - prevGold);
     const leveledUp = newLevel > prevLevel;
-    const questGold = isDaily ? 7 : isSide ? 3 : 0;
+    const standardGold = isDaily ? 7 : isSide ? 3 : 0;
     
     if (leveledUp) {
-      toast(`🏆 LEVEL UP! Nível ${newLevel}! Recompensa em GOLD do Level Up recebida!`);
+      toast(`🏆 LEVEL UP! Nível ${newLevel}! +${goldGained} GOLD recebido!`);
+    } else if (goldGained > standardGold) {
+      toast(`⭐ Marco de rotina concluído! +10 EXP • +${goldGained} GOLD!`);
     } else {
       const expEarned = isDaily || isSide ? 10 : 30;
-      const goldBonus = questGold > 0 ? ` • +${questGold} GOLD` : "";
+      const goldBonus = goldGained > 0 ? ` • +${goldGained} GOLD` : "";
       toast(`Quest concluída: +${expEarned} EXP${goldBonus}`);
     }
   } catch (error) {

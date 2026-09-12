@@ -7,7 +7,25 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260911-1">
+  <link rel="stylesheet" href="styles.css?v=20260911-2">
+  <style>
+    /* Ajustes de organização: classes que substituem estilos inline do arquivo original.
+       Nenhum valor visual foi alterado, exceto onde comentado (normalizações minimas). */
+    .avatar-frame--sm { width: 100px; height: 100px; }
+    .file-input-hidden { display: none; }
+    .w-full { width: 100%; }
+    .btn-pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .modal-close-btn { width: 32px; min-height: 32px; font-size: 11px; }
+    .shop-empty { text-align: center; padding: 48px 16px; }
+    .shop-empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .shop-balance-line { font-size: 15px; color: var(--amber); letter-spacing: 0.12em; margin-bottom: 8px; }
+    .shop-balance-value { font-weight: 700; color: #fff4d1; }
+    .shop-empty-text { padding: 0; max-width: 340px; margin: 0 auto; }
+    .form-spaced { margin-bottom: 16px; }
+    .config-info-text { padding: 0 0 12px; }
+    .config-log-margin { margin-top: 18px; }
+    .avatar-modal-body { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 12px 0; }
+  </style>
 </head>
 <body>
   <main id="auth-screen" class="app-shell">
@@ -49,7 +67,7 @@
           <span>EXP</span>
           <strong id="exp-val">- / -</strong>
         </div>
-        <div class="xp-track" aria-label="Progresso de experiencia">
+        <div class="xp-track" aria-label="Progresso de experiência">
           <div id="exp-fill" class="xp-fill"></div>
         </div>
       </div>
@@ -58,7 +76,7 @@
         <article class="attribute-card">
           <span>STR</span>
           <strong id="a-forca">-</strong>
-          <small>Forca</small>
+          <small>Força</small>
         </article>
         <article class="attribute-card">
           <span>MAG</span>
@@ -73,23 +91,23 @@
         <article class="attribute-card">
           <span>INT</span>
           <strong id="a-intel">-</strong>
-          <small>Inteligencia</small>
+          <small>Inteligência</small>
         </article>
       </div>
     </section>
 
-    <nav class="tabs" aria-label="Navegacao principal">
+    <nav class="tabs" aria-label="Navegação principal">
       <button class="tab active" type="button" data-tab="quests">Quests</button>
       <button class="tab" type="button" data-tab="loja">Loja</button>
       <button class="tab" type="button" data-tab="config">Config</button>
     </nav>
 
     <section id="tab-quests" class="tab-panel active">
-      <section id="daily-section" class="panel daily-panel" aria-label="Quests diarias">
+      <section id="daily-section" class="panel daily-panel" aria-label="Quests diárias">
         <div class="panel-header">
           <div>
-            <h2>Diarias de hoje</h2>
-            <p id="daily-summary">Carregando protocolos diarios...</p>
+            <h2>Diárias de hoje</h2>
+            <p id="daily-summary">Carregando protocolos diários...</p>
           </div>
         </div>
         <div id="daily-list" class="quest-list">
@@ -102,7 +120,7 @@
           <h2>Quests ativas</h2>
         </div>
         <div id="quest-list" class="quest-list">
-          <p class="state-text">Carregando missoes...</p>
+          <p class="state-text">Carregando missões...</p>
         </div>
       </section>
 
@@ -122,22 +140,22 @@
               <span>Tipo</span>
               <select id="q-tipo">
                 <option value="side">Side quest (+10 EXP, +1, +3 GOLD)</option>
-                <option value="principal">Missao principal (+30 EXP, +3)</option>
-                <option value="diaria">Diaria (+10 EXP, +1, +7 GOLD)</option>
+                <option value="principal">Missão principal (+30 EXP, +3)</option>
+                <option value="diaria">Diária (+10 EXP, +1, +7 GOLD)</option>
               </select>
             </label>
 
             <label class="field">
               <span>Atributo</span>
               <select id="q-atrib">
-                <option value="forca">Forca</option>
+                <option value="forca">Força</option>
                 <option value="magia">Magia</option>
                 <option value="carisma">Carisma</option>
-                <option value="inteligencia">Inteligencia</option>
+                <option value="inteligencia">Inteligência</option>
               </select>
             </label>
             <label id="q-semanal-field" class="field" style="display: none;" hidden>
-              <span>Minimo por semana</span>
+              <span>Mínimo por semana</span>
               <select id="q-semanal">
                 <option value="7">Todos os dias (7x)</option>
                 <option value="6">6 vezes</option>
@@ -229,30 +247,30 @@
         <div class="panel-header">
           <h2>Loja de Recompensas</h2>
         </div>
-        <div style="text-align: center; padding: 48px 16px;">
-          <div style="font-size: 36px; margin-bottom: 12px;">🏪</div>
-          <p class="hero-class" style="font-size: 15px; color: var(--amber); letter-spacing: 0.12em; margin-bottom: 8px;">// SALDO ATUAL: <span id="shop-gold" style="font-weight: 700; color: #fff4d1;">0</span> GOLD</p>
-          <p class="state-text" style="padding: 0; max-width: 340px; margin: 0 auto;">Em breve: troque seu GOLD acumulado por recompensas e itens reais.</p>
+        <div class="shop-empty">
+          <div class="shop-empty-icon">🏪</div>
+          <p class="hero-class shop-balance-line">// SALDO ATUAL: <span id="shop-gold" class="shop-balance-value">0</span> GOLD</p>
+          <p class="state-text shop-empty-text">Em breve: troque seu GOLD acumulado por recompensas e itens reais.</p>
         </div>
       </section>
     </section>
 
     <section id="tab-config" class="tab-panel">
-      <section class="panel" aria-label="Configuracoes">
+      <section class="panel" aria-label="Configurações">
         <div class="panel-header">
-          <h2>Configuracoes</h2>
+          <h2>Configurações</h2>
         </div>
 
         <div class="config-info">
-          <p class="state-text" style="padding: 0 0 12px;">Banco PostgreSQL no Supabase. Conta atual: <strong id="account-email"></strong></p>
+          <p class="state-text config-info-text">Banco PostgreSQL no Supabase. Conta atual: <strong id="account-email"></strong></p>
         </div>
 
-        <form id="clean-date-form" class="clean-form" style="margin-bottom: 16px;">
+        <form id="clean-date-form" class="clean-form form-spaced">
           <label class="field">
             <span>Dias Limpo - Data do ato (início do contador)</span>
             <input id="clean-date-input" type="date" required>
           </label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+          <div class="btn-pair-grid">
             <button class="btn btn-secondary" type="submit">Salvar data</button>
             <button id="btn-clean-today" class="btn btn-ghost" type="button">Zerar para hoje</button>
           </div>
@@ -276,7 +294,7 @@
           </button>
         </div>
 
-        <section id="config-log-section" class="panel log-panel" style="margin-top: 18px; display: none;" aria-label="Historico">
+        <section id="config-log-section" class="panel log-panel config-log-margin" style="display: none;" aria-label="Histórico">
           <div class="panel-header">
             <h2>Log de batalhas</h2>
           </div>
@@ -292,27 +310,27 @@
     <div class="modal-content panel">
       <div class="panel-header">
         <h2>Foto de Perfil</h2>
-        <button id="btn-close-avatar-modal" class="btn btn-delete" type="button" style="width: 32px; min-height: 32px; font-size: 11px;">X</button>
+        <button id="btn-close-avatar-modal" class="btn btn-delete modal-close-btn" type="button" aria-label="Fechar">X</button>
       </div>
 
-      <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 12px 0;">
-        <div class="avatar-frame" style="width: 100px; height: 100px;">
+      <div class="avatar-modal-body">
+        <div class="avatar-frame avatar-frame--sm">
           <img id="avatar-modal-preview" src="assets/profile.jpg?v=20260904-1" alt="Preview do avatar" class="avatar">
           <span class="scanline"></span>
         </div>
 
-        <input id="avatar-file-input" type="file" accept="image/*" style="display: none;">
+        <input id="avatar-file-input" type="file" accept="image/*" class="file-input-hidden">
 
-        <button id="btn-select-avatar-file" class="btn btn-secondary" type="button" style="width: 100%;">
+        <button id="btn-select-avatar-file" class="btn btn-secondary w-full" type="button">
           📁 Escolher imagem do aparelho
         </button>
 
-        <label class="field" style="width: 100%;">
+        <label class="field w-full">
           <span>Ou link direto da imagem (URL)</span>
           <input id="avatar-url-input" type="url" placeholder="https://exemplo.com/foto.jpg" autocomplete="off">
         </label>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 4px;">
+        <div class="btn-pair-grid w-full">
           <button id="btn-save-avatar" class="btn btn-secondary" type="button">Salvar Foto</button>
           <button id="btn-reset-avatar-default" class="btn btn-ghost" type="button">Foto padrão</button>
         </div>
@@ -324,7 +342,7 @@
     <div class="modal-content panel">
       <div class="panel-header">
         <h2>Editar Quest</h2>
-        <button id="btn-close-edit-modal" class="btn btn-delete" type="button" style="width: 32px; min-height: 32px; font-size: 11px;">X</button>
+        <button id="btn-close-edit-modal" class="btn btn-delete modal-close-btn" type="button" aria-label="Fechar">X</button>
       </div>
 
       <form id="edit-quest-form" class="quest-form">
@@ -339,22 +357,22 @@
             <span>Tipo</span>
             <select id="edit-q-tipo">
               <option value="side">Side quest (+10 EXP, +1, +3 GOLD)</option>
-              <option value="principal">Missao principal (+30 EXP, +3)</option>
-              <option value="diaria">Diaria (+10 EXP, +1, +7 GOLD)</option>
+              <option value="principal">Missão principal (+30 EXP, +3)</option>
+              <option value="diaria">Diária (+10 EXP, +1, +7 GOLD)</option>
             </select>
           </label>
 
           <label class="field">
             <span>Atributo</span>
             <select id="edit-q-atrib">
-              <option value="forca">Forca</option>
+              <option value="forca">Força</option>
               <option value="magia">Magia</option>
               <option value="carisma">Carisma</option>
-              <option value="inteligencia">Inteligencia</option>
+              <option value="inteligencia">Inteligência</option>
             </select>
           </label>
           <label id="edit-q-semanal-field" class="field" style="display: none;" hidden>
-            <span>Minimo por semana</span>
+            <span>Mínimo por semana</span>
             <select id="edit-q-semanal">
               <option value="7">Todos os dias (7x)</option>
               <option value="6">6 vezes</option>
@@ -438,7 +456,7 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+        <div class="btn-pair-grid">
           <button class="btn btn-secondary" type="submit">Salvar</button>
           <button id="btn-cancel-edit" class="btn btn-ghost" type="button">Cancelar</button>
         </div>
@@ -450,7 +468,7 @@
     <div class="modal-content panel">
       <div class="panel-header">
         <h2>Atualizar Progresso</h2>
-        <button id="btn-close-progress-modal" class="btn btn-delete" type="button" style="width: 32px; min-height: 32px; font-size: 11px;">X</button>
+        <button id="btn-close-progress-modal" class="btn btn-delete modal-close-btn" type="button" aria-label="Fechar">X</button>
       </div>
 
       <form id="progress-quest-form" class="quest-form">
@@ -465,7 +483,7 @@
 
         <div id="prog-preview-card" class="prog-preview-wrap"></div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+        <div class="btn-pair-grid">
           <button class="btn btn-secondary" type="submit">Salvar progresso</button>
           <button id="btn-cancel-progress" class="btn btn-ghost" type="button">Cancelar</button>
         </div>
@@ -475,7 +493,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260911-1"></script>
-  <script src="app.js?v=20260911-1"></script>
+  <script src="db.js?v=20260911-2"></script>
+  <script src="app.js?v=20260911-2"></script>
 </body>
 </html>

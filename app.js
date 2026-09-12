@@ -110,6 +110,36 @@ async function loadHero() {
 }
 
 function formatGold(value) { return Number(value || 0).toLocaleString("pt-BR"); }
+
+function profileMetric(label, value, detail = "") {
+  return `<article class="profile-metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong>${detail ? `<small>${escapeHtml(detail)}</small>` : ""}</article>`;
+}
+
+function renderProfilePanel(hero, quests, history, goldHistory) {
+  const completedGoals = quests.filter((quest) => Number(quest.goal_total) > 0 && Number(quest.goal_current || 0) >= Number(quest.goal_total));
+  const booksRead = completedGoals.filter((quest) => quest.goal_type === "livro").length;
+  const coursesCompleted = completedGoals.filter((quest) => quest.goal_type === "curso").length;
+  const purchaseGoalsCompleted = completedGoals.filter((quest) => quest.goal_type === "compra").length;
+  const goldEarned = goldHistory.filter((entry) => entry.transaction_type === "credit").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+  const completedQuests = quests.filter((quest) => quest.status === "concluida").length;
+  const summary = $("#profile-summary");
+  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(goldEarned)} GOLD`, "Registrado no extrato")}${profileMetric("ATIVIDADES", history.length, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", completedQuests, "Metas encerradas")}${profileMetric("LIVROS LIDOS", booksRead, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", coursesCompleted, "Metas de curso concluídas")}${profileMetric("COMPRAS PLANEJADAS", purchaseGoalsCompleted, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
+  const timeline = [...history.map((item) => ({ date: item.created_at, title: item.acao, type: "Atividade", detail: `+${item.exp_ganho} EXP · +${item.pontos} ${item.atributo?.toUpperCase() || "ATR"}` })), ...goldHistory.map((item) => ({ date: item.created_at, title: item.description || item.origin || "Movimentação GOLD", type: item.transaction_type === "debit" ? "Resgate" : "GOLD", detail: `${item.transaction_type === "debit" ? "-" : "+"}${formatGold(item.amount)} GOLD · saldo ${formatGold(item.balance_after)}` }))].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const timelineEl = $("#profile-timeline");
+  if (timelineEl) timelineEl.innerHTML = timeline.length ? timeline.slice(0, 12).map((item) => `<article class="history-item profile-timeline-item"><div class="history-title">${escapeHtml(item.title)}</div><div class="history-meta"><span class="badge">${escapeHtml(item.type)}</span><span class="badge">${escapeHtml(item.detail)}</span><span class="badge">${escapeHtml(formatDate(item.date))}</span></div></article>`).join("") : `<p class="state-text">Sua linha do tempo aparecerá quando concluir a primeira atividade.</p>`;
+}
+
+async function openProfilePanel() {
+  showTab("profile");
+  const summary = $("#profile-summary"), timeline = $("#profile-timeline");
+  if (summary) summary.innerHTML = `<p class="state-text">Carregando dados do herói...</p>`;
+  if (timeline) timeline.innerHTML = `<p class="state-text">Carregando histórico...</p>`;
+  try {
+    const [hero, quests, history, goldHistory] = await Promise.all([db.getHero(), db.getQuests(), db.getHistorico(), db.getGoldHistory()]);
+    renderProfilePanel(hero, quests, history, goldHistory);
+  } catch (error) { toast(error.message || "Não foi possível carregar o painel do herói."); }
+}
+
 function rarityClass(rarity) { return `rarity-${String(rarity || "Common").toLowerCase()}`; }
 function rewardCardHtml(reward, { custom = false } = {}) {
   const gold = Number(currentHero?.gold || 0), price = Number(reward.price ?? reward.gold_price), realValue = reward.realValue ?? reward.real_value;
@@ -1018,6 +1048,14 @@ function bind() {
     setAppVisible(false);
   };
   $("#quest-form").onsubmit = addQuest;
+  $("#hero-panel").onclick = openProfilePanel;
+  $("#hero-panel").onkeydown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openProfilePanel();
+    }
+  };
+  $("#btn-close-profile").onclick = () => showTab("quests");
   $("#q-tipo").onchange = () => {
     syncWeeklyField();
     syncGoalFields();

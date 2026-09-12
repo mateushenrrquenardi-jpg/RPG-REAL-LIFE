@@ -61,6 +61,29 @@ button {
   padding: 18px;
 }
 
+.hero-panel--interactive {
+  position: relative;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.hero-panel--interactive:hover,
+.hero-panel--interactive:focus-visible {
+  border-color: rgba(69, 217, 255, 0.7);
+  box-shadow: 0 0 28px rgba(69, 217, 255, 0.12), var(--shadow);
+  outline: none;
+}
+
+.hero-panel-hint {
+  margin-top: 12px;
+  color: var(--cyan);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -331,6 +354,77 @@ h1 {
   margin-top: 4px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.profile-identity {
+  padding: 2px 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.profile-identity h1 {
+  margin-top: 8px;
+  font-size: clamp(26px, 7vw, 38px);
+}
+
+.profile-identity p {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.profile-metrics,
+.profile-attributes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-metric {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-2);
+}
+
+.profile-metric span,
+.profile-metric small {
+  display: block;
+  color: var(--muted);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.profile-metric strong {
+  display: block;
+  margin: 5px 0 3px;
+  color: var(--cyan);
+  font-size: 22px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.profile-attributes {
+  margin-top: 18px;
+}
+
+.profile-attributes h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.profile-attributes-grid .profile-metric strong {
+  color: var(--pink);
+}
+
+.profile-timeline-item {
+  border-left: 2px solid rgba(69, 217, 255, 0.52);
 }
 
 .quest-form {
@@ -856,5 +950,13 @@ select:focus {
   .quest-item {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+  }
+
+  .profile-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .profile-attributes-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260911-daily-1">
+  <link rel="stylesheet" href="styles.css?v=20260912-profile-1">
   <style>
     /* Ajustes de organização: classes que substituem estilos inline do arquivo original.
        Nenhum valor visual foi alterado, exceto onde comentado (normalizações minimas). */
@@ -42,7 +42,7 @@
   </main>
 
   <main id="app-screen" class="app-shell" hidden>
-    <section class="hero-panel" aria-label="Status do personagem">
+    <section id="hero-panel" class="hero-panel hero-panel--interactive" aria-label="Status do personagem. Abrir painel do herói" role="button" tabindex="0">
       <div class="hero-grid">
         <div class="avatar-frame">
           <img id="hero-avatar" src="assets/profile.jpg?v=20260904-1" alt="Avatar de Mateus" class="avatar">
@@ -94,6 +94,7 @@
           <small>Inteligência</small>
         </article>
       </div>
+      <p class="hero-panel-hint">Abrir painel completo do herói →</p>
     </section>
 
     <nav class="tabs" aria-label="Navegação principal">
@@ -239,6 +240,20 @@
 
           <button class="btn btn-secondary" type="submit">Adicionar quest</button>
         </form>
+      </section>
+    </section>
+
+    <section id="tab-profile" class="tab-panel" aria-label="Painel do herói">
+      <section class="panel">
+        <div class="panel-header">
+          <div><h2>Painel do Herói</h2><p>Panorama geral da sua jornada.</p></div>
+          <button id="btn-close-profile" class="btn btn-ghost" type="button">Voltar</button>
+        </div>
+        <div id="profile-summary" class="profile-summary"><p class="state-text">Carregando dados do herói...</p></div>
+      </section>
+      <section class="panel">
+        <div class="panel-header"><div><h2>Linha do Tempo</h2><p>Atividades e movimentações recentes.</p></div></div>
+        <div id="profile-timeline" class="history-list"><p class="state-text">Carregando histórico...</p></div>
       </section>
     </section>
 

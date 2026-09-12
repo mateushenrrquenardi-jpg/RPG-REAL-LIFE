@@ -169,16 +169,12 @@ const db = (() => {
   }
 
   async function updateQuestProgress(id, currentProgress) {
-    const { data, error } = await client
-      .from("quests")
-      .update({
-        goal_current: Number(currentProgress),
-      })
-      .eq("id", id)
-      .select("*")
-      .single();
+    const { data, error } = await client.rpc("update_main_quest_progress", {
+      p_quest_id: id,
+      p_goal_current: Number(currentProgress),
+    });
     throwOnError(error);
-    return { success: true, quest: data };
+    return { success: true, result: data };
   }
 
   async function completeQuest(id) {

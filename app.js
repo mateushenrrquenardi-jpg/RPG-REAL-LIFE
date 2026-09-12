@@ -664,10 +664,13 @@ async function saveQuestProgress(event) {
 
   busy(button, true, "Salvando...");
   try {
-    await db.updateQuestProgress(quest.id, newCurrent);
+    const result = await db.updateQuestProgress(quest.id, newCurrent);
     closeProgressModal();
-    await loadQuests();
-    if (newCurrent >= total) {
+    await Promise.all([loadQuests(), loadHero(), loadShop()]);
+    const goldAwarded = Number(result.result?.gold_awarded || 0);
+    if (goldAwarded > 0) {
+      toast(`Marco de progresso atingido! +${goldAwarded} GOLD.`);
+    } else if (newCurrent >= total) {
       toast("Parabéns! Meta concluída com sucesso! 🏆");
     } else {
       toast("Progresso atualizado com sucesso!");

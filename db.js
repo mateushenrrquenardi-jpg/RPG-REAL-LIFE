@@ -23,6 +23,21 @@ const db = (() => {
     if (error) throw new Error(error.message);
   }
 
+  function questRpcPayload(id, nome, tipo, atributo, weeklyTarget, goal) {
+    return {
+      p_quest_id: id,
+      p_nome: nome,
+      p_tipo: tipo,
+      p_atributo: atributo,
+      p_weekly_target: Number(weeklyTarget || 7),
+      p_goal_type: goal?.type || null,
+      p_goal_target_name: goal?.targetName || null,
+      p_goal_unit: goal?.unit || null,
+      p_goal_total: goal?.total != null ? Number(goal.total) : null,
+      p_goal_current: goal?.current != null ? Number(goal.current) : 0,
+    };
+  }
+
   async function signUp(email, password) {
     const { data, error } = await client.auth.signUp({
       email,
@@ -69,16 +84,20 @@ const db = (() => {
     return data.map((quest) => ({ ...quest, routine: stateByQuest.get(quest.id) || null }));
   }
 
-  async function getHistorico() {
+  async function getHistorico(limit = null) {
     await requireUser();
-    const { data, error } = await client.from("history").select("*").order("created_at", { ascending: false });
+    let query = client.from("history").select("*").order("created_at", { ascending: false });
+    if (limit != null) query = query.limit(Math.max(1, Math.min(Number(limit), 250)));
+    const { data, error } = await query;
     throwOnError(error);
     return data;
   }
 
-  async function getGoldHistory() {
+  async function getGoldHistory(limit = null) {
     await requireUser();
-    const { data, error } = await client.from("gold_transactions").select("*").order("created_at", { ascending: false });
+    let query = client.from("gold_transactions").select("*").order("created_at", { ascending: false });
+    if (limit != null) query = query.limit(Math.max(1, Math.min(Number(limit), 250)));
+    const { data, error } = await query;
     throwOnError(error);
     return data || [];
   }
@@ -90,16 +109,22 @@ const db = (() => {
     return data || [];
   }
 
+  async function getHeroOverview() {
+    const { data, error } = await client.rpc("get_hero_overview");
+    throwOnError(error);
+    return data;
+  }
+
   async function addCustomReward({ name, description, realValue, goldPrice, rarity }) {
-    await requireUser();
-    const { data, error } = await client.from("custom_rewards").insert({ name, description: description || null, real_value: realValue, gold_price: goldPrice, rarity }).select("*").single();
+    const { data, error } = await client.rpc("save_custom_reward", {
+      p_name: name, p_description: description || null, p_real_value: realValue, p_gold_price: goldPrice, p_rarity: rarity,
+    });
     throwOnError(error);
     return data;
   }
 
   async function deleteCustomReward(id) {
-    await requireUser();
-    const { error } = await client.from("custom_rewards").delete().eq("id", id);
+    const { error } = await client.rpc("delete_own_custom_reward", { p_reward_id: id });
     throwOnError(error);
   }
 
@@ -110,60 +135,13 @@ const db = (() => {
   }
 
   async function addQuest(nome, tipo, atributo, weeklyTarget = 7, goal = null) {
-    const payload = {
-      nome,
-      tipo,
-      atributo,
-      weekly_target: tipo === "diaria" ? weeklyTarget : 7,
-    };
-    if (tipo === "principal" && goal && goal.type) {
-      payload.goal_type = goal.type;
-      payload.goal_target_name = goal.targetName || null;
-      payload.goal_unit = goal.unit || null;
-      payload.goal_total = goal.total != null ? Number(goal.total) : null;
-      payload.goal_current = goal.current != null ? Number(goal.current) : 0;
-    } else {
-      payload.goal_type = null;
-      payload.goal_target_name = null;
-      payload.goal_unit = null;
-      payload.goal_total = null;
-      payload.goal_current = 0;
-    }
-    const { data, error } = await client
-      .from("quests")
-      .insert(payload)
-      .select("id")
-      .single();
+    const { data, error } = await client.rpc("save_quest", questRpcPayload(null, nome, tipo, atributo, weeklyTarget, goal));
     throwOnError(error);
     return { success: true, id: data.id };
   }
 
   async function updateQuest(id, { nome, tipo, atributo, weeklyTarget = 7, goal = null }) {
-    const payload = {
-      nome,
-      tipo,
-      atributo,
-      weekly_target: tipo === "diaria" ? weeklyTarget : 7,
-    };
-    if (tipo === "principal" && goal && goal.type) {
-      payload.goal_type = goal.type;
-      payload.goal_target_name = goal.targetName || null;
-      payload.goal_unit = goal.unit || null;
-      payload.goal_total = goal.total != null ? Number(goal.total) : null;
-      payload.goal_current = goal.current != null ? Number(goal.current) : 0;
-    } else {
-      payload.goal_type = null;
-      payload.goal_target_name = null;
-      payload.goal_unit = null;
-      payload.goal_total = null;
-      payload.goal_current = 0;
-    }
-    const { data, error } = await client
-      .from("quests")
-      .update(payload)
-      .eq("id", id)
-      .select("*")
-      .single();
+    const { data, error } = await client.rpc("save_quest", questRpcPayload(id, nome, tipo, atributo, weeklyTarget, goal));
     throwOnError(error);
     return { success: true, quest: data };
   }
@@ -184,7 +162,7 @@ const db = (() => {
   }
 
   async function deleteQuest(id) {
-    const { error } = await client.from("quests").delete().eq("id", id);
+    const { error } = await client.rpc("delete_own_quest", { p_quest_id: id });
     throwOnError(error);
     return { success: true };
   }
@@ -262,7 +240,7 @@ const db = (() => {
 
   return {
     signUp, signIn, signOut, getSession, onAuthChange,
-    getHero, getQuests, getHistorico, getGoldHistory, getCustomRewards, addCustomReward, deleteCustomReward, redeemReward, addQuest, updateQuest, updateQuestProgress, completeQuest,
+    getHero, getQuests, getHistorico, getGoldHistory, getCustomRewards, getHeroOverview, addCustomReward, deleteCustomReward, redeemReward, addQuest, updateQuest, updateQuestProgress, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
     getCleanDate, setCleanDate, getAvatar, setAvatar,
   };

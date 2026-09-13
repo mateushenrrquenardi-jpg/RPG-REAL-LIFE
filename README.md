@@ -1,40 +1,55 @@
-# RPG da Vida Real
+# RPG Real Life
 
-RPG pessoal publicado no GitHub Pages, com dados em PostgreSQL no Supabase.
+Aplicação pessoal estática hospedada no GitHub Pages, com autenticação e dados no Supabase.
 
-**Site:** https://mateushenrrquenardi-jpg.github.io/RPG-REAL-LIFE/
+**Produção:** https://mateushenrrquenardi-jpg.github.io/RPG-REAL-LIFE/
+
+## Fonte canônica
+
+Este diretório (`_github_repo`) é a única fonte publicada. Trabalhe, teste, faça commit e publique a partir dele. A pasta pai é apenas o workspace local e não deve ser usada para deploy.
 
 ## Arquitetura
 
-- **GitHub Pages:** interface estatica.
-- **Supabase Auth:** conta e sessao da pessoa usuaria.
-- **Supabase Postgres:** tabelas `profiles`, `quests` e `history`.
-- **Row Level Security:** cada conta le e altera somente os seus proprios dados.
+- GitHub Pages: interface estática.
+- Supabase Auth: conta e sessão.
+- Supabase Postgres: perfil, quests, histórico, GOLD e recompensas personalizadas.
+- PostgreSQL RPCs: conclusão de quest, progresso de metas, resgate, criação/edição/exclusão de quests e contratos.
+- RLS + permissões SQL: cada pessoa acessa apenas os próprios dados; operações críticas não aceitam escrita direta do navegador.
 
-Nao ha token do GitHub nem senha do banco no navegador. A unica chave presente no codigo e a chave publica do projeto Supabase; as politicas do banco protegem os dados.
+A chave no `db.js` é pública por definição. A proteção está nas políticas RLS, nos privilégios de tabela e nas funções do PostgreSQL; nunca adicione uma `service_role` ao front-end.
 
-## Uso
+## Estrutura
 
-1. Abra o site e crie uma conta com email e senha (minimo de seis caracteres).
-2. Confirme o email, se o Supabase solicitar.
-3. Entre com a conta criada e gerencie as quests.
+```text
+js/constants.js  Catálogo e constantes do jogo
+js/rules.js      Regras puras e testáveis de progresso/marcos
+db.js            Camada de acesso ao Supabase
+app.js           Orquestração da interface
+supabase/        Migrations SQL ordenadas
+test/            Testes das regras puras
+```
 
-Cada conclusao de quest e calculada em uma unica transacao no PostgreSQL: atualiza quest, EXP, atributos, nivel e historico sem risco de conflito entre cliques.
+## Banco de dados
 
-## Rotinas diarias
+Execute as migrations na ordem definida em [supabase/MIGRATIONS.md](supabase/MIGRATIONS.md). Em instalações já existentes, execute os arquivos ainda não aplicados, principalmente:
 
-Uma quest do tipo **Diaria** pode ter uma meta de 1 a 7 execucoes por semana. A semana inicia no domingo.
+1. `20260912_gold_ledger_store.sql`
+2. `20260912_secure_writes.sql`
 
-- Para meta de 7x, deixar de concluir um dia reinicia apenas o contador do nivel atual.
-- Para metas de 1x a 6x, a verificacao ocorre ao iniciar uma nova semana: se a meta anterior nao foi atingida, o contador do nivel atual reinicia.
-- A barra mostra dias efetivamente concluidos no ciclo e o progresso semanal. Os niveis sao Sinal (14), Sincronia (28), Piloto (56), Integracao (91) e Fixada (182 dias).
+Esses arquivos são necessários antes de publicar uma interface que use loja, painel ou as novas operações seguras.
 
-O banco necessario para o recurso esta documentado em [supabase/20260906_daily_routines.sql](supabase/20260906_daily_routines.sql). Esse arquivo deve ser executado uma unica vez no SQL Editor do projeto Supabase antes de publicar uma interface que use rotinas.
+## Desenvolvimento e validação
+
+Não há dependências de build. Com Node instalado:
+
+```powershell
+npm run check
+npm test
+npm run verify
+```
+
+Para testar a interface, sirva esta pasta por HTTP. O deploy acontece ao enviar commits para a branch `main`.
 
 ## Backup
 
-Na aba **Config**, use **Exportar dados (JSON)** para baixar uma copia de seus dados. O reset afeta somente a conta logada.
-
-## Desenvolvimento
-
-Nao ha build. Para testar localmente, sirva a pasta por HTTP. O deploy ocorre automaticamente ao enviar commits para a branch `main`.
+A aba Config exporta perfil, quests, histórico, extrato de GOLD, contratos e preferências em JSON. O reset afeta somente a conta autenticada.

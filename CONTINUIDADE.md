@@ -1,38 +1,34 @@
-# Contexto de continuidade
+# Continuidade técnica
 
-## Arquitetura atual
+## Fonte e publicação
 
-O site e GitHub Pages; os dados estao no projeto Supabase `eddapoexxzlxicqkvxts` (PostgreSQL, Sao Paulo).
+- Diretório canônico: `_github_repo`.
+- Branch de produção: `main`.
+- Antes de publicar: `npm run verify`, revisão de migration necessária e incremento dos parâmetros de versão em `index.html`.
 
-| Item | Papel |
+## Camadas
+
+| Camada | Responsabilidade |
 | --- | --- |
-| `db.js` | Cliente Supabase, autenticacao e operacoes do banco (CRUD quests, metas e progresso). |
-| `app.js` | Interface assincrona, login, rotinas e metas de missoes principais. |
-| `profiles`, `quests`, `history` | Tabelas do banco. |
-| `complete_quest` | Transacao atomica para concluir quest, EXP, atributos e log. |
-| `updateQuestProgress` | Atualizacao do progresso da meta mensuravel na tabela `quests`. |
-| `reset_daily_quests`, `reset_rpg` | Operacoes atomicas de reset. |
+| `js/constants.js` | Constantes de títulos, rotinas e loja. |
+| `js/rules.js` | Cálculo puro de percentuais e marcos de GOLD. |
+| `db.js` | Autenticação e chamadas Supabase/RPC. |
+| `app.js` | Interface, estado local e ligação de eventos. |
+| `supabase/` | Migrations de esquema, regras e permissões. |
 
-RLS esta habilitado nas tres tabelas. Nunca use nem versione uma `secret key`; somente a publishable key pode estar no frontend.
+## Banco
 
-## Migrations SQL (pasta `supabase/`)
-- `20260906_daily_routines.sql`: Sistema de rotinas com ciclos semanais.
-- `20260906_fix_routine_timezone.sql`: Ajuste de fuso para America/Manaus.
-- `20260907_main_quest_goals.sql`: Colunas de meta mensuravel para missoes principais (`goal_type`, `goal_target_name`, `goal_unit`, `goal_total`, `goal_current`).
-- `20260910_goal_compra.sql`: Tipo de meta 'compra' e unidade 'reais'.
-- `20260910_gold_rewards.sql`: Sistema de recompensas financeiras em GOLD (+7 GOLD por diaria concluida).
-- `20260910_gold_side_quests.sql`: Recompensa de +3 GOLD ao concluir side quests.
-- `20260911_gold_on_levelup.sql`: Recompensa de GOLD no Level UP igual ao XP necessario para upar.
-- `20260911_gold_routine_milestones.sql`: Recompensas em GOLD nos marcos de rotina (14d: +50, 28d: +75, 60d: +120, 90d: +180, 180d: +300, fixada: +500).
+- Nunca exponha chave `service_role`.
+- Leitura é limitada por RLS; escrita crítica é feita por funções `security definer` com `auth.uid()`.
+- `complete_quest`, `update_main_quest_progress`, `redeem_gold_reward`, `save_quest` e `save_custom_reward` são as operações de domínio.
+- Consulte [supabase/MIGRATIONS.md](supabase/MIGRATIONS.md) antes de executar qualquer SQL.
 
-## Validacao
+## Checklist de regressão
 
-1. `node --check db.js` e `node --check app.js`.
-2. Crie uma conta no site e entre.
-3. Crie, conclua, remova e resete uma quest diaria.
-4. Crie uma Missao Principal com meta de Livro ou Curso, atualize o progresso via modal e conclua.
-5. Confira que outro usuario nao consegue ler os dados da primeira conta.
-
-## Prompt de retomada
-
-> Mantenha o RPG Real Life, um GitHub Pages com Supabase. Leia README.md e CONTINUIDADE.md. Preserve RLS e nao exponha chaves secretas. Antes de publicar, valide a sintaxe JavaScript e teste autenticacao e CRUD no Supabase.
+1. `npm run verify`.
+2. Login e logout.
+3. Criar, editar, concluir e remover quest.
+4. Registrar progresso de livro, curso e compra; conferir marcos de GOLD sem duplicação.
+5. Criar e resgatar Custom Contract; conferir extrato e saldo.
+6. Abrir Painel do Herói e validar agregados/linha do tempo.
+7. Confirmar o site publicado sem cache antigo.

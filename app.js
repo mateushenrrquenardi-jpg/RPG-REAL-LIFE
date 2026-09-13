@@ -1,32 +1,12 @@
-const TITLES = [[1, "Iniciante"], [5, "Aventureiro"], [10, "Guerreiro"], [15, "Campeao"], [20, "Heroi"], [30, "Lendario"], [50, "Mitico"]];
+const { TITLES, ROUTINE_LEVELS, SHOP_PRODUCTS, SHOP_CATEGORIES } = RPG_CONFIG;
+const { progressPercent } = RPG_RULES;
 const $ = (selector) => document.querySelector(selector);
 const titleFor = (level) => TITLES.reduce((current, [minimum, title]) => Number(level) >= minimum ? title : current, "Iniciante");
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-const ROUTINE_LEVELS = [
-  { name: "Reconhecendo o padrao", days: 14 },
-  { name: "Menos esforco consciente", days: 28 },
-  { name: "Protocolo automatico", days: 60 },
-  { name: "Parte do seu sistema", days: 90 },
-  { name: "Rotina incorporada", days: 180 },
-];
-
 let loadedQuests = [];
 let pendingAvatarData = null;
 let currentProgressQuest = null;
 let currentHero = null;
-const SHOP_PRODUCTS = [
-  { id: "neural-brew", name: "Café especial", code: "Neural Brew", category: "Recovery", price: 60, description: "Uma recarga curta para restaurar o foco.", rarity: "Common" },
-  { id: "system-pause", name: "1h de lazer livre", code: "System Pause", category: "Recovery", price: 70, description: "Uma hora sem culpa, fora do protocolo.", rarity: "Common" },
-  { id: "night-protocol", name: "Noite de filme/série", code: "Night Protocol", category: "Recovery", price: 100, description: "Sessão de descanso audiovisual liberada.", rarity: "Rare" },
-  { id: "street-fuel", name: "Lanche/delivery", code: "Street Fuel", category: "Consumables", price: 160, description: "Combustível de rua para uma refeição especial.", rarity: "Rare" },
-  { id: "personal-cache", name: "Compra pessoal", code: "Personal Cache", category: "Consumables", price: 220, description: "Compra pessoal com limite real de até R$ 30,00.", realValue: 30, rarity: "Rare" },
-  { id: "knowledge-chip", name: "Livro/ebook", code: "Knowledge Chip", category: "Upgrades", price: 300, description: "Novo módulo de conhecimento para o inventário.", rarity: "Epic" },
-  { id: "family-run", name: "Passeio familiar", code: "Family Run", category: "Upgrades", price: 350, description: "Tempo de qualidade em uma missão com a família.", rarity: "Epic" },
-  { id: "upgrade-pack", name: "Compra pessoal", code: "Upgrade Pack", category: "High-Tier", price: 650, description: "Compra pessoal com limite real de até R$ 100,00.", realValue: 100, rarity: "Epic" },
-  { id: "tech-module", name: "Acessório tech/música", code: "Tech Module", category: "High-Tier", price: 1200, description: "Upgrade para seu ecossistema tech ou musical.", rarity: "Legendary" },
-  { id: "prime-upgrade", name: "Compra maior planejada", code: "Prime Upgrade", category: "High-Tier", price: 2000, description: "Resgate de alto nível para uma compra planejada.", rarity: "Legendary" },
-];
-const SHOP_CATEGORIES = ["Recovery", "Consumables", "Upgrades", "High-Tier"];
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -115,15 +95,9 @@ function profileMetric(label, value, detail = "") {
   return `<article class="profile-metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong>${detail ? `<small>${escapeHtml(detail)}</small>` : ""}</article>`;
 }
 
-function renderProfilePanel(hero, quests, history, goldHistory) {
-  const completedGoals = quests.filter((quest) => Number(quest.goal_total) > 0 && Number(quest.goal_current || 0) >= Number(quest.goal_total));
-  const booksRead = completedGoals.filter((quest) => quest.goal_type === "livro").length;
-  const coursesCompleted = completedGoals.filter((quest) => quest.goal_type === "curso").length;
-  const purchaseGoalsCompleted = completedGoals.filter((quest) => quest.goal_type === "compra").length;
-  const goldEarned = goldHistory.filter((entry) => entry.transaction_type === "credit").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-  const completedQuests = quests.filter((quest) => quest.status === "concluida").length;
+function renderProfilePanel(hero, overview, history, goldHistory) {
   const summary = $("#profile-summary");
-  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(goldEarned)} GOLD`, "Registrado no extrato")}${profileMetric("ATIVIDADES", history.length, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", completedQuests, "Metas encerradas")}${profileMetric("LIVROS LIDOS", booksRead, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", coursesCompleted, "Metas de curso concluídas")}${profileMetric("COMPRAS PLANEJADAS", purchaseGoalsCompleted, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
+  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(overview.gold_earned)} GOLD`, "Registrado no extrato")}${profileMetric("ATIVIDADES", overview.completed_activity_count, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", overview.completed_quest_count, "Metas encerradas")}${profileMetric("LIVROS LIDOS", overview.books_read, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", overview.courses_completed, "Metas de curso concluídas")}${profileMetric("COMPRAS PLANEJADAS", overview.purchase_goals_completed, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
   const timeline = [...history.map((item) => ({ date: item.created_at, title: item.acao, type: "Atividade", detail: `+${item.exp_ganho} EXP · +${item.pontos} ${item.atributo?.toUpperCase() || "ATR"}` })), ...goldHistory.map((item) => ({ date: item.created_at, title: item.description || item.origin || "Movimentação GOLD", type: item.transaction_type === "debit" ? "Resgate" : "GOLD", detail: `${item.transaction_type === "debit" ? "-" : "+"}${formatGold(item.amount)} GOLD · saldo ${formatGold(item.balance_after)}` }))].sort((a, b) => new Date(b.date) - new Date(a.date));
   const timelineEl = $("#profile-timeline");
   if (timelineEl) timelineEl.innerHTML = timeline.length ? timeline.slice(0, 12).map((item) => `<article class="history-item profile-timeline-item"><div class="history-title">${escapeHtml(item.title)}</div><div class="history-meta"><span class="badge">${escapeHtml(item.type)}</span><span class="badge">${escapeHtml(item.detail)}</span><span class="badge">${escapeHtml(formatDate(item.date))}</span></div></article>`).join("") : `<p class="state-text">Sua linha do tempo aparecerá quando concluir a primeira atividade.</p>`;
@@ -135,15 +109,15 @@ async function openProfilePanel() {
   if (summary) summary.innerHTML = `<p class="state-text">Carregando dados do herói...</p>`;
   if (timeline) timeline.innerHTML = `<p class="state-text">Carregando histórico...</p>`;
   try {
-    const [hero, quests, history, goldHistory] = await Promise.all([db.getHero(), db.getQuests(), db.getHistorico(), db.getGoldHistory()]);
-    renderProfilePanel(hero, quests, history, goldHistory);
+    const [hero, overview, history, goldHistory] = await Promise.all([db.getHero(), db.getHeroOverview(), db.getHistorico(12), db.getGoldHistory(12)]);
+    renderProfilePanel(hero, overview, history, goldHistory);
   } catch (error) { toast(error.message || "Não foi possível carregar o painel do herói."); }
 }
 
 function rarityClass(rarity) { return `rarity-${String(rarity || "Common").toLowerCase()}`; }
 function rewardCardHtml(reward, { custom = false } = {}) {
   const gold = Number(currentHero?.gold || 0), price = Number(reward.price ?? reward.gold_price), realValue = reward.realValue ?? reward.real_value;
-  const pct = price > 0 ? Math.min(100, Math.round((gold / price) * 100)) : 0, canBuy = gold >= price;
+  const pct = progressPercent(gold, price), canBuy = gold >= price;
   const realText = realValue != null ? `<span class="badge">LIMITE: R$ ${formatReais(realValue)}</span>` : "";
   return `<article class="reward-card"><div class="reward-card-top"><div><div class="reward-name">${escapeHtml(reward.name)}</div><div class="reward-code">// ${escapeHtml(reward.code || "Custom Contract")}</div></div><span class="badge ${rarityClass(reward.rarity)}">${escapeHtml(reward.rarity || "Common")}</span></div><p class="reward-description">${escapeHtml(reward.description || "Recompensa personalizada.")}</p><div class="reward-detail-row"><span class="badge">${escapeHtml(reward.category || "Custom")}</span>${realText}<span class="badge reward-price">${formatGold(price)} GOLD</span></div>${custom ? `<div class="goal-card shop-progress"><div class="goal-top"><span class="goal-rank">Progresso do contrato</span><span>${formatGold(Math.min(gold, price))}/${formatGold(price)} GOLD · ${pct}%</span></div><div class="goal-track"><div class="goal-fill" style="width:${pct}%"></div></div></div>` : ""}<div class="reward-detail-row"><button class="btn reward-buy" type="button" data-action="redeem" data-product-id="${escapeHtml(reward.id || "")}" data-custom-id="${custom ? escapeHtml(reward.id) : ""}" ${canBuy ? "" : "disabled"}>${canBuy ? "Resgatar recompensa" : `Faltam ${formatGold(price - gold)} GOLD`}</button>${custom ? `<button class="btn btn-delete" type="button" data-action="delete-custom-reward" data-custom-id="${escapeHtml(reward.id)}" aria-label="Remover contrato">X</button>` : ""}</div></article>`;
 }
@@ -157,7 +131,7 @@ function renderShop(products, customRewards, transactions) {
   if (customList) customList.innerHTML = customRewards.length ? customRewards.map((reward) => rewardCardHtml(reward, { custom: true })).join("") : `<p class="state-text">Nenhum contrato personalizado ativo.</p>`;
   renderGoldHistory(transactions);
 }
-async function loadShop() { try { const [customRewards, transactions] = await Promise.all([db.getCustomRewards(), db.getGoldHistory()]); renderShop(SHOP_PRODUCTS, customRewards, transactions); } catch (error) { toast(error.message || "Erro ao carregar a loja."); } }
+async function loadShop() { try { const [customRewards, transactions] = await Promise.all([db.getCustomRewards(), db.getGoldHistory(50)]); renderShop(SHOP_PRODUCTS, customRewards, transactions); } catch (error) { toast(error.message || "Erro ao carregar a loja."); } }
 async function redeemShopReward(button) {
   const customId = button.dataset.customId, product = customId ? (await db.getCustomRewards()).find((item) => String(item.id) === String(customId)) : SHOP_PRODUCTS.find((item) => item.id === button.dataset.productId);
   if (!product) return toast("Recompensa não encontrada.");
@@ -191,7 +165,7 @@ function goalHtml(quest) {
   if (quest.tipo !== "principal" || !quest.goal_type || !quest.goal_total) return "";
   const total = Number(quest.goal_total);
   const current = Number(quest.goal_current || 0);
-  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+  const pct = progressPercent(current, total);
   const isComplete = current >= total;
   const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
   const targetName = escapeHtml(quest.goal_target_name || quest.nome);
@@ -218,7 +192,7 @@ function routineHtml(quest) {
   const levelIdx = Math.min(Math.max(Number(quest.routine_level || 1), 1), ROUTINE_LEVELS.length) - 1;
   const level = ROUTINE_LEVELS[levelIdx];
   const days = Math.min(Number(routine.routine_days || 0), level.days);
-  const pct = Math.min(100, Math.round((days / level.days) * 100));
+  const pct = progressPercent(days, level.days);
   const fixed = routine.routine_fixed;
   const levelNum = String(quest.routine_level || 1).padStart(2, "0");
   const rankLabel = fixed ? "ROTINA FIXADA" : `Nivel ${levelNum} - ${level.name}`;
@@ -545,7 +519,7 @@ function openProgressModal(id) {
     const unitLabel = goalUnitLabel(unit, total);
     currentText = `${current} / ${total} ${unitLabel}`;
   }
-  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+  const pct = progressPercent(current, total);
 
   $("#prog-quest-summary").innerHTML = `
     <div style="margin-bottom: 4px;">
@@ -631,7 +605,7 @@ function updateProgressPreview() {
   }
 
   newCurrent = Math.max(0, Math.min(total, newCurrent));
-  const pct = total > 0 ? Math.min(100, Math.round((newCurrent / total) * 100)) : 0;
+  const pct = progressPercent(newCurrent, total);
   const isComplete = newCurrent >= total;
   let text;
   if (unit === "porcentagem") {
@@ -924,7 +898,7 @@ function formatDate(value) {
 
 async function loadHistory() {
   try {
-    const rows = await db.getHistorico();
+    const rows = await db.getHistorico(50);
     $("#hist-list").innerHTML = rows.length
       ? rows
           .slice(0, 50)

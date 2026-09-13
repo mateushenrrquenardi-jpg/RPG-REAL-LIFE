@@ -97,7 +97,7 @@ function profileMetric(label, value, detail = "") {
 
 function renderProfilePanel(hero, overview, history, goldHistory) {
   const summary = $("#profile-summary");
-  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(overview.gold_earned)} GOLD`, "Registrado no extrato")}${profileMetric("ATIVIDADES", overview.completed_activity_count, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", overview.completed_quest_count, "Metas encerradas")}${profileMetric("LIVROS LIDOS", overview.books_read, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", overview.courses_completed, "Metas de curso concluídas")}${profileMetric("COMPRAS PLANEJADAS", overview.purchase_goals_completed, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
+  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(overview.gold_earned)} GOLD`, "Registrado no extrato")}${profileMetric("ATIVIDADES", overview.completed_activity_count, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", overview.completed_quest_count, "Metas encerradas")}${profileMetric("LIVROS LIDOS", overview.books_read, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", overview.courses_completed, "Metas de curso concluídas")}${profileMetric("TREINOS CONCLUÍDOS", overview.workout_goals_completed || 0, "Metas mensais concluídas")}${profileMetric("COMPRAS PLANEJADAS", overview.purchase_goals_completed, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
   const timeline = [...history.map((item) => ({ date: item.created_at, title: item.acao, type: "Atividade", detail: `+${item.exp_ganho} EXP · +${item.pontos} ${item.atributo?.toUpperCase() || "ATR"}` })), ...goldHistory.map((item) => ({ date: item.created_at, title: item.description || item.origin || "Movimentação GOLD", type: item.transaction_type === "debit" ? "Resgate" : "GOLD", detail: `${item.transaction_type === "debit" ? "-" : "+"}${formatGold(item.amount)} GOLD · saldo ${formatGold(item.balance_after)}` }))].sort((a, b) => new Date(b.date) - new Date(a.date));
   const timelineEl = $("#profile-timeline");
   if (timelineEl) timelineEl.innerHTML = timeline.length ? timeline.slice(0, 12).map((item) => `<article class="history-item profile-timeline-item"><div class="history-title">${escapeHtml(item.title)}</div><div class="history-meta"><span class="badge">${escapeHtml(item.type)}</span><span class="badge">${escapeHtml(item.detail)}</span><span class="badge">${escapeHtml(formatDate(item.date))}</span></div></article>`).join("") : `<p class="state-text">Sua linha do tempo aparecerá quando concluir a primeira atividade.</p>`;
@@ -151,6 +151,7 @@ async function removeCustomReward(button) { if (!confirm("Remover este Custom Co
 function goalUnitLabel(unit, count) {
   if (unit === "paginas") return count === 1 ? "página" : "páginas";
   if (unit === "aulas") return count === 1 ? "aula" : "aulas";
+  if (unit === "treinos") return count === 1 ? "treino" : "treinos";
   if (unit === "horas") return count === 1 ? "hora" : "horas";
   if (unit === "porcentagem") return "%";
   if (unit === "reais") return "R$";
@@ -161,14 +162,31 @@ function formatReais(value) {
   return Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function goalUnitFor(quest) {
+  return quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : quest.goal_type === "treino" ? "treinos" : "aulas");
+}
+
+function currentMonthInputValue() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatGoalMonth(value) {
+  if (!value) return "";
+  const date = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date).toUpperCase();
+}
+
 function goalHtml(quest) {
   if (quest.tipo !== "principal" || !quest.goal_type || !quest.goal_total) return "";
   const total = Number(quest.goal_total);
   const current = Number(quest.goal_current || 0);
   const pct = progressPercent(current, total);
   const isComplete = current >= total;
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
+  const unit = goalUnitFor(quest);
   const targetName = escapeHtml(quest.goal_target_name || quest.nome);
+  const periodMonth = quest.goal_type === "treino" ? formatGoalMonth(quest.goal_period_month) : "";
   let progressText;
   if (unit === "porcentagem") {
     progressText = `${current}/${total}%`;
@@ -178,12 +196,14 @@ function goalHtml(quest) {
     progressText = `${current}/${total} PÁGINAS · ${pct}%`;
   } else if (unit === "aulas") {
     progressText = `${current}/${total} AULAS · ${pct}%`;
+  } else if (unit === "treinos") {
+    progressText = `${current}/${total} TREINOS · ${pct}%`;
   } else if (unit === "horas") {
     progressText = `${current}/${total} HORAS · ${pct}%`;
   } else {
     progressText = `${current}/${total} · ${pct}%`;
   }
-  return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><span class="goal-rank">${targetName}</span><span>${escapeHtml(progressText)}</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
+  return `<div class="goal-card ${isComplete ? "goal-complete" : ""}"><div class="goal-top"><span class="goal-rank">${targetName}${periodMonth ? ` · ${escapeHtml(periodMonth)}` : ""}</span><span>${escapeHtml(progressText)}</span></div><div class="goal-track" aria-label="Progresso da meta"><div class="goal-fill" style="width:${pct}%"></div></div></div>`;
 }
 
 function routineHtml(quest) {
@@ -256,6 +276,7 @@ function syncGoalFields() {
   const goalType = $("#q-goal-type").value;
   const livroFields = $("#q-goal-livro-fields");
   const cursoFields = $("#q-goal-curso-fields");
+  const treinoFields = $("#q-goal-treino-fields");
   const compraFields = $("#q-goal-compra-fields");
 
   livroFields.hidden = goalType !== "livro";
@@ -263,6 +284,10 @@ function syncGoalFields() {
 
   cursoFields.hidden = goalType !== "curso";
   cursoFields.style.display = goalType === "curso" ? "grid" : "none";
+
+  treinoFields.hidden = goalType !== "treino";
+  treinoFields.style.display = goalType === "treino" ? "grid" : "none";
+  if (goalType === "treino" && !$("#q-goal-treino-mes").value) $("#q-goal-treino-mes").value = currentMonthInputValue();
 
   compraFields.hidden = goalType !== "compra";
   compraFields.style.display = goalType === "compra" ? "grid" : "none";
@@ -310,6 +335,7 @@ function syncEditGoalFields() {
   const goalType = $("#edit-q-goal-type").value;
   const livroFields = $("#edit-q-goal-livro-fields");
   const cursoFields = $("#edit-q-goal-curso-fields");
+  const treinoFields = $("#edit-q-goal-treino-fields");
   const compraFields = $("#edit-q-goal-compra-fields");
 
   livroFields.hidden = goalType !== "livro";
@@ -317,6 +343,10 @@ function syncEditGoalFields() {
 
   cursoFields.hidden = goalType !== "curso";
   cursoFields.style.display = goalType === "curso" ? "grid" : "none";
+
+  treinoFields.hidden = goalType !== "treino";
+  treinoFields.style.display = goalType === "treino" ? "grid" : "none";
+  if (goalType === "treino" && !$("#edit-q-goal-treino-mes").value) $("#edit-q-goal-treino-mes").value = currentMonthInputValue();
 
   compraFields.hidden = goalType !== "compra";
   compraFields.style.display = goalType === "compra" ? "grid" : "none";
@@ -397,6 +427,23 @@ function getGoalFromForm(prefix) {
     return { type: "compra", targetName, unit: "reais", total, current };
   }
 
+  if (goalType === "treino") {
+    const targetName = $(`#${prefix}-goal-treino-nome`).value.trim();
+    const periodMonth = $(`#${prefix}-goal-treino-mes`).value;
+    const totalVal = $(`#${prefix}-goal-treino-total`).value;
+    const total = Number(totalVal);
+    const currentVal = $(`#${prefix}-goal-treino-current`).value;
+    const current = currentVal !== "" ? Number(currentVal) : 0;
+
+    if (!targetName) throw new Error("Informe o nome do treino.");
+    if (!/^\\d{4}-\\d{2}$/.test(periodMonth)) throw new Error("Informe o mês de referência da meta de treino.");
+    if (!totalVal || !Number.isInteger(total) || total <= 0) throw new Error("Informe uma meta inteira de treinos maior que 0.");
+    if (!Number.isInteger(current) || current < 0) throw new Error("A quantidade de treinos não pode ser negativa.");
+    if (current > total) throw new Error("Os treinos já realizados não podem ser maiores que a meta.");
+
+    return { type: "treino", targetName, unit: "treinos", total, current, periodMonth: `${periodMonth}-01` };
+  }
+
   return null;
 }
 
@@ -411,6 +458,10 @@ function openEditModal(id) {
 
   const goalType = quest.goal_type || "";
   $("#edit-q-goal-type").value = goalType;
+  $("#edit-q-goal-treino-nome").value = "";
+  $("#edit-q-goal-treino-mes").value = currentMonthInputValue();
+  $("#edit-q-goal-treino-total").value = "";
+  $("#edit-q-goal-treino-current").value = "0";
   if (goalType === "livro") {
     $("#edit-q-goal-livro-nome").value = quest.goal_target_name || quest.nome || "";
     $("#edit-q-goal-livro-total").value = quest.goal_total || "";
@@ -444,6 +495,21 @@ function openEditModal(id) {
     $("#edit-q-goal-curso-unit").value = "aulas";
     $("#edit-q-goal-curso-total").value = "";
     $("#edit-q-goal-curso-current").value = "0";
+  } else if (goalType === "treino") {
+    $("#edit-q-goal-treino-nome").value = quest.goal_target_name || quest.nome || "";
+    $("#edit-q-goal-treino-mes").value = String(quest.goal_period_month || "").slice(0, 7) || currentMonthInputValue();
+    $("#edit-q-goal-treino-total").value = quest.goal_total || "";
+    $("#edit-q-goal-treino-current").value = quest.goal_current != null ? quest.goal_current : 0;
+    $("#edit-q-goal-livro-nome").value = "";
+    $("#edit-q-goal-livro-total").value = "";
+    $("#edit-q-goal-livro-current").value = "0";
+    $("#edit-q-goal-curso-nome").value = "";
+    $("#edit-q-goal-curso-unit").value = "aulas";
+    $("#edit-q-goal-curso-total").value = "";
+    $("#edit-q-goal-curso-current").value = "0";
+    $("#edit-q-goal-compra-nome").value = "";
+    $("#edit-q-goal-compra-total").value = "";
+    $("#edit-q-goal-compra-current").value = "0";
   } else {
     $("#edit-q-goal-livro-nome").value = "";
     $("#edit-q-goal-livro-total").value = "";
@@ -508,7 +574,7 @@ function openProgressModal(id) {
 
   const total = Number(quest.goal_total || 0);
   const current = Number(quest.goal_current || 0);
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
+  const unit = goalUnitFor(quest);
   const targetName = escapeHtml(quest.goal_target_name || quest.nome);
   let currentText;
   if (unit === "porcentagem") {
@@ -526,7 +592,7 @@ function openProgressModal(id) {
       <span class="system-label" style="font-size: 11px;">Missão Principal</span>
       <div style="font-size: 15px; font-weight: 700; color: var(--text);">${escapeHtml(quest.nome)}</div>
     </div>
-    <div>Meta: <strong>${targetName}</strong></div>
+    <div>Meta: <strong>${targetName}</strong>${quest.goal_type === "treino" && formatGoalMonth(quest.goal_period_month) ? ` · ${escapeHtml(formatGoalMonth(quest.goal_period_month))}` : ""}</div>
     <div style="margin-top: 4px; color: var(--muted); font-size: 12px;">Progresso atual: <strong style="color: var(--cyan);">${escapeHtml(currentText)}</strong> (${pct}%)</div>
   `;
 
@@ -543,6 +609,15 @@ function openProgressModal(id) {
     input.step = "1";
     input.value = "";
     input.placeholder = remaining > 0 ? `Ex: ${Math.min(10, remaining)}` : "0";
+  } else if (quest.goal_type === "treino") {
+    label.textContent = "Quantos treinos você concluiu agora? (será somado)";
+    const remaining = Math.max(0, total - current);
+    hint.textContent = remaining > 0 ? `Máximo para atingir a meta: +${remaining} treinos.` : "Meta já atingida!";
+    input.min = "0";
+    input.max = String(remaining);
+    input.step = "1";
+    input.value = "";
+    input.placeholder = remaining > 0 ? "Ex: 1" : "0";
   } else if (quest.goal_type === "compra") {
     label.textContent = "Quanto você guardou agora? (R$) — será somado ao total";
     const remaining = Math.max(0, Number((total - current).toFixed(2)));
@@ -593,7 +668,7 @@ function updateProgressPreview() {
   const quest = currentProgressQuest;
   const total = Number(quest.goal_total || 0);
   const current = Number(quest.goal_current || 0);
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
+  const unit = goalUnitFor(quest);
   const rawVal = $("#prog-input-value").value;
   const inputNum = rawVal !== "" ? Number(rawVal) : 0;
 
@@ -616,6 +691,8 @@ function updateProgressPreview() {
     text = `${newCurrent}/${total} PÁGINAS · ${pct}%`;
   } else if (unit === "aulas") {
     text = `${newCurrent}/${total} AULAS · ${pct}%`;
+  } else if (unit === "treinos") {
+    text = `${newCurrent}/${total} TREINOS · ${pct}%`;
   } else if (unit === "horas") {
     text = `${newCurrent}/${total} HORAS · ${pct}%`;
   } else {
@@ -647,7 +724,7 @@ async function saveQuestProgress(event) {
   const quest = currentProgressQuest;
   const total = Number(quest.goal_total || 0);
   const current = Number(quest.goal_current || 0);
-  const unit = quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : "aulas");
+  const unit = goalUnitFor(quest);
   const rawVal = $("#prog-input-value").value;
   const button = event.submitter || $("#progress-quest-form button[type=submit]");
 
@@ -809,6 +886,10 @@ async function addQuest(event) {
     $("#q-goal-curso-unit").value = "aulas";
     $("#q-goal-curso-total").value = "";
     $("#q-goal-curso-current").value = "0";
+    $("#q-goal-treino-nome").value = "";
+    $("#q-goal-treino-mes").value = currentMonthInputValue();
+    $("#q-goal-treino-total").value = "";
+    $("#q-goal-treino-current").value = "0";
     $("#q-goal-compra-nome").value = "";
     $("#q-goal-compra-total").value = "";
     $("#q-goal-compra-current").value = "0";

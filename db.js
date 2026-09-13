@@ -35,6 +35,7 @@ const db = (() => {
       p_goal_unit: goal?.unit || null,
       p_goal_total: goal?.total != null ? Number(goal.total) : null,
       p_goal_current: goal?.current != null ? Number(goal.current) : 0,
+      p_goal_period_month: goal?.periodMonth || null,
     };
   }
 

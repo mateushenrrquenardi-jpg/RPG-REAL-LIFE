@@ -36,6 +36,7 @@ Execute as migrations na ordem definida em [supabase/MIGRATIONS.md](supabase/MIG
 1. `20260912_gold_ledger_store.sql`
 2. `20260912_secure_writes.sql`
 3. `20260913_training_monthly_goal.sql`
+4. `20260913_levelup_half_gold.sql`
 
 Esses arquivos são necessários antes de publicar uma interface que use loja, painel, operações seguras ou metas mensais de treino.
 

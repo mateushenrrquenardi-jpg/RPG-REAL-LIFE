@@ -14,6 +14,7 @@ Execute no SQL Editor do Supabase, uma única vez e exatamente nesta ordem. Não
 10. `20260912_gold_ledger_store.sql`
 11. `20260912_secure_writes.sql`
 12. `20260913_training_monthly_goal.sql`
+13. `20260913_levelup_half_gold.sql`
 
 ## Convenções
 
@@ -24,4 +25,4 @@ Execute no SQL Editor do Supabase, uma única vez e exatamente nesta ordem. Não
 
 ## Conferência pós-migration
 
-Depois da etapa 12, valide: criar/editar/remover uma quest, registrar progresso de livro, curso e treino, concluir uma quest, criar/remover um Custom Contract e resgatar uma recompensa. Também confirme que GOLD, EXP e atributos continuam sendo atualizados apenas pelas funções do banco.
+Depois da etapa 13, valide: criar/editar/remover uma quest, registrar progresso de livro, curso e treino, concluir uma quest, subir de nível, criar/remover um Custom Contract e resgatar uma recompensa. Também confirme que GOLD, EXP e atributos continuam sendo atualizados apenas pelas funções do banco.

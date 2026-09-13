@@ -436,7 +436,7 @@ function getGoalFromForm(prefix) {
     const current = currentVal !== "" ? Number(currentVal) : 0;
 
     if (!targetName) throw new Error("Informe o nome do treino.");
-    if (!/^\\d{4}-\\d{2}$/.test(periodMonth)) throw new Error("Informe o mês de referência da meta de treino.");
+    if (!/^\d{4}-\d{2}$/.test(periodMonth)) throw new Error("Informe o mês de referência da meta de treino.");
     if (!totalVal || !Number.isInteger(total) || total <= 0) throw new Error("Informe uma meta inteira de treinos maior que 0.");
     if (!Number.isInteger(current) || current < 0) throw new Error("A quantidade de treinos não pode ser negativa.");
     if (current > total) throw new Error("Os treinos já realizados não podem ser maiores que a meta.");

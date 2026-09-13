@@ -85,8 +85,6 @@ async function loadHero() {
   const preview = $("#avatar-modal-preview");
   if (preview) preview.src = currentAvatarSrc;
 
-  const cleanInput = $("#clean-date-input");
-  if (cleanInput && cleanDate) cleanInput.value = cleanDate;
 }
 
 function formatGold(value) { return Number(value || 0).toLocaleString("pt-BR"); }
@@ -95,9 +93,22 @@ function profileMetric(label, value, detail = "") {
   return `<article class="profile-metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong>${detail ? `<small>${escapeHtml(detail)}</small>` : ""}</article>`;
 }
 
-function renderProfilePanel(hero, overview, history, goldHistory) {
+function formatCleanDate(value) {
+  if (!value) return "Não registrado";
+  const date = new Date(`${value}T12:00:00`);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(date);
+}
+
+function renderProfilePanel(hero, overview, history, goldHistory, cleanDate, cleanDateLogs) {
   const summary = $("#profile-summary");
-  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(overview.gold_earned)} GOLD`, "Registrado no extrato")}${profileMetric("ATIVIDADES", overview.completed_activity_count, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", overview.completed_quest_count, "Metas encerradas")}${profileMetric("LIVROS LIDOS", overview.books_read, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", overview.courses_completed, "Metas de curso concluídas")}${profileMetric("TREINOS CONCLUÍDOS", overview.workout_goals_completed || 0, "Metas mensais concluídas")}${profileMetric("COMPRAS PLANEJADAS", overview.purchase_goals_completed, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
+  const cleanDays = calcCleanDays(cleanDate);
+  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(overview.gold_earned)} GOLD`, "Registrado no extrato")}${profileMetric("DIAS LIMPO", cleanDays == null ? "—" : cleanDays, cleanDays == null ? "Sem marco registrado" : `Desde ${formatCleanDate(cleanDate)}`)}${profileMetric("ATIVIDADES", overview.completed_activity_count, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", overview.completed_quest_count, "Metas encerradas")}${profileMetric("LIVROS LIDOS", overview.books_read, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", overview.courses_completed, "Metas de curso concluídas")}${profileMetric("TREINOS CONCLUÍDOS", overview.workout_goals_completed || 0, "Metas mensais concluídas")}${profileMetric("COMPRAS PLANEJADAS", overview.purchase_goals_completed, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
+  const cleanStatus = $("#profile-clean-status");
+  if (cleanStatus) cleanStatus.textContent = cleanDays == null ? "Nenhum marco registrado. Escolha a data em que o contador deve começar." : `${cleanDays === 1 ? "1 dia limpo" : `${cleanDays} dias limpo`} desde ${formatCleanDate(cleanDate)}.`;
+  const cleanInput = $("#profile-clean-date-input");
+  if (cleanInput) cleanInput.value = cleanDate || new Date().toISOString().slice(0, 10);
+  const cleanHistory = $("#clean-date-history");
+  if (cleanHistory) cleanHistory.innerHTML = cleanDateLogs.length ? cleanDateLogs.slice(0, 20).map((item) => `<article class="history-item profile-timeline-item"><div class="history-title">Novo marco: ${escapeHtml(formatCleanDate(item.clean_date))}</div><div class="history-meta"><span class="badge">DIAS LIMPO</span>${item.previous_clean_date ? `<span class="badge">Anterior: ${escapeHtml(formatCleanDate(item.previous_clean_date))}</span>` : ""}<span class="badge">Registrado: ${escapeHtml(formatDate(item.created_at))}</span></div></article>`).join("") : `<p class="state-text">Os próximos marcos registrados aparecerão aqui.</p>`;
   const timeline = [...history.map((item) => ({ date: item.created_at, title: item.acao, type: "Atividade", detail: `+${item.exp_ganho} EXP · +${item.pontos} ${item.atributo?.toUpperCase() || "ATR"}` })), ...goldHistory.map((item) => ({ date: item.created_at, title: item.description || item.origin || "Movimentação GOLD", type: item.transaction_type === "debit" ? "Resgate" : "GOLD", detail: `${item.transaction_type === "debit" ? "-" : "+"}${formatGold(item.amount)} GOLD · saldo ${formatGold(item.balance_after)}` }))].sort((a, b) => new Date(b.date) - new Date(a.date));
   const timelineEl = $("#profile-timeline");
   if (timelineEl) timelineEl.innerHTML = timeline.length ? timeline.slice(0, 12).map((item) => `<article class="history-item profile-timeline-item"><div class="history-title">${escapeHtml(item.title)}</div><div class="history-meta"><span class="badge">${escapeHtml(item.type)}</span><span class="badge">${escapeHtml(item.detail)}</span><span class="badge">${escapeHtml(formatDate(item.date))}</span></div></article>`).join("") : `<p class="state-text">Sua linha do tempo aparecerá quando concluir a primeira atividade.</p>`;
@@ -109,8 +120,8 @@ async function openProfilePanel() {
   if (summary) summary.innerHTML = `<p class="state-text">Carregando dados do herói...</p>`;
   if (timeline) timeline.innerHTML = `<p class="state-text">Carregando histórico...</p>`;
   try {
-    const [hero, overview, history, goldHistory] = await Promise.all([db.getHero(), db.getHeroOverview(), db.getHistorico(12), db.getGoldHistory(12)]);
-    renderProfilePanel(hero, overview, history, goldHistory);
+    const [hero, overview, history, goldHistory, cleanDate, cleanDateLogs] = await Promise.all([db.getHero(), db.getHeroOverview(), db.getHistorico(12), db.getGoldHistory(12), db.getCleanDate(), db.getCleanDateLogs()]);
+    renderProfilePanel(hero, overview, history, goldHistory, cleanDate, cleanDateLogs);
   } catch (error) { toast(error.message || "Não foi possível carregar o painel do herói."); }
 }
 
@@ -1065,30 +1076,19 @@ async function boot(session) {
 
 async function saveCleanDate(event) {
   event.preventDefault();
-  const dateVal = $("#clean-date-input").value;
+  const dateVal = $("#profile-clean-date-input").value;
   if (!dateVal) return toast("Selecione uma data.");
-  const button = event.submitter || $("#clean-date-form button[type=submit]");
+  const button = event.submitter || $("#profile-clean-date-form button[type=submit]");
   busy(button, true);
   try {
-    await db.setCleanDate(dateVal);
+    const result = await db.setCleanDate(dateVal);
     await loadHero();
-    toast("Data dos Dias Limpo salva.");
+    await openProfilePanel();
+    toast(result.changed ? "Novo marco de dias limpo registrado." : "Esta já é a data ativa do contador.");
   } catch (error) {
     toast(error.message);
   } finally {
     busy(button, false);
-  }
-}
-
-async function setCleanToday() {
-  const today = new Date().toISOString().slice(0, 10);
-  $("#clean-date-input").value = today;
-  try {
-    await db.setCleanDate(today);
-    await loadHero();
-    toast("Contador zerado para hoje.");
-  } catch (error) {
-    toast(error.message);
   }
 }
 
@@ -1182,8 +1182,7 @@ function bind() {
 
   $("#btn-export").onclick = exportData;
   $("#btn-reset-data").onclick = resetData;
-  $("#clean-date-form").onsubmit = saveCleanDate;
-  $("#btn-clean-today").onclick = setCleanToday;
+  $("#profile-clean-date-form").onsubmit = saveCleanDate;
   $("#btn-toggle-log").onclick = () => {
     const logSection = $("#config-log-section");
     const isHidden = logSection.style.display === "none";

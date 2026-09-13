@@ -189,6 +189,8 @@ const db = (() => {
 
   async function setCleanDate(dateStr) {
     const user = await requireUser();
+    const previousDate = user.user_metadata?.clean_date || localStorage.getItem(`rpg_clean_date_${user.id}`) || null;
+    if (previousDate === dateStr) return { date: dateStr, changed: false };
     if (dateStr) {
       localStorage.setItem(`rpg_clean_date_${user.id}`, dateStr);
     } else {
@@ -198,7 +200,19 @@ const db = (() => {
       data: { clean_date: dateStr || null },
     });
     throwOnError(error);
-    return dateStr;
+    const { error: logError } = await client.rpc("record_clean_date_change", {
+      p_clean_date: dateStr,
+      p_previous_clean_date: previousDate,
+    });
+    throwOnError(logError);
+    return { date: dateStr, changed: true };
+  }
+
+  async function getCleanDateLogs(limit = 20) {
+    await requireUser();
+    const { data, error } = await client.from("clean_date_logs").select("*").order("created_at", { ascending: false }).limit(Math.max(1, Math.min(Number(limit), 100)));
+    throwOnError(error);
+    return data || [];
   }
 
   async function getAvatar() {
@@ -232,7 +246,8 @@ const db = (() => {
       getCleanDate().catch(() => null),
       getAvatar().catch(() => null),
     ]);
-    return { hero, quests, historico, gold_history: goldHistory, custom_rewards: customRewards, clean_date: cleanDate, avatar, exportedAt: new Date().toISOString() };
+    const cleanDateLogs = await getCleanDateLogs().catch(() => []);
+    return { hero, quests, historico, gold_history: goldHistory, custom_rewards: customRewards, clean_date: cleanDate, clean_date_logs: cleanDateLogs, avatar, exportedAt: new Date().toISOString() };
   }
 
   function onAuthChange(handler) {
@@ -243,6 +258,6 @@ const db = (() => {
     signUp, signIn, signOut, getSession, onAuthChange,
     getHero, getQuests, getHistorico, getGoldHistory, getCustomRewards, getHeroOverview, addCustomReward, deleteCustomReward, redeemReward, addQuest, updateQuest, updateQuestProgress, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
-    getCleanDate, setCleanDate, getAvatar, setAvatar,
+    getCleanDate, setCleanDate, getCleanDateLogs, getAvatar, setAvatar,
   };
 })();

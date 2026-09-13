@@ -273,6 +273,18 @@
         </div>
         <div id="profile-summary" class="profile-summary"><p class="state-text">Carregando dados do herói...</p></div>
       </section>
+      <section class="panel" aria-label="Registro de dias limpo">
+        <div class="panel-header"><div><h2>Protocolo Dias Limpo</h2><p>Registre um novo marco e acompanhe o contador.</p></div></div>
+        <div id="profile-clean-status" class="state-text">Carregando protocolo...</div>
+        <form id="profile-clean-date-form" class="clean-form form-spaced">
+          <label class="field">
+            <span>Nova data de início do contador</span>
+            <input id="profile-clean-date-input" type="date" required>
+          </label>
+          <button class="btn btn-secondary" type="submit">Registrar nova data</button>
+        </form>
+        <div id="clean-date-history" class="history-list"><p class="state-text">Nenhum registro ainda.</p></div>
+      </section>
       <section class="panel">
         <div class="panel-header"><div><h2>Linha do Tempo</h2><p>Atividades e movimentações recentes.</p></div></div>
         <div id="profile-timeline" class="history-list"><p class="state-text">Carregando histórico...</p></div>
@@ -323,17 +335,6 @@
         <div class="config-info">
           <p class="state-text config-info-text">Banco PostgreSQL no Supabase. Conta atual: <strong id="account-email"></strong></p>
         </div>
-
-        <form id="clean-date-form" class="clean-form form-spaced">
-          <label class="field">
-            <span>Dias Limpo - Data do ato (início do contador)</span>
-            <input id="clean-date-input" type="date" required>
-          </label>
-          <div class="btn-pair-grid">
-            <button class="btn btn-secondary" type="submit">Salvar data</button>
-            <button id="btn-clean-today" class="btn btn-ghost" type="button">Zerar para hoje</button>
-          </div>
-        </form>
 
         <div class="config-actions">
           <button id="btn-change-avatar" class="btn btn-config btn-config-avatar" type="button">
@@ -576,7 +577,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/constants.js?v=20260912-tech-1"></script>
   <script src="js/rules.js?v=20260912-tech-1"></script>
-  <script src="db.js?v=20260913-training-1"></script>
-  <script src="app.js?v=20260913-training-1"></script>
+  <script src="db.js?v=20260913-clean-log-1"></script>
+  <script src="app.js?v=20260913-clean-log-1"></script>
 </body>
 </html>

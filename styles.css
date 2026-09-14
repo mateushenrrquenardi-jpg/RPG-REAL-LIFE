@@ -604,7 +604,7 @@ select:focus {
   flex: 0 0 44px;
 }
 
-/* Diárias: no celular, as ações ficam compactas abaixo do conteúdo. */
+/* Diárias: ações em faixa lateral no desktop e compactas abaixo no celular. */
 #daily-list .quest-item {
   grid-template-columns: minmax(0, 1fr) minmax(210px, 250px);
   gap: 16px;
@@ -1031,20 +1031,15 @@ select:focus {
 
   .quest-item {
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
+    align-items: end;
   }
 
-  /* No computador, ações de diárias ficam abaixo do conteúdo para a leitura
-     não competir com o botão principal na lateral do card. */
+  /* Alinha as ações à parte inferior: ao lado da barra de progresso,
+     em vez de centralizadas no meio do card. */
   #daily-list .quest-item {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-  }
-
-  #daily-list .quest-actions {
-    grid-template-columns: minmax(180px, 220px) 44px 44px;
-    justify-content: start;
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 250px);
+    gap: 16px;
+    align-items: end;
   }
 
   .profile-metrics {

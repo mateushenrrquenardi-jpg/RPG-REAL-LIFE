@@ -74,6 +74,10 @@ button {
   outline: none;
 }
 
+.hero-panel--interactive:active {
+  transform: translateY(1px) scale(0.997);
+}
+
 .hero-panel-hint {
   margin-top: 12px;
   color: var(--cyan);
@@ -201,11 +205,23 @@ h1 {
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, opacity 160ms ease;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
 }
 
 .btn:hover {
   transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(69, 217, 255, 0.18);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: none;
+}
+
+.btn:focus-visible,
+.tab:focus-visible {
+  outline: 2px solid rgba(69, 217, 255, 0.82);
+  outline-offset: 2px;
 }
 
 .btn:disabled {
@@ -314,12 +330,17 @@ h1 {
   font-family: "Share Tech Mono", monospace;
   letter-spacing: 0.09em;
   text-transform: uppercase;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, color 160ms ease;
 }
 
 .tab.active {
   border-color: rgba(69, 217, 255, 0.75);
   color: var(--cyan);
   background: rgba(69, 217, 255, 0.08);
+}
+
+.tab:active {
+  transform: translateY(1px) scale(0.985);
 }
 
 .tab-panel {
@@ -465,6 +486,7 @@ select {
 input:focus,
 select:focus {
   border-color: rgba(69, 217, 255, 0.85);
+  box-shadow: 0 0 0 3px rgba(69, 217, 255, 0.09), 0 0 18px rgba(69, 217, 255, 0.08);
 }
 
 .quest-list,
@@ -481,6 +503,7 @@ select:focus {
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--surface-2);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
 .quest-item.done {
@@ -898,7 +921,7 @@ select:focus {
 
 .shop-category-title small { color: var(--muted); font-size: 10px; }
 .shop-grid { display: grid; gap: 10px; }
-.reward-card { display: grid; gap: 10px; padding: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2); }
+.reward-card { display: grid; gap: 10px; padding: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2); transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease; }
 .reward-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .reward-name { color: var(--text); font-size: 16px; font-weight: 700; }
 .reward-code { margin-top: 2px; color: var(--cyan); font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -917,6 +940,66 @@ select:focus {
 .shop-filter { min-width: 125px; }
 .gold-credit { color: var(--green); border-color: rgba(141, 240, 143, 0.32); }
 .gold-debit { color: var(--pink); border-color: rgba(255, 79, 145, 0.35); }
+
+/* Feedback de interface: brilho discreto e profundidade onde há interação.
+   Ativado apenas em dispositivos com ponteiro de precisão, para não causar saltos no toque. */
+@media (hover: hover) and (pointer: fine) {
+  .panel:not(.hero-panel) {
+    transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  .panel:not(.hero-panel):hover {
+    transform: translateY(-2px);
+    border-color: rgba(69, 217, 255, 0.34);
+    box-shadow: 0 0 24px rgba(69, 217, 255, 0.07), var(--shadow);
+  }
+
+  .tab:hover {
+    transform: translateY(-1px);
+    border-color: rgba(69, 217, 255, 0.55);
+    color: var(--cyan);
+    box-shadow: 0 0 16px rgba(69, 217, 255, 0.1);
+  }
+
+  .attribute-card,
+  .profile-metric {
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  }
+
+  .attribute-card:hover,
+  .profile-metric:hover,
+  .quest-item:not(.done):hover,
+  .history-item:hover,
+  .reward-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(69, 217, 255, 0.45);
+    background: linear-gradient(135deg, rgba(69, 217, 255, 0.06), transparent 55%), var(--surface-2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 16px rgba(69, 217, 255, 0.08);
+  }
+
+  .btn-delete:hover {
+    box-shadow: 0 0 18px rgba(255, 79, 145, 0.2);
+  }
+
+  .btn-complete:hover {
+    box-shadow: 0 0 18px rgba(141, 240, 143, 0.18);
+  }
+
+  .reward-buy:hover {
+    box-shadow: 0 0 18px rgba(255, 200, 87, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
 
 @media (min-width: 620px) {
   .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

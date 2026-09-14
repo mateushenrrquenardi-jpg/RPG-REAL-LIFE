@@ -7,6 +7,7 @@ let loadedQuests = [];
 let pendingAvatarData = null;
 let currentProgressQuest = null;
 let currentHero = null;
+let currentQuestSuggestion = null;
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -123,6 +124,68 @@ async function openProfilePanel() {
     const [hero, overview, history, goldHistory, cleanDate, cleanDateLogs] = await Promise.all([db.getHero(), db.getHeroOverview(), db.getHistorico(12), db.getGoldHistory(12), db.getCleanDate(), db.getCleanDateLogs()]);
     renderProfilePanel(hero, overview, history, goldHistory, cleanDate, cleanDateLogs);
   } catch (error) { toast(error.message || "Não foi possível carregar o painel do herói."); }
+}
+
+function suggestionTypeLabel(type) {
+  if (type === "principal") return "Missão Principal";
+  if (type === "diaria") return "Rotina Diária";
+  return "Side Quest";
+}
+
+function closeQuestSuggestion() {
+  currentQuestSuggestion = null;
+  const modal = $("#quest-suggestion-modal");
+  if (modal?.close) modal.close();
+  else modal?.removeAttribute("open");
+}
+
+async function checkQuestSuggestion() {
+  try {
+    const suggestion = await db.getDailyQuestSuggestion();
+    if (!suggestion || suggestion.status !== "pending") return;
+    currentQuestSuggestion = suggestion;
+    $("#suggestion-name").textContent = suggestion.name;
+    $("#suggestion-description").textContent = suggestion.description;
+    $("#suggestion-type").textContent = suggestionTypeLabel(suggestion.quest_type);
+    $("#suggestion-attribute").textContent = suggestion.attribute.toUpperCase();
+    const modal = $("#quest-suggestion-modal");
+    if (modal.showModal) modal.showModal();
+    else modal.setAttribute("open", "");
+  } catch (error) {
+    console.warn("Não foi possível carregar a proposta diária.", error);
+  }
+}
+
+async function acceptQuestSuggestion(event) {
+  if (!currentQuestSuggestion) return;
+  const button = event.currentTarget;
+  busy(button, true, "Adotando...");
+  try {
+    const suggestionName = currentQuestSuggestion.name;
+    await db.acceptQuestSuggestion(currentQuestSuggestion.id);
+    closeQuestSuggestion();
+    await refresh();
+    toast("Quest opcional adicionada: " + suggestionName + ".");
+  } catch (error) {
+    toast(error.message || "Não foi possível adicionar esta quest.");
+  } finally {
+    busy(button, false);
+  }
+}
+
+async function dismissQuestSuggestion(event) {
+  if (!currentQuestSuggestion) return;
+  const button = event.currentTarget;
+  busy(button, true, "Dispensando...");
+  try {
+    await db.dismissQuestSuggestion(currentQuestSuggestion.id);
+    closeQuestSuggestion();
+    toast("Proposta dispensada. Um novo sinal chegará amanhã.");
+  } catch (error) {
+    toast(error.message || "Não foi possível dispensar esta proposta.");
+  } finally {
+    busy(button, false);
+  }
 }
 
 function rarityClass(rarity) { return `rarity-${String(rarity || "Common").toLowerCase()}`; }
@@ -1071,6 +1134,7 @@ async function boot(session) {
     const accEmail = $("#account-email");
     if (accEmail) accEmail.textContent = session.user.email;
     await refresh();
+    await checkQuestSuggestion();
   }
 }
 
@@ -1162,6 +1226,9 @@ function bind() {
   $("#progress-quest-modal").onclick = (event) => {
     if (event.target === $("#progress-quest-modal")) closeProgressModal();
   };
+
+  $("#btn-accept-suggestion").onclick = acceptQuestSuggestion;
+  $("#btn-dismiss-suggestion").onclick = dismissQuestSuggestion;
 
   $("#btn-change-avatar").onclick = openAvatarModal;
   $("#btn-close-avatar-modal").onclick = closeAvatarModal;

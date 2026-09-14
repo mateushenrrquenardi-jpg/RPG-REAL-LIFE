@@ -156,6 +156,23 @@ const db = (() => {
     return { success: true, result: data };
   }
 
+  async function getDailyQuestSuggestion() {
+    const { data, error } = await client.rpc("get_daily_quest_suggestion");
+    throwOnError(error);
+    return data;
+  }
+
+  async function acceptQuestSuggestion(id) {
+    const { data, error } = await client.rpc("accept_quest_suggestion", { p_suggestion_id: id });
+    throwOnError(error);
+    return data;
+  }
+
+  async function dismissQuestSuggestion(id) {
+    const { error } = await client.rpc("dismiss_quest_suggestion", { p_suggestion_id: id });
+    throwOnError(error);
+  }
+
   async function completeQuest(id) {
     const { data, error } = await client.rpc("complete_quest", { p_quest_id: id });
     throwOnError(error);
@@ -258,6 +275,7 @@ const db = (() => {
     signUp, signIn, signOut, getSession, onAuthChange,
     getHero, getQuests, getHistorico, getGoldHistory, getCustomRewards, getHeroOverview, addCustomReward, deleteCustomReward, redeemReward, addQuest, updateQuest, updateQuestProgress, completeQuest,
     deleteQuest, resetDailies, resetAll, exportAll,
+    getDailyQuestSuggestion, acceptQuestSuggestion, dismissQuestSuggestion,
     getCleanDate, setCleanDate, getCleanDateLogs, getAvatar, setAvatar,
   };
 })();

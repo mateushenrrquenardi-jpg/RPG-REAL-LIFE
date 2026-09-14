@@ -810,6 +810,78 @@ select:focus {
   box-shadow: 0 0 35px rgba(69, 217, 255, 0.15), var(--shadow);
 }
 
+.suggestion-modal {
+  width: min(500px, 92vw);
+}
+
+.suggestion-modal .modal-content {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border-color: rgba(255, 200, 87, 0.5);
+  background: linear-gradient(145deg, rgba(255, 200, 87, 0.08), transparent 48%), var(--surface);
+  box-shadow: 0 0 42px rgba(255, 200, 87, 0.12), var(--shadow);
+}
+
+.suggestion-signal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--amber);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.suggestion-signal span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 12px rgba(255, 200, 87, 0.85);
+  animation: suggestion-pulse 1.5s ease-in-out infinite;
+}
+
+.suggestion-modal h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(25px, 7vw, 34px);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.suggestion-description,
+.suggestion-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.suggestion-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.suggestion-meta .badge:first-child {
+  color: var(--cyan);
+}
+
+.suggestion-meta .badge:nth-child(2) {
+  color: var(--pink);
+}
+
+.suggestion-note {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+@keyframes suggestion-pulse {
+  50% { opacity: 0.45; transform: scale(0.72); }
+}
+
 .state-text {
   padding: 18px 0;
   color: var(--muted);

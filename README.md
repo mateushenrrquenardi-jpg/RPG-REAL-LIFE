@@ -38,6 +38,7 @@ Execute as migrations na ordem definida em [supabase/MIGRATIONS.md](supabase/MIG
 3. `20260913_training_monthly_goal.sql`
 4. `20260913_levelup_half_gold.sql`
 5. `20260913_clean_date_history.sql`
+6. `20260913_daily_quest_suggestions.sql`
 
 Esses arquivos são necessários antes de publicar uma interface que use loja, painel, operações seguras ou metas mensais de treino.
 

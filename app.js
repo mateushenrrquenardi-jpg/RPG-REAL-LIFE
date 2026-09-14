@@ -42,6 +42,14 @@ function busy(button, active, text = "Salvando...") {
   }
 }
 
+function safeLocalGet(key) {
+  try { return localStorage.getItem(key); } catch (_) { return null; }
+}
+
+function safeLocalSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (_) { /* armazenamento opcional */ }
+}
+
 function setAppVisible(signedIn) {
   const authScreen = $("#auth-screen");
   const appScreen = $("#app-screen");
@@ -304,12 +312,12 @@ function questHtml(quest) {
 async function loadQuests() {
   // Reset automático das diárias quando o dia virar
   const todayKey = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
-  const lastSeenDay = localStorage.getItem("rpg_last_seen_day");
+  const lastSeenDay = safeLocalGet("rpg_last_seen_day");
   if (lastSeenDay !== todayKey) {
     try {
       await db.resetDailies();
     } catch (_) { /* silencioso — não bloqueia o carregamento */ }
-    localStorage.setItem("rpg_last_seen_day", todayKey);
+    safeLocalSet("rpg_last_seen_day", todayKey);
   }
 
   const quests = await db.getQuests(), daily = quests.filter((q) => q.tipo === "diaria").sort((a, b) => Number(a.status === "concluida") - Number(b.status === "concluida")), active = quests.filter((q) => q.tipo !== "diaria" && q.status === "ativa");

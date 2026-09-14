@@ -23,6 +23,18 @@ const db = (() => {
     if (error) throw new Error(error.message);
   }
 
+  function safeStorageGet(key) {
+    try { return localStorage.getItem(key); } catch (_) { return null; }
+  }
+
+  function safeStorageSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (_) { /* armazenamento opcional */ }
+  }
+
+  function safeStorageRemove(key) {
+    try { localStorage.removeItem(key); } catch (_) { /* armazenamento opcional */ }
+  }
+
   function questRpcPayload(id, nome, tipo, atributo, weeklyTarget, goal) {
     return {
       p_quest_id: id,
@@ -201,17 +213,17 @@ const db = (() => {
     const user = await requireUser();
     const metaDate = user.user_metadata?.clean_date;
     if (metaDate) return metaDate;
-    return localStorage.getItem(`rpg_clean_date_${user.id}`) || null;
+    return safeStorageGet(`rpg_clean_date_${user.id}`) || null;
   }
 
   async function setCleanDate(dateStr) {
     const user = await requireUser();
-    const previousDate = user.user_metadata?.clean_date || localStorage.getItem(`rpg_clean_date_${user.id}`) || null;
+    const previousDate = user.user_metadata?.clean_date || safeStorageGet(`rpg_clean_date_${user.id}`) || null;
     if (previousDate === dateStr) return { date: dateStr, changed: false };
     if (dateStr) {
-      localStorage.setItem(`rpg_clean_date_${user.id}`, dateStr);
+      safeStorageSet(`rpg_clean_date_${user.id}`, dateStr);
     } else {
-      localStorage.removeItem(`rpg_clean_date_${user.id}`);
+      safeStorageRemove(`rpg_clean_date_${user.id}`);
     }
     const { error } = await client.auth.updateUser({
       data: { clean_date: dateStr || null },
@@ -236,15 +248,15 @@ const db = (() => {
     const user = await requireUser();
     const metaAvatar = user.user_metadata?.custom_avatar;
     if (metaAvatar) return metaAvatar;
-    return localStorage.getItem(`rpg_avatar_${user.id}`) || null;
+    return safeStorageGet(`rpg_avatar_${user.id}`) || null;
   }
 
   async function setAvatar(avatarUrlOrBase64) {
     const user = await requireUser();
     if (avatarUrlOrBase64) {
-      localStorage.setItem(`rpg_avatar_${user.id}`, avatarUrlOrBase64);
+      safeStorageSet(`rpg_avatar_${user.id}`, avatarUrlOrBase64);
     } else {
-      localStorage.removeItem(`rpg_avatar_${user.id}`);
+      safeStorageRemove(`rpg_avatar_${user.id}`);
     }
     const { error } = await client.auth.updateUser({
       data: { custom_avatar: avatarUrlOrBase64 || null },

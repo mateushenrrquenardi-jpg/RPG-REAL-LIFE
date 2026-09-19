@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260913-suggestions-1">
+  <link rel="stylesheet" href="styles.css?v=20260919-quest-dossier-1">
   <style>
     /* Ajustes de organização: classes que substituem estilos inline do arquivo original.
        Nenhum valor visual foi alterado, exceto onde comentado (normalizações minimas). */
@@ -134,6 +134,10 @@
           <label class="field">
             <span>Nome</span>
             <input id="q-nome" type="text" placeholder="Nome da quest..." autocomplete="off" required>
+          </label>
+          <label class="field">
+            <span>Observações / briefing (opcional)</span>
+            <textarea id="q-descricao" rows="3" maxlength="500" placeholder="Defina o que precisa ser feito, a intenção ou o critério de sucesso."></textarea>
           </label>
 
           <div class="form-grid">
@@ -384,6 +388,33 @@
     </div>
   </dialog>
 
+  <dialog id="quest-detail-modal" class="modal-dialog quest-detail-modal" aria-labelledby="detail-quest-name">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <div><span class="system-label">Dossiê de Quest</span><h2 id="detail-quest-name">Quest</h2></div>
+        <button id="btn-close-detail-modal" class="btn btn-delete modal-close-btn" type="button" aria-label="Fechar">X</button>
+      </div>
+      <div id="detail-quest-meta" class="quest-meta"></div>
+      <section class="quest-detail-section">
+        <h3>Briefing</h3>
+        <p id="detail-quest-description" class="quest-detail-description"></p>
+      </section>
+      <section class="quest-detail-section">
+        <h3>Status da missão</h3>
+        <div id="detail-quest-progress"></div>
+      </section>
+      <section class="quest-detail-section">
+        <h3>Recompensa</h3>
+        <div id="detail-quest-reward" class="quest-meta"></div>
+      </section>
+      <div id="detail-quest-primary-actions" class="btn-pair-grid"></div>
+      <div class="quest-detail-management">
+        <button id="btn-detail-edit" class="btn btn-ghost" type="button">Editar Quest</button>
+        <button id="btn-detail-cancel" class="btn btn-delete" type="button">Cancelar Quest</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="avatar-modal" class="modal-dialog">
     <div class="modal-content panel">
       <div class="panel-header">
@@ -428,6 +459,10 @@
         <label class="field">
           <span>Nome</span>
           <input id="edit-q-nome" type="text" placeholder="Nome da quest..." autocomplete="off" required>
+        </label>
+        <label class="field">
+          <span>Observações / briefing (opcional)</span>
+          <textarea id="edit-q-descricao" rows="3" maxlength="500" placeholder="Defina o que precisa ser feito, a intenção ou o critério de sucesso."></textarea>
         </label>
 
         <div class="form-grid">
@@ -595,7 +630,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/constants.js?v=20260912-tech-1"></script>
   <script src="js/rules.js?v=20260912-tech-1"></script>
-  <script src="db.js?v=20260914-mobile-recovery-1"></script>
-  <script src="app.js?v=20260914-mobile-recovery-1"></script>
+  <script src="db.js?v=20260919-quest-dossier-1"></script>
+  <script src="app.js?v=20260919-quest-dossier-1"></script>
 </body>
 </html>

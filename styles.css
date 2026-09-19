@@ -35,7 +35,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -472,7 +473,8 @@ h1 {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 44px;
   border: 1px solid var(--line);
@@ -484,9 +486,17 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: rgba(69, 217, 255, 0.85);
   box-shadow: 0 0 0 3px rgba(69, 217, 255, 0.09), 0 0 18px rgba(69, 217, 255, 0.08);
+}
+
+textarea {
+  min-height: 84px;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.4;
 }
 
 .quest-list,
@@ -510,8 +520,28 @@ select:focus {
   opacity: 0.58;
 }
 
+.quest-item[role="button"] {
+  cursor: pointer;
+}
+
+.quest-item:focus-visible {
+  outline: 2px solid rgba(69, 217, 255, 0.82);
+  outline-offset: 2px;
+}
+
 .quest-main {
   min-width: 0;
+}
+
+.quest-observation {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .quest-title,
@@ -856,6 +886,67 @@ select:focus {
   color: var(--muted);
   font-size: 15px;
   line-height: 1.45;
+}
+
+.quest-detail-modal {
+  width: min(580px, 92vw);
+}
+
+.quest-detail-modal .modal-content {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border-color: rgba(69, 217, 255, 0.55);
+  background: linear-gradient(145deg, rgba(69, 217, 255, 0.07), transparent 48%), var(--surface);
+}
+
+.quest-detail-modal h2 {
+  margin-top: 5px;
+  color: var(--text);
+  font-size: clamp(24px, 7vw, 34px);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.quest-detail-section {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.quest-detail-section h3 {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.quest-detail-description,
+.quest-detail-empty {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.quest-detail-empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.quest-detail-section .routine-card,
+.quest-detail-section .goal-card {
+  margin-top: 0;
+}
+
+.quest-detail-management {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 4px;
 }
 
 .suggestion-meta {

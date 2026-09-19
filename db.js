@@ -35,7 +35,7 @@ const db = (() => {
     try { localStorage.removeItem(key); } catch (_) { /* armazenamento opcional */ }
   }
 
-  function questRpcPayload(id, nome, tipo, atributo, weeklyTarget, goal) {
+  function questRpcPayload(id, nome, tipo, atributo, weeklyTarget, goal, description = "") {
     return {
       p_quest_id: id,
       p_nome: nome,
@@ -48,6 +48,7 @@ const db = (() => {
       p_goal_total: goal?.total != null ? Number(goal.total) : null,
       p_goal_current: goal?.current != null ? Number(goal.current) : 0,
       p_goal_period_month: goal?.periodMonth || null,
+      p_descricao: description.trim() || null,
     };
   }
 
@@ -147,14 +148,14 @@ const db = (() => {
     return data;
   }
 
-  async function addQuest(nome, tipo, atributo, weeklyTarget = 7, goal = null) {
-    const { data, error } = await client.rpc("save_quest", questRpcPayload(null, nome, tipo, atributo, weeklyTarget, goal));
+  async function addQuest(nome, tipo, atributo, weeklyTarget = 7, goal = null, description = "") {
+    const { data, error } = await client.rpc("save_quest", questRpcPayload(null, nome, tipo, atributo, weeklyTarget, goal, description));
     throwOnError(error);
     return { success: true, id: data.id };
   }
 
-  async function updateQuest(id, { nome, tipo, atributo, weeklyTarget = 7, goal = null }) {
-    const { data, error } = await client.rpc("save_quest", questRpcPayload(id, nome, tipo, atributo, weeklyTarget, goal));
+  async function updateQuest(id, { nome, tipo, atributo, weeklyTarget = 7, goal = null, description = "" }) {
+    const { data, error } = await client.rpc("save_quest", questRpcPayload(id, nome, tipo, atributo, weeklyTarget, goal, description));
     throwOnError(error);
     return { success: true, quest: data };
   }

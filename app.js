@@ -8,6 +8,7 @@ let pendingAvatarData = null;
 let currentProgressQuest = null;
 let currentHero = null;
 let currentQuestSuggestion = null;
+let currentQuestDetail = null;
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -301,12 +302,71 @@ function routineHtml(quest) {
   return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS · ${pct}%</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
 }
 
+function questDescription(quest) {
+  if (quest.descricao && quest.descricao.trim()) return quest.descricao.trim();
+  if (quest.tipo === "diaria") return "Rotina recorrente para fortalecer consistência e evolução gradual.";
+  if (quest.tipo === "principal") return "Missão de impacto maior. Defina um objetivo claro e avance com intenção.";
+  return "Quest opcional de desenvolvimento: conclua quando a ação estiver realmente feita.";
+}
+
+function questTypeLabel(quest) {
+  return quest.tipo === "principal" ? "Missão Principal" : quest.tipo === "diaria" ? "Rotina Diária" : "Side Quest";
+}
+
+function questRewardText(quest) {
+  if (quest.tipo === "principal") return "+30 EXP · +3 atributo";
+  return quest.tipo === "diaria" ? "+10 EXP · +1 atributo · +7 GOLD" : "+10 EXP · +1 atributo · +3 GOLD";
+}
+
 function questHtml(quest) {
   const done = quest.status === "concluida", daily = quest.tipo === "diaria", principal = quest.tipo === "principal";
   const hasGoal = principal && Boolean(quest.goal_type) && Boolean(quest.goal_total);
   const label = principal ? "Principal" : daily ? "Diaria" : "Side";
   const style = principal ? "badge-main" : daily ? "badge-daily" : "";
-  return `<article class="quest-item ${done ? "done" : ""}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div>${daily ? routineHtml(quest) : hasGoal ? goalHtml(quest) : ""}</div><div class="quest-actions">${hasGoal && !done ? `<button class="btn btn-progress" type="button" data-action="progress" data-id="${quest.id}">Progresso</button>` : ""}<button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-edit" type="button" data-action="edit" data-id="${quest.id}" aria-label="Editar quest">✏️</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
+  return `<article class="quest-item ${done ? "done" : ""}" data-action="details" data-id="${quest.id}" role="button" tabindex="0" aria-label="Abrir detalhes de ${escapeHtml(quest.nome)}"><div class="quest-main"><div class="quest-title">${escapeHtml(quest.nome)}</div><div class="quest-meta"><span class="badge ${style}">${label}</span><span class="badge">${escapeHtml(quest.atributo[0].toUpperCase() + quest.atributo.slice(1))}</span><span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Concluida" : "Pendente"}</span></div><p class="quest-observation">${escapeHtml(questDescription(quest))}</p>${daily ? routineHtml(quest) : hasGoal ? goalHtml(quest) : ""}</div><div class="quest-actions">${hasGoal && !done ? `<button class="btn btn-progress" type="button" data-action="progress" data-id="${quest.id}">Progresso</button>` : ""}<button class="btn btn-complete" type="button" data-action="complete" data-id="${quest.id}" ${done ? "disabled" : ""}>${done ? "Feita" : "Concluir"}</button><button class="btn btn-edit" type="button" data-action="edit" data-id="${quest.id}" aria-label="Editar quest">✏️</button><button class="btn btn-delete" type="button" data-action="delete" data-id="${quest.id}" aria-label="Remover quest">X</button></div></article>`;
+}
+
+function closeQuestDetails() {
+  currentQuestDetail = null;
+  const modal = $("#quest-detail-modal");
+  if (modal.close) modal.close();
+  else modal.removeAttribute("open");
+}
+
+function openQuestDetails(id) {
+  const quest = loadedQuests.find((item) => String(item.id) === String(id));
+  if (!quest) return toast("Quest não encontrada.");
+  currentQuestDetail = quest;
+  const done = quest.status === "concluida";
+  const hasGoal = quest.tipo === "principal" && Boolean(quest.goal_type) && Boolean(quest.goal_total);
+  $("#detail-quest-name").textContent = quest.nome;
+  $("#detail-quest-description").textContent = questDescription(quest);
+  $("#detail-quest-meta").innerHTML = '<span class="badge">' + escapeHtml(questTypeLabel(quest)) + '</span><span class="badge">' + escapeHtml(quest.atributo.toUpperCase()) + '</span><span class="badge ' + (done ? "badge-done" : "badge-pending") + '">' + (done ? "CONCLUÍDA" : "ATIVA") + '</span>';
+  $("#detail-quest-progress").innerHTML = quest.tipo === "diaria" ? routineHtml(quest) : hasGoal ? goalHtml(quest) : '<p class="quest-detail-empty">' + (done ? "Esta quest já foi concluída." : "Conclua esta quest quando a ação estiver finalizada.") + '</p>';
+  $("#detail-quest-reward").innerHTML = '<span class="badge reward-price">' + escapeHtml(questRewardText(quest)) + '</span>' + (hasGoal ? '<span class="badge">MARCOS DE PROGRESSO: ATÉ +400 GOLD</span>' : "");
+  $("#detail-quest-primary-actions").innerHTML = done ? "" : (hasGoal ? '<button class="btn btn-progress" type="button" data-action="detail-progress" data-id="' + escapeHtml(quest.id) + '">Atualizar progresso</button>' : "") + '<button class="btn btn-complete" type="button" data-action="detail-complete" data-id="' + escapeHtml(quest.id) + '">Concluir quest</button>';
+  $("#btn-detail-edit").disabled = done;
+  $("#btn-detail-cancel").disabled = done;
+  const modal = $("#quest-detail-modal");
+  if (modal.showModal) modal.showModal();
+  else modal.setAttribute("open", "");
+}
+
+async function cancelQuestFromDetails() {
+  if (!currentQuestDetail) return;
+  if (!confirm("Cancelar esta quest? Ela será removida da sua lista.")) return;
+  const button = $("#btn-detail-cancel");
+  busy(button, true, "Cancelando...");
+  try {
+    await db.deleteQuest(currentQuestDetail.id);
+    closeQuestDetails();
+    await loadQuests();
+    toast("Quest cancelada.");
+  } catch (error) {
+    toast(error.message || "Não foi possível cancelar esta quest.");
+  } finally {
+    busy(button, false);
+  }
 }
 
 async function loadQuests() {
@@ -534,6 +594,7 @@ function openEditModal(id) {
   if (!quest) return toast("Quest nao encontrada.");
   $("#edit-q-id").value = quest.id;
   $("#edit-q-nome").value = quest.nome;
+  $("#edit-q-descricao").value = quest.descricao || "";
   $("#edit-q-tipo").value = quest.tipo;
   $("#edit-q-atrib").value = quest.atributo;
   $("#edit-q-semanal").value = String(quest.weekly_target || 7);
@@ -622,6 +683,7 @@ async function saveQuestEdit(event) {
   event.preventDefault();
   const id = $("#edit-q-id").value;
   const name = $("#edit-q-nome").value.trim();
+  const description = $("#edit-q-descricao").value.trim();
   const type = $("#edit-q-tipo").value;
   const atrib = $("#edit-q-atrib").value;
   const weeklyTarget = Number($("#edit-q-semanal").value);
@@ -637,7 +699,7 @@ async function saveQuestEdit(event) {
 
   busy(button, true, "Salvando...");
   try {
-    await db.updateQuest(id, { nome: name, tipo: type, atributo: atrib, weeklyTarget, goal });
+    await db.updateQuest(id, { nome: name, tipo: type, atributo: atrib, weeklyTarget, goal, description });
     closeEditModal();
     await loadQuests();
     toast("Quest atualizada.");
@@ -944,6 +1006,7 @@ async function resetAvatarDefault() {
 async function addQuest(event) {
   event.preventDefault();
   const name = $("#q-nome").value.trim();
+  const description = $("#q-descricao").value.trim();
   const button = event.submitter || $("#quest-form button[type=submit]");
   const type = $("#q-tipo").value;
   const weeklyTarget = Number($("#q-semanal").value);
@@ -958,8 +1021,9 @@ async function addQuest(event) {
 
   busy(button, true);
   try {
-    await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget, goal);
+    await db.addQuest(name, type, $("#q-atrib").value, weeklyTarget, goal, description);
     $("#q-nome").value = "";
+    $("#q-descricao").value = "";
     $("#q-goal-type").value = "";
     $("#q-goal-livro-nome").value = "";
     $("#q-goal-livro-total").value = "";
@@ -1204,9 +1268,18 @@ function bind() {
     const button = event.target.closest("[data-action]");
     if (!button) return;
     if (button.dataset.action === "complete") completeQuest(button.dataset.id, button);
+    else if (button.dataset.action === "details") openQuestDetails(button.dataset.id);
     else if (button.dataset.action === "edit") openEditModal(button.dataset.id);
     else if (button.dataset.action === "delete") deleteQuest(button.dataset.id, button);
     else if (button.dataset.action === "progress") openProgressModal(button.dataset.id);
+    else if (button.dataset.action === "detail-complete") {
+      closeQuestDetails();
+      completeQuest(button.dataset.id, button);
+    }
+    else if (button.dataset.action === "detail-progress") {
+      closeQuestDetails();
+      openProgressModal(button.dataset.id);
+    }
     else if (button.dataset.action === "redeem") redeemShopReward(button);
     else if (button.dataset.action === "delete-custom-reward") removeCustomReward(button);
   };
@@ -1237,6 +1310,25 @@ function bind() {
 
   $("#btn-accept-suggestion").onclick = acceptQuestSuggestion;
   $("#btn-dismiss-suggestion").onclick = dismissQuestSuggestion;
+  $("#btn-close-detail-modal").onclick = closeQuestDetails;
+  $("#btn-detail-edit").onclick = () => {
+    if (!currentQuestDetail) return;
+    const id = currentQuestDetail.id;
+    closeQuestDetails();
+    openEditModal(id);
+  };
+  $("#btn-detail-cancel").onclick = cancelQuestFromDetails;
+  $("#quest-detail-modal").onclick = (event) => {
+    if (event.target === $("#quest-detail-modal")) closeQuestDetails();
+  };
+
+  document.body.onkeydown = (event) => {
+    const card = event.target.closest?.(".quest-item[data-action='details']");
+    if (card && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      openQuestDetails(card.dataset.id);
+    }
+  };
 
   $("#btn-change-avatar").onclick = openAvatarModal;
   $("#btn-close-avatar-modal").onclick = closeAvatarModal;

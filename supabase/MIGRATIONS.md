@@ -17,6 +17,7 @@ Execute no SQL Editor do Supabase, uma única vez e exatamente nesta ordem. Não
 13. `20260913_levelup_half_gold.sql`
 14. `20260913_clean_date_history.sql`
 15. `20260913_daily_quest_suggestions.sql`
+16. `20260919_quest_details_and_notes.sql`
 
 ## Convenções
 
@@ -27,4 +28,4 @@ Execute no SQL Editor do Supabase, uma única vez e exatamente nesta ordem. Não
 
 ## Conferência pós-migration
 
-Depois da etapa 15, valide: criar/editar/remover uma quest, receber e aceitar/dispensar uma proposta diária, registrar progresso de livro, curso e treino, registrar um marco de dias limpo no Painel do Herói, concluir uma quest, subir de nível, criar/remover um Custom Contract e resgatar uma recompensa. Também confirme que GOLD, EXP e atributos continuam sendo atualizados apenas pelas funções do banco.
+Depois da etapa 16, valide: criar, editar e cancelar uma quest com observações; abrir o dossiê de uma quest; receber e aceitar/dispensar uma proposta diária; registrar progresso de livro, curso e treino; registrar um marco de dias limpo no Painel do Herói; concluir uma quest, subir de nível, criar/remover um Custom Contract e resgatar uma recompensa. Também confirme que GOLD, EXP e atributos continuam sendo atualizados apenas pelas funções do banco.

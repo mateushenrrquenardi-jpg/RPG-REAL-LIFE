@@ -858,25 +858,82 @@ textarea {
   color: var(--cyan);
 }
 
-.btn-edit {
-  width: 44px;
-  padding: 0;
-  background: rgba(69, 217, 255, 0.12);
-  border: 1px solid rgba(69, 217, 255, 0.45);
-  color: var(--cyan);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-}
-
+.btn-edit,
 .btn-delete {
   width: 44px;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-edit {
+  background: rgba(69, 217, 255, 0.12);
+  border: 1px solid rgba(69, 217, 255, 0.45);
+  color: var(--cyan);
+}
+
+.btn-delete {
   background: rgba(255, 79, 145, 0.12);
   border: 1px solid rgba(255, 79, 145, 0.4);
   color: var(--pink);
 }
+
+.quest-action-icon {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Ícones desenhados no próprio sistema, sem emojis ou biblioteca externa. */
+.quest-action-icon--edit {
+  width: 8px;
+  height: 17px;
+  border: 1.5px solid currentColor;
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+.quest-action-icon--edit::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: -1.5px;
+  left: -1.5px;
+  border-top: 1.5px solid currentColor;
+}
+
+.quest-action-icon--edit::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-right: 3px solid transparent;
+  border-left: 3px solid transparent;
+  border-top: 4px solid currentColor;
+}
+
+.quest-action-icon--cancel::before,
+.quest-action-icon--cancel::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 0;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 5px currentColor;
+}
+
+.quest-action-icon--cancel::before { transform: rotate(45deg); }
+.quest-action-icon--cancel::after { transform: rotate(-45deg); }
 
 .prog-summary {
   padding: 12px;

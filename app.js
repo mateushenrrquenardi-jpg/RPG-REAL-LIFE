@@ -89,12 +89,18 @@ async function loadHero() {
   if (c) c.textContent = hero.carisma;
   if (i) i.textContent = hero.inteligencia;
 
-  const defaultAvatar = "assets/profile.jpg?v=20260904-1";
+  const defaultAvatar = "assets/avatar-placeholder.svg?v=20260921-1";
   const currentAvatarSrc = avatar || defaultAvatar;
   const heroAvatar = $("#hero-avatar");
-  if (heroAvatar) heroAvatar.src = currentAvatarSrc;
+  if (heroAvatar) {
+    heroAvatar.src = currentAvatarSrc;
+    heroAvatar.alt = avatar ? "Avatar de Mateus" : "Avatar padrão do herói";
+  }
   const preview = $("#avatar-modal-preview");
-  if (preview) preview.src = currentAvatarSrc;
+  if (preview) {
+    preview.src = currentAvatarSrc;
+    preview.alt = avatar ? "Preview do avatar de Mateus" : "Preview do avatar padrão";
+  }
 
 }
 
@@ -942,7 +948,7 @@ function processImageFile(file) {
 
 function openAvatarModal() {
   pendingAvatarData = null;
-  const currentSrc = $("#hero-avatar") ? $("#hero-avatar").src : "assets/profile.jpg?v=20260904-1";
+  const currentSrc = $("#hero-avatar") ? $("#hero-avatar").src : "assets/avatar-placeholder.svg?v=20260921-1";
   $("#avatar-modal-preview").src = currentSrc;
   $("#avatar-url-input").value = "";
   $("#avatar-file-input").value = "";

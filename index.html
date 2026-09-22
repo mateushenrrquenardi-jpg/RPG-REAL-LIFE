@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260919-dossier-clean-1">
+  <link rel="stylesheet" href="styles.css?v=20260921-system-dock-1">
   <style>
     /* Ajustes de organização: classes que substituem estilos inline do arquivo original.
        Nenhum valor visual foi alterado, exceto onde comentado (normalizações minimas). */
@@ -368,6 +368,21 @@
         </section>
       </section>
     </section>
+
+    <nav id="system-dock" class="system-dock" aria-label="Atalhos do sistema">
+      <button class="dock-module dock-module--locked" type="button" disabled aria-label="Módulo de arquivo bloqueado no nível atual">
+        <span class="dock-screen-icon" aria-hidden="true"><i></i><i></i></span>
+        <span class="dock-lock-label">LOCK</span>
+      </button>
+      <button id="btn-dock-home" class="dock-home" type="button" aria-label="Ir para início">
+        <span class="dock-home-symbol" aria-hidden="true">⌂</span>
+        <span>HOME</span>
+      </button>
+      <button class="dock-module dock-module--locked" type="button" disabled aria-label="Módulo de mapa bloqueado no nível atual">
+        <span class="dock-screen-icon dock-screen-icon--map" aria-hidden="true"><i></i><i></i></span>
+        <span class="dock-lock-label">LOCK</span>
+      </button>
+    </nav>
   </main>
 
   <dialog id="quest-suggestion-modal" class="modal-dialog suggestion-modal" aria-labelledby="suggestion-name">
@@ -631,6 +646,6 @@
   <script src="js/constants.js?v=20260912-tech-1"></script>
   <script src="js/rules.js?v=20260912-tech-1"></script>
   <script src="db.js?v=20260919-quest-dossier-1"></script>
-  <script src="app.js?v=20260919-dossier-clean-1"></script>
+  <script src="app.js?v=20260921-system-dock-1"></script>
 </body>
 </html>

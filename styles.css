@@ -353,6 +353,100 @@ h1 {
   gap: 14px;
 }
 
+/* System Dock: atalhos persistentes, com módulos futuros ainda bloqueados. */
+.system-dock {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 44px 62px 44px;
+  align-items: end;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid rgba(69, 217, 255, 0.26);
+  border-radius: 10px;
+  background: rgba(17, 16, 23, 0.88);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.38), 0 0 18px rgba(69, 217, 255, 0.08);
+  backdrop-filter: blur(12px);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.dock-module,
+.dock-home {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  font-family: "Share Tech Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dock-module {
+  min-height: 44px;
+  padding: 4px;
+  border: 1px solid rgba(155, 148, 170, 0.2);
+  border-radius: 6px;
+  background: rgba(155, 148, 170, 0.035);
+  color: rgba(155, 148, 170, 0.5);
+  cursor: not-allowed;
+}
+
+.dock-screen-icon {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  width: 20px;
+  height: 14px;
+  padding: 3px;
+  border: 1px solid currentColor;
+  box-shadow: inset 0 0 7px rgba(155, 148, 170, 0.16);
+}
+
+.dock-screen-icon i {
+  display: block;
+  min-width: 0;
+  background: currentColor;
+  opacity: 0.38;
+}
+
+.dock-screen-icon--map i:first-child { opacity: 0.22; }
+.dock-screen-icon--map i:last-child { opacity: 0.62; }
+
+.dock-lock-label {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.dock-home {
+  min-height: 62px;
+  margin-top: -19px;
+  padding: 5px 4px 4px;
+  border: 1px solid rgba(69, 217, 255, 0.72);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(69, 217, 255, 0.18), rgba(69, 217, 255, 0.05)), var(--surface-2);
+  color: var(--cyan);
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(69, 217, 255, 0.12);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.dock-home:active { transform: translateY(1px) scale(0.97); }
+
+.dock-home:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+.dock-home-symbol {
+  height: 27px;
+  font-family: Arial, sans-serif;
+  font-size: 31px;
+  line-height: 24px;
+}
+
+.dock-home > span:last-child { font-size: 9px; }
+
 .panel {
   padding: 16px;
 }
@@ -1144,6 +1238,18 @@ textarea {
   .reward-buy:hover {
     box-shadow: 0 0 18px rgba(255, 200, 87, 0.2);
   }
+
+  .system-dock:hover {
+    border-color: rgba(69, 217, 255, 0.52);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.38), 0 0 24px rgba(69, 217, 255, 0.14);
+  }
+
+  .dock-home:hover {
+    transform: translateY(-2px);
+    border-color: var(--cyan);
+    background: linear-gradient(180deg, rgba(69, 217, 255, 0.24), rgba(69, 217, 255, 0.07)), var(--surface-2);
+    box-shadow: 0 0 23px rgba(69, 217, 255, 0.22);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1163,6 +1269,26 @@ textarea {
 }
 
 @media (max-width: 619px) {
+  #app-screen {
+    padding-bottom: calc(108px + env(safe-area-inset-bottom));
+  }
+
+  .system-dock {
+    right: auto;
+    left: 50%;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    width: min(288px, calc(100vw - 24px));
+    grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr);
+    transform: translateX(-50%);
+    transition: transform 240ms ease, opacity 200ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .system-dock.is-hidden {
+    transform: translate(-50%, calc(100% + 30px));
+    opacity: 0;
+    pointer-events: none;
+  }
+
   #daily-list .quest-item {
     grid-template-columns: 1fr;
     gap: 12px;

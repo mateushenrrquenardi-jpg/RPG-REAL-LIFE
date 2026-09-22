@@ -9,6 +9,7 @@ let currentProgressQuest = null;
 let currentHero = null;
 let currentQuestSuggestion = null;
 let currentQuestDetail = null;
+let lastDockScrollY = 0;
 
 function calcCleanDays(dateStr) {
   if (!dateStr) return null;
@@ -1177,6 +1178,42 @@ function showTab(name) {
   document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`));
 }
 
+function bindSystemDock() {
+  const dock = $("#system-dock");
+  const homeButton = $("#btn-dock-home");
+  if (!dock || !homeButton) return;
+
+  const updateDockVisibility = () => {
+    const isMobile = window.matchMedia("(max-width: 619px)").matches;
+    const currentY = Math.max(0, window.scrollY || 0);
+    const movedDown = currentY > lastDockScrollY + 8;
+    const movedUp = currentY < lastDockScrollY - 8;
+
+    if (!isMobile || currentY <= 12 || movedUp) dock.classList.remove("is-hidden");
+    else if (movedDown) dock.classList.add("is-hidden");
+
+    lastDockScrollY = currentY;
+  };
+
+  homeButton.onclick = () => {
+    showTab("quests");
+    dock.classList.remove("is-hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  let isScrollFramePending = false;
+  window.addEventListener("scroll", () => {
+    if (isScrollFramePending) return;
+    isScrollFramePending = true;
+    window.requestAnimationFrame(() => {
+      updateDockVisibility();
+      isScrollFramePending = false;
+    });
+  }, { passive: true });
+  window.addEventListener("resize", updateDockVisibility, { passive: true });
+  updateDockVisibility();
+}
+
 async function login(event) {
   event.preventDefault();
   const button = event.submitter || $("#auth-form button[type=submit]");
@@ -1229,6 +1266,7 @@ async function saveCleanDate(event) {
 }
 
 function bind() {
+  bindSystemDock();
   $("#auth-form").onsubmit = login;
   $("#btn-signup").onclick = (event) => {
     event.preventDefault();

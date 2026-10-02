@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260921-action-icons-1">
+  <link rel="stylesheet" href="styles.css?v=20261001-life-design-1">
   <style>
     /* Ajustes de organização: classes que substituem estilos inline do arquivo original.
        Nenhum valor visual foi alterado, exceto onde comentado (normalizações minimas). */
@@ -269,6 +269,28 @@
       </section>
     </section>
 
+    <section id="tab-life-design" class="tab-panel life-design-screen" aria-label="Life Design">
+      <section class="life-design-shell">
+        <header class="life-design-header">
+          <div>
+            <p class="system-label">// MÓDULO DE ARQUITETURA PESSOAL</p>
+            <h1>Life Design</h1>
+          </div>
+          <span id="life-design-access-badge" class="life-design-access-badge">NV.10 REQUIRED</span>
+        </header>
+
+        <div class="life-design-stage">
+          <div class="life-design-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <p class="life-design-kicker">LIFE DESIGN // CENTRAL</p>
+          <h2 id="life-design-state-title">Acesso restrito</h2>
+          <p id="life-design-state-copy" class="life-design-state-copy">Este módulo será desbloqueado quando seu herói alcançar o nível 10.</p>
+          <div class="life-design-level-readout"><span>NÍVEL ATUAL</span><strong id="life-design-current-level">NV. —</strong><span>REQUISITO: NV.10</span></div>
+        </div>
+
+        <footer class="life-design-footer">PROTOCOLO EM PREPARAÇÃO <span></span> MÓDULO RESERVADO</footer>
+      </section>
+    </section>
+
     <section id="tab-profile" class="tab-panel" aria-label="Painel do herói">
       <section class="panel">
         <div class="panel-header">
@@ -370,9 +392,9 @@
     </section>
 
     <nav id="system-dock" class="system-dock" aria-label="Atalhos do sistema">
-      <button class="dock-module dock-module--locked" type="button" disabled aria-label="Módulo de arquivo bloqueado no nível atual">
-        <span class="dock-screen-icon" aria-hidden="true"><i></i><i></i></span>
-        <span class="dock-lock-label">LOCK</span>
+      <button id="btn-dock-life-design" class="dock-module dock-life-design dock-module--locked" type="button" aria-label="Life Design bloqueado até o nível 10">
+        <span class="dock-life-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span id="dock-life-design-label" class="dock-lock-label">NV.10</span>
       </button>
       <button id="btn-dock-home" class="dock-home" type="button" aria-label="Ir para início">
         <span class="dock-home-symbol" aria-hidden="true">⌂</span>
@@ -646,6 +668,6 @@
   <script src="js/constants.js?v=20260912-tech-1"></script>
   <script src="js/rules.js?v=20260912-tech-1"></script>
   <script src="db.js?v=20260919-quest-dossier-1"></script>
-  <script src="app.js?v=20260921-avatar-placeholder-1"></script>
+  <script src="app.js?v=20261001-life-design-1"></script>
 </body>
 </html>

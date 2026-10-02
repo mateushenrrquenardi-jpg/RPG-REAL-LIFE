@@ -353,6 +353,167 @@ h1 {
   gap: 14px;
 }
 
+/* Life Design: módulo de planejamento futuro, reservado ao nível 10. */
+#app-screen.life-design-active > .hero-panel,
+#app-screen.life-design-active > .tabs {
+  display: none;
+}
+
+.life-design-screen.active {
+  display: block;
+  min-height: calc(100dvh - 56px);
+}
+
+.life-design-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: calc(100dvh - 56px);
+  padding: clamp(22px, 5vw, 42px);
+  border: 1px solid rgba(69, 217, 255, 0.28);
+  border-radius: 10px;
+  background:
+    linear-gradient(120deg, rgba(69, 217, 255, 0.06), transparent 32%),
+    linear-gradient(-38deg, rgba(255, 79, 145, 0.045), transparent 34%),
+    var(--surface);
+  box-shadow: var(--shadow), inset 0 0 70px rgba(69, 217, 255, 0.025);
+}
+
+.life-design-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.life-design-header h1 {
+  margin-top: 5px;
+  color: var(--text);
+  font-size: clamp(27px, 6vw, 42px);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.life-design-access-badge {
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 79, 145, 0.42);
+  color: var(--pink);
+  background: rgba(255, 79, 145, 0.07);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.life-design-access-badge.is-unlocked {
+  border-color: rgba(141, 240, 143, 0.48);
+  color: var(--green);
+  background: rgba(141, 240, 143, 0.07);
+}
+
+.life-design-stage {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  max-width: 470px;
+  margin: 0 auto;
+  padding: 44px 0;
+  text-align: center;
+}
+
+.life-design-mark {
+  display: grid;
+  grid-template-columns: repeat(2, 24px);
+  grid-template-rows: repeat(2, 24px);
+  gap: 5px;
+  width: max-content;
+  margin-bottom: 21px;
+  padding: 8px;
+  border: 1px solid rgba(155, 148, 170, 0.32);
+  box-shadow: 0 0 25px rgba(69, 217, 255, 0.08), inset 0 0 16px rgba(69, 217, 255, 0.04);
+}
+
+.life-design-mark i {
+  display: block;
+  border: 1px solid rgba(155, 148, 170, 0.44);
+  background: rgba(155, 148, 170, 0.08);
+}
+
+.life-design-mark i:nth-child(1),
+.life-design-mark i:nth-child(4) {
+  border-color: rgba(69, 217, 255, 0.68);
+  background: rgba(69, 217, 255, 0.15);
+  box-shadow: inset 0 0 10px rgba(69, 217, 255, 0.13);
+}
+
+.life-design-kicker,
+.life-design-footer,
+.life-design-level-readout {
+  font-family: "Share Tech Mono", monospace;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.life-design-kicker {
+  color: var(--cyan);
+  font-size: 10px;
+}
+
+.life-design-stage h2 {
+  margin: 12px 0 7px;
+  color: var(--text);
+  font-size: clamp(24px, 5vw, 34px);
+  text-transform: uppercase;
+}
+
+.life-design-state-copy {
+  max-width: 400px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.life-design-level-readout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 25px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.life-design-level-readout strong {
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 79, 145, 0.36);
+  color: var(--pink);
+  background: rgba(255, 79, 145, 0.06);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.life-design-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: rgba(155, 148, 170, 0.68);
+  font-size: 9px;
+  text-align: center;
+}
+
+.life-design-footer span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 7px var(--pink);
+}
+
 /* System Dock: atalhos persistentes, com módulos futuros ainda bloqueados. */
 .system-dock {
   position: fixed;
@@ -390,6 +551,43 @@ h1 {
   background: rgba(155, 148, 170, 0.035);
   color: rgba(155, 148, 170, 0.5);
   cursor: not-allowed;
+}
+
+.dock-module.is-available {
+  border-color: rgba(69, 217, 255, 0.58);
+  background: rgba(69, 217, 255, 0.09);
+  color: var(--cyan);
+  cursor: pointer;
+  box-shadow: inset 0 0 10px rgba(69, 217, 255, 0.08);
+}
+
+.dock-life-icon {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 6px);
+  grid-template-rows: repeat(2, 6px);
+  gap: 2px;
+  width: 18px;
+  height: 18px;
+  padding: 1px;
+  border: 1px solid currentColor;
+}
+
+.dock-life-icon i {
+  display: block;
+  border: 1px solid currentColor;
+  opacity: 0.56;
+}
+
+.dock-life-icon i:first-child,
+.dock-life-icon i:last-child {
+  background: currentColor;
+  opacity: 0.38;
+}
+
+.dock-life-icon i:last-child {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .dock-screen-icon {

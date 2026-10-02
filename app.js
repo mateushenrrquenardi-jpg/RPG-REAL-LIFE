@@ -1,5 +1,6 @@
 const { TITLES, ROUTINE_LEVELS, SHOP_PRODUCTS, SHOP_CATEGORIES } = RPG_CONFIG;
 const { progressPercent } = RPG_RULES;
+const LIFE_DESIGN_UNLOCK_LEVEL = 10;
 const $ = (selector) => document.querySelector(selector);
 const titleFor = (level) => TITLES.reduce((current, [minimum, title]) => Number(level) >= minimum ? title : current, "Iniciante");
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -101,6 +102,8 @@ async function loadHero() {
     preview.src = currentAvatarSrc;
     preview.alt = avatar ? "Preview do avatar de Mateus" : "Preview do avatar padrão";
   }
+
+  updateLifeDesignAccess();
 
 }
 
@@ -1182,12 +1185,41 @@ async function resetData() {
 function showTab(name) {
   document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name));
   document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`));
+  $("#app-screen")?.classList.toggle("life-design-active", name === "life-design");
+}
+
+function updateLifeDesignAccess() {
+  const level = Number(currentHero?.nivel || 0);
+  const unlocked = level >= LIFE_DESIGN_UNLOCK_LEVEL;
+  const dockButton = $("#btn-dock-life-design");
+  const dockLabel = $("#dock-life-design-label");
+  const accessBadge = $("#life-design-access-badge");
+  const stateTitle = $("#life-design-state-title");
+  const stateCopy = $("#life-design-state-copy");
+  const currentLevel = $("#life-design-current-level");
+
+  if (dockButton) {
+    dockButton.classList.toggle("dock-module--locked", !unlocked);
+    dockButton.classList.toggle("is-available", unlocked);
+    dockButton.setAttribute("aria-label", unlocked ? "Abrir Life Design" : `Life Design bloqueado até o nível ${LIFE_DESIGN_UNLOCK_LEVEL}`);
+  }
+  if (dockLabel) dockLabel.textContent = unlocked ? "LIFE" : `NV.${LIFE_DESIGN_UNLOCK_LEVEL}`;
+  if (accessBadge) {
+    accessBadge.textContent = unlocked ? "ACCESS GRANTED" : `NV.${LIFE_DESIGN_UNLOCK_LEVEL} REQUIRED`;
+    accessBadge.classList.toggle("is-unlocked", unlocked);
+  }
+  if (stateTitle) stateTitle.textContent = unlocked ? "Módulo online" : "Acesso restrito";
+  if (stateCopy) stateCopy.textContent = unlocked
+    ? "Seu espaço de arquitetura pessoal está pronto. Novos protocolos serão integrados aqui."
+    : `Este módulo será desbloqueado quando seu herói alcançar o nível ${LIFE_DESIGN_UNLOCK_LEVEL}.`;
+  if (currentLevel) currentLevel.textContent = level ? `NV. ${level}` : "NV. —";
 }
 
 function bindSystemDock() {
   const dock = $("#system-dock");
   const homeButton = $("#btn-dock-home");
-  if (!dock || !homeButton) return;
+  const lifeDesignButton = $("#btn-dock-life-design");
+  if (!dock || !homeButton || !lifeDesignButton) return;
 
   const updateDockVisibility = () => {
     const isMobile = window.matchMedia("(max-width: 619px)").matches;
@@ -1203,6 +1235,12 @@ function bindSystemDock() {
 
   homeButton.onclick = () => {
     showTab("quests");
+    dock.classList.remove("is-hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  lifeDesignButton.onclick = () => {
+    showTab("life-design");
     dock.classList.remove("is-hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

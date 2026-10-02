@@ -1280,11 +1280,36 @@ textarea {
   margin-top: 0;
 }
 
-.quest-detail-management {
+.quest-detail-actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: stretch;
   gap: 8px;
   padding-top: 4px;
+}
+
+.quest-detail-primary-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1 1 180px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.quest-detail-primary-actions:empty {
+  display: none;
+}
+
+.quest-detail-primary-actions .btn {
+  width: 100%;
+}
+
+.quest-detail-primary-actions > .btn:only-child {
+  grid-column: 1 / -1;
+}
+
+.quest-detail-management {
+  display: flex;
+  gap: 8px;
 }
 
 .quest-detail-management .btn {

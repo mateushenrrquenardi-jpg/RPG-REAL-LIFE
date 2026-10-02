@@ -354,7 +354,7 @@ function openQuestDetails(id) {
   $("#detail-quest-meta").innerHTML = '<span class="badge">' + escapeHtml(questTypeLabel(quest)) + '</span><span class="badge">' + escapeHtml(quest.atributo.toUpperCase()) + '</span><span class="badge ' + (done ? "badge-done" : "badge-pending") + '">' + (done ? "CONCLUÍDA" : "ATIVA") + '</span>';
   $("#detail-quest-progress").innerHTML = quest.tipo === "diaria" ? routineHtml(quest) : hasGoal ? goalHtml(quest) : '<p class="quest-detail-empty">' + (done ? "Esta quest já foi concluída." : "Conclua esta quest quando a ação estiver finalizada.") + '</p>';
   $("#detail-quest-reward").innerHTML = '<span class="badge reward-price">' + escapeHtml(questRewardText(quest)) + '</span>' + (hasGoal ? '<span class="badge">MARCOS DE PROGRESSO: ATÉ +400 GOLD</span>' : "");
-  $("#detail-quest-primary-actions").innerHTML = done ? "" : (hasGoal ? '<button class="btn btn-progress" type="button" data-action="detail-progress" data-id="' + escapeHtml(quest.id) + '">Atualizar progresso</button>' : "") + '<button class="btn btn-complete" type="button" data-action="detail-complete" data-id="' + escapeHtml(quest.id) + '">Concluir quest</button>';
+  $("#detail-quest-primary-actions").innerHTML = done ? "" : (hasGoal ? '<button class="btn btn-progress" type="button" data-action="detail-progress" data-id="' + escapeHtml(quest.id) + '">Progresso</button>' : "") + '<button class="btn btn-complete" type="button" data-action="detail-complete" data-id="' + escapeHtml(quest.id) + '">Concluir quest</button>';
   $("#btn-detail-edit").disabled = done;
   $("#btn-detail-cancel").disabled = done;
   const modal = $("#quest-detail-modal");

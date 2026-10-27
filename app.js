@@ -122,7 +122,7 @@ function formatCleanDate(value) {
 function renderProfilePanel(hero, overview, history, goldHistory, cleanDate, cleanDateLogs) {
   const summary = $("#profile-summary");
   const cleanDays = calcCleanDays(cleanDate);
-  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(overview.gold_earned)} GOLD`, "Registrado no extrato")}${profileMetric("DIAS LIMPO", cleanDays == null ? "—" : cleanDays, cleanDays == null ? "Sem marco registrado" : `Desde ${formatCleanDate(cleanDate)}`)}${profileMetric("ATIVIDADES", overview.completed_activity_count, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", overview.completed_quest_count, "Metas encerradas")}${profileMetric("LIVROS LIDOS", overview.books_read, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", overview.courses_completed, "Metas de curso concluídas")}${profileMetric("TREINOS CONCLUÍDOS", overview.workout_goals_completed || 0, "Metas mensais concluídas")}${profileMetric("COMPRAS PLANEJADAS", overview.purchase_goals_completed, "Metas de compra concluídas")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
+  if (summary) summary.innerHTML = `<div class="profile-identity"><span class="system-label">// REGISTRO DE JORNADA</span><h1>NV. ${hero.nivel} · ${escapeHtml(titleFor(hero.nivel))}</h1><p>Seu estado atual, conquistas acumuladas e histórico de evolução.</p></div><div class="profile-metrics">${profileMetric("GOLD ATUAL", `${formatGold(hero.gold)} GOLD`, "Saldo disponível")}${profileMetric("GOLD RECEBIDO", `${formatGold(overview.gold_earned)} GOLD`, "Registrado no extrato")}${profileMetric("DIAS LIMPO", cleanDays == null ? "—" : cleanDays, cleanDays == null ? "Sem marco registrado" : `Desde ${formatCleanDate(cleanDate)}`)}${profileMetric("ATIVIDADES", overview.completed_activity_count, "Conclusões registradas")}${profileMetric("QUESTS FINALIZADAS", overview.completed_quest_count, "Metas encerradas")}${profileMetric("LIVROS LIDOS", overview.books_read, "Metas de leitura concluídas")}${profileMetric("CURSOS CONCLUÍDOS", overview.courses_completed, "Metas de curso concluídas")}${profileMetric("TREINOS CONCLUÍDOS", overview.workout_goals_completed || 0, "Metas mensais concluídas")}${profileMetric("COMPRAS PLANEJADAS", overview.purchase_goals_completed, "Metas de compra concluídas")}${profileMetric("PROTOCOLOS CONCLUÍDOS", overview.protocol_goals_completed || 0, "Desafios de dias concluídos")}</div><div class="profile-attributes"><h3>Atributos atuais</h3><div class="profile-attributes-grid">${profileMetric("STR", hero.forca, "Força")}${profileMetric("MAG", hero.magia, "Magia")}${profileMetric("CAR", hero.carisma, "Carisma")}${profileMetric("INT", hero.inteligencia, "Inteligência")}</div></div>`;
   const cleanStatus = $("#profile-clean-status");
   if (cleanStatus) cleanStatus.textContent = cleanDays == null ? "Nenhum marco registrado. Escolha a data em que o contador deve começar." : `${cleanDays === 1 ? "1 dia limpo" : `${cleanDays} dias limpo`} desde ${formatCleanDate(cleanDate)}.`;
   const cleanInput = $("#profile-clean-date-input");
@@ -248,6 +248,7 @@ function goalUnitLabel(unit, count) {
   if (unit === "horas") return count === 1 ? "hora" : "horas";
   if (unit === "porcentagem") return "%";
   if (unit === "reais") return "R$";
+  if (unit === "dias") return count === 1 ? "dia" : "dias";
   return "";
 }
 
@@ -256,7 +257,7 @@ function formatReais(value) {
 }
 
 function goalUnitFor(quest) {
-  return quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : quest.goal_type === "treino" ? "treinos" : "aulas");
+  return quest.goal_unit || (quest.goal_type === "livro" ? "paginas" : quest.goal_type === "compra" ? "reais" : quest.goal_type === "treino" ? "treinos" : quest.goal_type === "protocolo" ? "dias" : "aulas");
 }
 
 function currentMonthInputValue() {
@@ -293,6 +294,8 @@ function goalHtml(quest) {
     progressText = `${current}/${total} TREINOS · ${pct}%`;
   } else if (unit === "horas") {
     progressText = `${current}/${total} HORAS · ${pct}%`;
+  } else if (unit === "dias") {
+    progressText = `${current}/${total} DIAS · ${pct}%`;
   } else {
     progressText = `${current}/${total} · ${pct}%`;
   }
@@ -430,6 +433,7 @@ function syncGoalFields() {
   const cursoFields = $("#q-goal-curso-fields");
   const treinoFields = $("#q-goal-treino-fields");
   const compraFields = $("#q-goal-compra-fields");
+  const protocoloFields = $("#q-goal-protocolo-fields");
 
   livroFields.hidden = goalType !== "livro";
   livroFields.style.display = goalType === "livro" ? "grid" : "none";
@@ -443,6 +447,9 @@ function syncGoalFields() {
 
   compraFields.hidden = goalType !== "compra";
   compraFields.style.display = goalType === "compra" ? "grid" : "none";
+
+  protocoloFields.hidden = goalType !== "protocolo";
+  protocoloFields.style.display = goalType === "protocolo" ? "grid" : "none";
 
   if (goalType === "curso") {
     const unit = $("#q-goal-curso-unit").value;
@@ -489,6 +496,7 @@ function syncEditGoalFields() {
   const cursoFields = $("#edit-q-goal-curso-fields");
   const treinoFields = $("#edit-q-goal-treino-fields");
   const compraFields = $("#edit-q-goal-compra-fields");
+  const protocoloFields = $("#edit-q-goal-protocolo-fields");
 
   livroFields.hidden = goalType !== "livro";
   livroFields.style.display = goalType === "livro" ? "grid" : "none";
@@ -502,6 +510,9 @@ function syncEditGoalFields() {
 
   compraFields.hidden = goalType !== "compra";
   compraFields.style.display = goalType === "compra" ? "grid" : "none";
+
+  protocoloFields.hidden = goalType !== "protocolo";
+  protocoloFields.style.display = goalType === "protocolo" ? "grid" : "none";
 
   if (goalType === "curso") {
     const unit = $("#edit-q-goal-curso-unit").value;
@@ -596,6 +607,21 @@ function getGoalFromForm(prefix) {
     return { type: "treino", targetName, unit: "treinos", total, current, periodMonth: `${periodMonth}-01` };
   }
 
+  if (goalType === "protocolo") {
+    const targetName = $(`#${prefix}-goal-protocolo-nome`).value.trim();
+    const totalVal = $(`#${prefix}-goal-protocolo-total`).value;
+    const total = Number(totalVal);
+    const currentVal = $(`#${prefix}-goal-protocolo-current`).value;
+    const current = currentVal !== "" ? Number(currentVal) : 0;
+
+    if (!targetName) throw new Error("Informe o nome do protocolo ou desafio.");
+    if (!totalVal || !Number.isInteger(total) || total <= 0) throw new Error("Informe uma meta inteira de dias maior que 0.");
+    if (!Number.isInteger(current) || current < 0) throw new Error("A quantidade de dias não pode ser negativa.");
+    if (current > total) throw new Error("Os dias já concluídos não podem ser maiores que a meta.");
+
+    return { type: "protocolo", targetName, unit: "dias", total, current };
+  }
+
   return null;
 }
 
@@ -626,6 +652,9 @@ function openEditModal(id) {
     $("#edit-q-goal-compra-nome").value = "";
     $("#edit-q-goal-compra-total").value = "";
     $("#edit-q-goal-compra-current").value = "0";
+    $("#edit-q-goal-protocolo-nome").value = "";
+    $("#edit-q-goal-protocolo-total").value = "";
+    $("#edit-q-goal-protocolo-current").value = "0";
   } else if (goalType === "curso") {
     $("#edit-q-goal-curso-nome").value = quest.goal_target_name || quest.nome || "";
     $("#edit-q-goal-curso-unit").value = quest.goal_unit || "aulas";
@@ -637,6 +666,9 @@ function openEditModal(id) {
     $("#edit-q-goal-compra-nome").value = "";
     $("#edit-q-goal-compra-total").value = "";
     $("#edit-q-goal-compra-current").value = "0";
+    $("#edit-q-goal-protocolo-nome").value = "";
+    $("#edit-q-goal-protocolo-total").value = "";
+    $("#edit-q-goal-protocolo-current").value = "0";
   } else if (goalType === "compra") {
     $("#edit-q-goal-compra-nome").value = quest.goal_target_name || quest.nome || "";
     $("#edit-q-goal-compra-total").value = quest.goal_total || "";
@@ -648,11 +680,31 @@ function openEditModal(id) {
     $("#edit-q-goal-curso-unit").value = "aulas";
     $("#edit-q-goal-curso-total").value = "";
     $("#edit-q-goal-curso-current").value = "0";
+    $("#edit-q-goal-protocolo-nome").value = "";
+    $("#edit-q-goal-protocolo-total").value = "";
+    $("#edit-q-goal-protocolo-current").value = "0";
   } else if (goalType === "treino") {
     $("#edit-q-goal-treino-nome").value = quest.goal_target_name || quest.nome || "";
     $("#edit-q-goal-treino-mes").value = String(quest.goal_period_month || "").slice(0, 7) || currentMonthInputValue();
     $("#edit-q-goal-treino-total").value = quest.goal_total || "";
     $("#edit-q-goal-treino-current").value = quest.goal_current != null ? quest.goal_current : 0;
+    $("#edit-q-goal-livro-nome").value = "";
+    $("#edit-q-goal-livro-total").value = "";
+    $("#edit-q-goal-livro-current").value = "0";
+    $("#edit-q-goal-curso-nome").value = "";
+    $("#edit-q-goal-curso-unit").value = "aulas";
+    $("#edit-q-goal-curso-total").value = "";
+    $("#edit-q-goal-curso-current").value = "0";
+    $("#edit-q-goal-compra-nome").value = "";
+    $("#edit-q-goal-compra-total").value = "";
+    $("#edit-q-goal-compra-current").value = "0";
+    $("#edit-q-goal-protocolo-nome").value = "";
+    $("#edit-q-goal-protocolo-total").value = "";
+    $("#edit-q-goal-protocolo-current").value = "0";
+  } else if (goalType === "protocolo") {
+    $("#edit-q-goal-protocolo-nome").value = quest.goal_target_name || quest.nome || "";
+    $("#edit-q-goal-protocolo-total").value = quest.goal_total || "";
+    $("#edit-q-goal-protocolo-current").value = quest.goal_current != null ? quest.goal_current : 0;
     $("#edit-q-goal-livro-nome").value = "";
     $("#edit-q-goal-livro-total").value = "";
     $("#edit-q-goal-livro-current").value = "0";
@@ -674,6 +726,9 @@ function openEditModal(id) {
     $("#edit-q-goal-compra-nome").value = "";
     $("#edit-q-goal-compra-total").value = "";
     $("#edit-q-goal-compra-current").value = "0";
+    $("#edit-q-goal-protocolo-nome").value = "";
+    $("#edit-q-goal-protocolo-total").value = "";
+    $("#edit-q-goal-protocolo-current").value = "0";
   }
 
   syncEditWeeklyField();
@@ -809,6 +864,15 @@ function openProgressModal(id) {
       input.value = current || "";
       input.placeholder = `Ex: ${Math.min(100, current + 10)}`;
     }
+  } else if (quest.goal_type === "protocolo") {
+    label.textContent = "Quantos dias você concluiu agora? (será somado)";
+    const remaining = Math.max(0, total - current);
+    hint.textContent = remaining > 0 ? `Máximo para atingir a meta: +${remaining} dias.` : "Meta já atingida!";
+    input.min = "0";
+    input.max = String(remaining);
+    input.step = "1";
+    input.value = "";
+    input.placeholder = remaining > 0 ? "Ex: 1" : "0";
   }
 
   updateProgressPreview();

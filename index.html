@@ -180,6 +180,7 @@
                 <option value="curso">Curso</option>
                 <option value="treino">Treino mensal</option>
                 <option value="compra">Aquisição / Compra de item</option>
+                <option value="protocolo">Protocolo / Desafio</option>
               </select>
             </label>
 
@@ -259,6 +260,23 @@
                 <label class="field">
                   <span>Já guardei (R$)</span>
                   <input id="q-goal-compra-current" type="number" min="0" step="0.01" value="0" placeholder="0">
+                </label>
+              </div>
+            </div>
+
+            <div id="q-goal-protocolo-fields" class="goal-subfields" style="display: none;" hidden>
+              <label class="field">
+                <span>Nome do protocolo / desafio</span>
+                <input id="q-goal-protocolo-nome" type="text" placeholder="Ex: Protocolo Sono Blindado" autocomplete="off">
+              </label>
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Total de dias</span>
+                  <input id="q-goal-protocolo-total" type="number" min="1" step="1" placeholder="Ex: 30">
+                </label>
+                <label class="field">
+                  <span>Dias já concluídos</span>
+                  <input id="q-goal-protocolo-current" type="number" min="0" step="1" value="0" placeholder="0">
                 </label>
               </div>
             </div>
@@ -546,6 +564,7 @@
                 <option value="curso">Curso</option>
                 <option value="treino">Treino mensal</option>
                 <option value="compra">Aquisição / Compra de item</option>
+                <option value="protocolo">Protocolo / Desafio</option>
             </select>
           </label>
 
@@ -628,6 +647,23 @@
               </label>
             </div>
           </div>
+
+            <div id="edit-q-goal-protocolo-fields" class="goal-subfields" style="display: none;" hidden>
+              <label class="field">
+                <span>Nome do protocolo / desafio</span>
+                <input id="edit-q-goal-protocolo-nome" type="text" placeholder="Ex: Protocolo Sono Blindado" autocomplete="off">
+              </label>
+              <div class="form-grid-2">
+                <label class="field">
+                  <span>Total de dias</span>
+                  <input id="edit-q-goal-protocolo-total" type="number" min="1" step="1" placeholder="Ex: 30">
+                </label>
+                <label class="field">
+                  <span>Dias já concluídos</span>
+                  <input id="edit-q-goal-protocolo-current" type="number" min="0" step="1" value="0" placeholder="0">
+                </label>
+              </div>
+            </div>
         </div>
 
         <div class="btn-pair-grid">

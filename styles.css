@@ -353,15 +353,9 @@ h1 {
   gap: 14px;
 }
 
-/* Life Design: módulo de planejamento futuro, reservado ao nível 10. */
-#app-screen.life-design-active > .hero-panel,
-#app-screen.life-design-active > .tabs {
-  display: none;
-}
-
+/* Life Design: módulo de planejamento futuro. */
 .life-design-screen.active {
   display: block;
-  min-height: calc(100dvh - 56px);
 }
 
 .life-design-shell {
@@ -1612,4 +1606,101 @@ textarea {
   .profile-attributes-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+/* Life Design */
+.life-goal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.life-goal-card {
+  background: var(--panel-bg, rgba(10, 14, 20, 0.85));
+  border: 1px solid var(--border-color, rgba(0, 240, 255, 0.15));
+  border-radius: 8px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.life-goal-card:hover {
+  border-color: var(--cyan, #00f0ff);
+}
+
+.life-goal-card.goal-complete {
+  border-color: var(--green, #00ff88);
+  opacity: 0.85;
+}
+
+.life-goal-card.goal-paused {
+  border-color: var(--amber, #ffb000);
+  opacity: 0.75;
+}
+
+.life-goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.life-goal-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.life-goal-title-row strong {
+  font-size: 15px;
+  color: var(--text, #e0e0e0);
+}
+
+.life-goal-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.life-goal-desc {
+  font-size: 13px;
+  color: var(--muted, #8899aa);
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.life-goal-quest-link {
+  font-size: 12px;
+  color: var(--cyan, #00f0ff);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color, rgba(0, 240, 255, 0.1));
+}
+
+.life-goal-quest-link .system-label {
+  font-size: 10px;
+  margin-right: 4px;
+}
+
+.life-goal-children {
+  margin-top: 12px;
+  padding-left: 16px;
+  border-left: 2px solid var(--border-color, rgba(0, 240, 255, 0.15));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.life-goal-children .life-goal-card {
+  padding: 12px;
+  background: rgba(10, 14, 20, 0.5);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+  min-height: 28px;
 }

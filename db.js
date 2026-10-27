@@ -280,6 +280,36 @@ const db = (() => {
     return { hero, quests, historico, gold_history: goldHistory, custom_rewards: customRewards, clean_date: cleanDate, clean_date_logs: cleanDateLogs, avatar, exportedAt: new Date().toISOString() };
   }
 
+  async function getLifeGoals() {
+    const user = await requireUser();
+    const { data, error } = await client.rpc("get_life_goals");
+    throwOnError(error);
+    return data || [];
+  }
+
+  async function saveLifeGoal(goal) {
+    await requireUser();
+    const { data, error } = await client.rpc("save_life_goal", {
+      p_goal_id: goal.id || null,
+      p_nome: goal.nome,
+      p_descricao: goal.descricao || null,
+      p_horizon: goal.horizon,
+      p_area: goal.area || null,
+      p_parent_id: goal.parentId || null,
+      p_status: goal.status || "ativo",
+      p_linked_quest_id: goal.linkedQuestId || null,
+      p_sort_order: goal.sortOrder ?? 0,
+    });
+    throwOnError(error);
+    return data;
+  }
+
+  async function deleteLifeGoal(id) {
+    await requireUser();
+    const { error } = await client.rpc("delete_life_goal", { p_goal_id: id });
+    throwOnError(error);
+  }
+
   function onAuthChange(handler) {
     return client.auth.onAuthStateChange((_event, session) => handler(session));
   }
@@ -290,5 +320,6 @@ const db = (() => {
     deleteQuest, resetDailies, resetAll, exportAll,
     getDailyQuestSuggestion, acceptQuestSuggestion, dismissQuestSuggestion,
     getCleanDate, setCleanDate, getCleanDateLogs, getAvatar, setAvatar,
+    getLifeGoals, saveLifeGoal, deleteLifeGoal,
   };
 })();

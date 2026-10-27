@@ -1,6 +1,5 @@
 const { TITLES, ROUTINE_LEVELS, SHOP_PRODUCTS, SHOP_CATEGORIES } = RPG_CONFIG;
 const { progressPercent } = RPG_RULES;
-const LIFE_DESIGN_UNLOCK_LEVEL = 10;
 const $ = (selector) => document.querySelector(selector);
 const titleFor = (level) => TITLES.reduce((current, [minimum, title]) => Number(level) >= minimum ? title : current, "Iniciante");
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -132,6 +131,153 @@ function renderProfilePanel(hero, overview, history, goldHistory, cleanDate, cle
   const timeline = [...history.map((item) => ({ date: item.created_at, title: item.acao, type: "Atividade", detail: `+${item.exp_ganho} EXP · +${item.pontos} ${item.atributo?.toUpperCase() || "ATR"}` })), ...goldHistory.map((item) => ({ date: item.created_at, title: item.description || item.origin || "Movimentação GOLD", type: item.transaction_type === "debit" ? "Resgate" : "GOLD", detail: `${item.transaction_type === "debit" ? "-" : "+"}${formatGold(item.amount)} GOLD · saldo ${formatGold(item.balance_after)}` }))].sort((a, b) => new Date(b.date) - new Date(a.date));
   const timelineEl = $("#profile-timeline");
   if (timelineEl) timelineEl.innerHTML = timeline.length ? timeline.slice(0, 12).map((item) => `<article class="history-item profile-timeline-item"><div class="history-title">${escapeHtml(item.title)}</div><div class="history-meta"><span class="badge">${escapeHtml(item.type)}</span><span class="badge">${escapeHtml(item.detail)}</span><span class="badge">${escapeHtml(formatDate(item.date))}</span></div></article>`).join("") : `<p class="state-text">Sua linha do tempo aparecerá quando concluir a primeira atividade.</p>`;
+}
+
+const HORIZON_LABELS = { vida: "Meta de Vida", "10_anos": "10 Anos", "5_anos": "5 Anos", "1_ano": "1 Ano", submeta: "Submeta" };
+const AREA_LABELS = { saude: "Saúde", carreira: "Carreira", financeiro: "Financeiro", pessoal: "Pessoal", relacionamento: "Relacionamento", espiritual: "Espiritual", lazer: "Lazer", educacao: "Educação" };
+const STATUS_LABELS = { ativo: "Ativo", pausado: "Pausado", concluido: "Concluído" };
+let loadedLifeGoals = [];
+let editingLifeGoalId = null;
+
+function horizonContainerId(horizon) {
+  const map = { vida: "life-vida-list", "10_anos": "life-10-anos-list", "5_anos": "life-5-anos-list", "1_ano": "life-1-ano-list", submeta: "life-submeta-list" };
+  return map[horizon] || null;
+}
+
+function lifeGoalCardHtml(goal, children, allQuests) {
+  const areaBadge = goal.area ? `<span class="badge">${escapeHtml(AREA_LABELS[goal.area] || goal.area)}</span>` : "";
+  const statusClass = goal.status === "concluido" ? " goal-complete" : goal.status === "pausado" ? " goal-paused" : "";
+  const linkedQuest = allQuests.find((q) => String(q.id) === String(goal.linked_quest_id));
+  const questLink = linkedQuest ? `<div class="life-goal-quest-link"><span class="system-label">Quest vinculada:</span> ${escapeHtml(linkedQuest.nome)}</div>` : "";
+  const childrenHtml = children.length ? `<div class="life-goal-children">${children.map((c) => lifeGoalCardHtml(c, [], allQuests)).join("")}</div>` : "";
+  return `<article class="life-goal-card${statusClass}" data-id="${goal.id}"><div class="life-goal-header"><div class="life-goal-title-row"><strong>${escapeHtml(goal.nome)}</strong>${areaBadge}<span class="badge">${escapeHtml(STATUS_LABELS[goal.status] || goal.status)}</span></div><div class="life-goal-actions"><button class="btn btn-edit btn-sm" type="button" data-action="life-edit" data-id="${goal.id}" aria-label="Editar">Editar</button><button class="btn btn-delete btn-sm" type="button" data-action="life-delete" data-id="${goal.id}" aria-label="Deletar">Deletar</button></div></div>${goal.descricao ? `<p class="life-goal-desc">${escapeHtml(goal.descricao)}</p>` : ""}${questLink}${childrenHtml}</article>`;
+}
+
+function renderLifeGoals(goals, allQuests) {
+  loadedLifeGoals = goals;
+  const grouped = { vida: [], "10_anos": [], "5_anos": [], "1_ano": [], submeta: [] };
+  goals.forEach((g) => { if (grouped[g.horizon]) grouped[g.horizon].push(g); });
+
+  Object.keys(grouped).forEach((horizon) => {
+    const container = document.getElementById(horizonContainerId(horizon));
+    if (!container) return;
+    const items = grouped[horizon];
+    if (!items.length) {
+      const emptyMsg = horizon === "vida" ? "Nenhuma Meta de Vida definida ainda." : `Nenhuma meta de ${HORIZON_LABELS[horizon].toLowerCase()} cadastrada.`;
+      container.innerHTML = `<p class="state-text">${emptyMsg}</p>`;
+      return;
+    }
+    container.innerHTML = items.map((goal) => {
+      const children = goals.filter((g) => g.parent_id === goal.id);
+      return lifeGoalCardHtml(goal, children, allQuests);
+    }).join("");
+  });
+
+  const btnAddVida = $("#btn-add-life-vida");
+  if (btnAddVida) {
+    const hasVida = grouped.vida.length > 0;
+    btnAddVida.textContent = hasVida ? "Editar Meta de Vida" : "Definir Meta de Vida";
+  }
+}
+
+async function loadLifeDesign() {
+  const containers = ["life-vida-list", "life-10-anos-list", "life-5-anos-list", "life-1-ano-list", "life-submeta-list"];
+  containers.forEach((id) => { const el = document.getElementById(id); if (el) el.innerHTML = `<p class="state-text">Carregando...</p>`; });
+  try {
+    const [goals, quests] = await Promise.all([db.getLifeGoals(), db.getQuests()]);
+    renderLifeGoals(goals, quests);
+  } catch (error) {
+    containers.forEach((id) => { const el = document.getElementById(id); if (el) el.innerHTML = `<p class="state-text">Erro ao carregar: ${escapeHtml(error.message)}</p>`; });
+  }
+}
+
+function populateLifeGoalForm(goal, allQuests) {
+  const horizonSelect = $("#lg-horizon");
+  const parentSelect = $("#lg-parent");
+  const questSelect = $("#lg-quest");
+
+  parentSelect.innerHTML = '<option value="">— Nenhuma —</option>';
+  loadedLifeGoals.forEach((g) => {
+    if (goal && String(g.id) === String(goal.id)) return;
+    parentSelect.innerHTML += `<option value="${g.id}" data-horizon="${g.horizon}">${escapeHtml(HORIZON_LABELS[g.horizon] || g.horizon)}: ${escapeHtml(g.nome)}</option>`;
+  });
+
+  questSelect.innerHTML = '<option value="">— Nenhuma —</option>';
+  allQuests.filter((q) => q.tipo === "principal").forEach((q) => {
+    questSelect.innerHTML += `<option value="${q.id}">${escapeHtml(q.nome)}</option>`;
+  });
+
+  if (goal) {
+    $("#lg-id").value = goal.id || "";
+    $("#lg-nome").value = goal.nome || "";
+    $("#lg-descricao").value = goal.descricao || "";
+    $("#lg-horizon").value = goal.horizon || "1_ano";
+    $("#lg-area").value = goal.area || "";
+    $("#lg-parent").value = goal.parent_id || "";
+    $("#lg-status").value = goal.status || "ativo";
+    $("#lg-quest").value = goal.linked_quest_id || "";
+    $("#life-goal-modal-title").textContent = "Editar Meta";
+  } else {
+    $("#lg-id").value = "";
+    $("#lg-nome").value = "";
+    $("#lg-descricao").value = "";
+    $("#lg-horizon").value = "1_ano";
+    $("#lg-area").value = "";
+    $("#lg-parent").value = "";
+    $("#lg-status").value = "ativo";
+    $("#lg-quest").value = "";
+    $("#life-goal-modal-title").textContent = "Nova Meta";
+  }
+}
+
+async function openLifeGoalModal(goalId, defaultHorizon) {
+  const modal = $("#life-goal-modal");
+  if (!modal) return;
+  try {
+    const quests = await db.getQuests();
+    if (goalId) {
+      const goal = loadedLifeGoals.find((g) => String(g.id) === String(goalId));
+      if (!goal) return toast("Meta não encontrada.");
+      populateLifeGoalForm(goal, quests);
+    } else {
+      populateLifeGoalForm(null, quests);
+      if (defaultHorizon) $("#lg-horizon").value = defaultHorizon;
+    }
+    if (modal.showModal) modal.showModal(); else modal.setAttribute("open", "");
+  } catch (error) { toast(error.message || "Erro ao abrir formulário."); }
+}
+
+async function handleLifeGoalSubmit(event) {
+  event.preventDefault();
+  const id = $("#lg-id").value || null;
+  const nome = $("#lg-nome").value.trim();
+  const descricao = $("#lg-descricao").value.trim();
+  const horizon = $("#lg-horizon").value;
+  const area = $("#lg-area").value || null;
+  const parentId = $("#lg-parent").value || null;
+  const status = $("#lg-status").value;
+  const linkedQuestId = $("#lg-quest").value || null;
+
+  if (!nome) return toast("Informe o nome da meta.");
+
+  try {
+    await db.saveLifeGoal({ id, nome, descricao, horizon, area, parentId, status, linkedQuestId, sortOrder: 0 });
+    const modal = $("#life-goal-modal");
+    if (modal && modal.close) modal.close(); else if (modal) modal.removeAttribute("open");
+    toast(id ? "Meta atualizada!" : "Meta criada!");
+    await loadLifeDesign();
+  } catch (error) { toast(error.message || "Erro ao salvar meta."); }
+}
+
+async function handleLifeGoalDelete(id) {
+  const goal = loadedLifeGoals.find((g) => String(g.id) === String(id));
+  if (!goal) return toast("Meta não encontrada.");
+  if (!confirm(`Deletar "${goal.nome}"?${goal.horizon === "vida" ? " Esta é sua Meta de Vida." : ""}`)) return;
+  try {
+    await db.deleteLifeGoal(id);
+    toast("Meta deletada.");
+    await loadLifeDesign();
+  } catch (error) { toast(error.message || "Erro ao deletar meta."); }
 }
 
 async function openProfilePanel() {
@@ -1249,34 +1395,19 @@ async function resetData() {
 function showTab(name) {
   document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === name));
   document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${name}`));
-  $("#app-screen")?.classList.toggle("life-design-active", name === "life-design");
 }
 
 function updateLifeDesignAccess() {
-  const level = Number(currentHero?.nivel || 0);
-  const unlocked = level >= LIFE_DESIGN_UNLOCK_LEVEL;
   const dockButton = $("#btn-dock-life-design");
   const dockLabel = $("#dock-life-design-label");
-  const accessBadge = $("#life-design-access-badge");
-  const stateTitle = $("#life-design-state-title");
-  const stateCopy = $("#life-design-state-copy");
-  const currentLevel = $("#life-design-current-level");
 
   if (dockButton) {
-    dockButton.classList.toggle("dock-module--locked", !unlocked);
-    dockButton.classList.toggle("is-available", unlocked);
-    dockButton.setAttribute("aria-label", unlocked ? "Abrir Life Design" : `Life Design bloqueado até o nível ${LIFE_DESIGN_UNLOCK_LEVEL}`);
+    dockButton.classList.remove("dock-module--locked");
+    dockButton.classList.add("is-available");
+    dockButton.removeAttribute("disabled");
+    dockButton.setAttribute("aria-label", "Abrir Life Design");
   }
-  if (dockLabel) dockLabel.textContent = unlocked ? "LIFE" : `NV.${LIFE_DESIGN_UNLOCK_LEVEL}`;
-  if (accessBadge) {
-    accessBadge.textContent = unlocked ? "ACCESS GRANTED" : `NV.${LIFE_DESIGN_UNLOCK_LEVEL} REQUIRED`;
-    accessBadge.classList.toggle("is-unlocked", unlocked);
-  }
-  if (stateTitle) stateTitle.textContent = unlocked ? "Módulo online" : "Acesso restrito";
-  if (stateCopy) stateCopy.textContent = unlocked
-    ? "Seu espaço de arquitetura pessoal está pronto. Novos protocolos serão integrados aqui."
-    : `Este módulo será desbloqueado quando seu herói alcançar o nível ${LIFE_DESIGN_UNLOCK_LEVEL}.`;
-  if (currentLevel) currentLevel.textContent = level ? `NV. ${level}` : "NV. —";
+  if (dockLabel) dockLabel.textContent = "LIFE";
 }
 
 function bindSystemDock() {
@@ -1407,6 +1538,7 @@ function bind() {
     if (tab) {
       showTab(tab.dataset.tab);
       if (tab.dataset.tab === "loja") loadShop();
+      if (tab.dataset.tab === "life-design") loadLifeDesign();
     }
   };
 
@@ -1428,6 +1560,8 @@ function bind() {
     }
     else if (button.dataset.action === "redeem") redeemShopReward(button);
     else if (button.dataset.action === "delete-custom-reward") removeCustomReward(button);
+    else if (button.dataset.action === "life-edit") openLifeGoalModal(button.dataset.id);
+    else if (button.dataset.action === "life-delete") handleLifeGoalDelete(button.dataset.id);
   };
 
   $("#custom-reward-form").onsubmit = createCustomReward;
@@ -1467,6 +1601,26 @@ function bind() {
   $("#quest-detail-modal").onclick = (event) => {
     if (event.target === $("#quest-detail-modal")) closeQuestDetails();
   };
+
+  function closeLifeGoalModal() {
+    const modal = $("#life-goal-modal");
+    if (modal && modal.close) modal.close(); else if (modal) modal.removeAttribute("open");
+  }
+  $("#btn-close-life-goal-modal").onclick = closeLifeGoalModal;
+  $("#btn-cancel-life-goal").onclick = closeLifeGoalModal;
+  $("#life-goal-modal").onclick = (event) => {
+    if (event.target === $("#life-goal-modal")) closeLifeGoalModal();
+  };
+  $("#life-goal-form").onsubmit = handleLifeGoalSubmit;
+
+  $("#btn-add-life-vida").onclick = () => {
+    const existingVida = loadedLifeGoals.find((g) => g.horizon === "vida");
+    if (existingVida) openLifeGoalModal(existingVida.id);
+    else openLifeGoalModal(null, "vida");
+  };
+  document.querySelectorAll(".btn-add-life").forEach((btn) => {
+    btn.onclick = () => openLifeGoalModal(null, btn.dataset.horizon);
+  });
 
   document.body.onkeydown = (event) => {
     const card = event.target.closest?.(".quest-item[data-action='details']");

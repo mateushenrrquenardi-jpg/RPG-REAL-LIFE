@@ -99,6 +99,7 @@
 
     <nav class="tabs" aria-label="Navegação principal">
       <button class="tab active" type="button" data-tab="quests">Quests</button>
+      <button class="tab" type="button" data-tab="life-design">Life Design</button>
       <button class="tab" type="button" data-tab="loja">Loja</button>
       <button class="tab" type="button" data-tab="config">Config</button>
     </nav>
@@ -287,25 +288,71 @@
       </section>
     </section>
 
-    <section id="tab-life-design" class="tab-panel life-design-screen" aria-label="Life Design">
-      <section class="life-design-shell">
-        <header class="life-design-header">
+    <section id="tab-life-design" class="tab-panel" aria-label="Life Design">
+      <section class="panel" aria-label="Meta de Vida">
+        <div class="panel-header">
           <div>
-            <p class="system-label">// MÓDULO DE ARQUITETURA PESSOAL</p>
-            <h1>Life Design</h1>
+            <p class="system-label">// ARQUITETURA PESSOAL</p>
+            <h2>Meta de Vida</h2>
+            <p>O norte que guia todas as suas decisões.</p>
           </div>
-          <span id="life-design-access-badge" class="life-design-access-badge">NV.10 REQUIRED</span>
-        </header>
-
-        <div class="life-design-stage">
-          <div class="life-design-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-          <p class="life-design-kicker">LIFE DESIGN // CENTRAL</p>
-          <h2 id="life-design-state-title">Acesso restrito</h2>
-          <p id="life-design-state-copy" class="life-design-state-copy">Este módulo será desbloqueado quando seu herói alcançar o nível 10.</p>
-          <div class="life-design-level-readout"><span>NÍVEL ATUAL</span><strong id="life-design-current-level">NV. —</strong><span>REQUISITO: NV.10</span></div>
+          <button id="btn-add-life-vida" class="btn btn-secondary" type="button">Definir Meta de Vida</button>
         </div>
+        <div id="life-vida-list" class="life-goal-list">
+          <p class="state-text">Nenhuma Meta de Vida definida ainda.</p>
+        </div>
+      </section>
 
-        <footer class="life-design-footer">PROTOCOLO EM PREPARAÇÃO <span></span> MÓDULO RESERVADO</footer>
+      <section class="panel" aria-label="Horizonte 10 anos">
+        <div class="panel-header">
+          <div>
+            <h2>10 Anos</h2>
+            <p>Visão de longo prazo.</p>
+          </div>
+          <button class="btn btn-ghost btn-add-life" type="button" data-horizon="10_anos">+ Adicionar</button>
+        </div>
+        <div id="life-10-anos-list" class="life-goal-list">
+          <p class="state-text">Nenhuma meta de 10 anos cadastrada.</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Horizonte 5 anos">
+        <div class="panel-header">
+          <div>
+            <h2>5 Anos</h2>
+            <p>Desdobramento do horizonte de 10 anos.</p>
+          </div>
+          <button class="btn btn-ghost btn-add-life" type="button" data-horizon="5_anos">+ Adicionar</button>
+        </div>
+        <div id="life-5-anos-list" class="life-goal-list">
+          <p class="state-text">Nenhuma meta de 5 anos cadastrada.</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Horizonte 1 ano">
+        <div class="panel-header">
+          <div>
+            <h2>1 Ano</h2>
+            <p>Metas anuais concretas.</p>
+          </div>
+          <button class="btn btn-ghost btn-add-life" type="button" data-horizon="1_ano">+ Adicionar</button>
+        </div>
+        <div id="life-1-ano-list" class="life-goal-list">
+          <p class="state-text">Nenhuma meta anual cadastrada.</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Submetas">
+        <div class="panel-header">
+          <div>
+            <h2>Submetas</h2>
+            <p>Ações concretas que geram missões.</p>
+          </div>
+          <button class="btn btn-ghost btn-add-life" type="button" data-horizon="submeta">+ Adicionar</button>
+        </div>
+        <div id="life-submeta-list" class="life-goal-list">
+          <p class="state-text">Nenhuma submeta cadastrada.</p>
+        </div>
       </section>
     </section>
 
@@ -410,9 +457,9 @@
     </section>
 
     <nav id="system-dock" class="system-dock" aria-label="Atalhos do sistema">
-      <button id="btn-dock-life-design" class="dock-module dock-life-design dock-module--locked" type="button" aria-label="Life Design bloqueado até o nível 10">
+      <button id="btn-dock-life-design" class="dock-module is-available" type="button" aria-label="Abrir Life Design">
         <span class="dock-life-icon" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span id="dock-life-design-label" class="dock-lock-label">NV.10</span>
+        <span id="dock-life-design-label" class="dock-lock-label">LIFE</span>
       </button>
       <button id="btn-dock-home" class="dock-home" type="button" aria-label="Ir para início">
         <span class="dock-home-symbol" aria-hidden="true">⌂</span>
@@ -696,6 +743,90 @@
         <div class="btn-pair-grid">
           <button class="btn btn-secondary" type="submit">Salvar progresso</button>
           <button id="btn-cancel-progress" class="btn btn-ghost" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="life-goal-modal" class="modal-dialog">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <div>
+          <span class="system-label">Life Design</span>
+          <h2 id="life-goal-modal-title">Nova Meta</h2>
+        </div>
+        <button id="btn-close-life-goal-modal" class="btn btn-delete modal-close-btn" type="button" aria-label="Fechar">X</button>
+      </div>
+
+      <form id="life-goal-form" class="quest-form">
+        <input id="lg-id" type="hidden">
+
+        <label class="field">
+          <span>Nome da meta</span>
+          <input id="lg-nome" type="text" placeholder="Ex: Dominar programação full-stack" autocomplete="off" required maxlength="200">
+        </label>
+
+        <label class="field">
+          <span>Descrição (opcional)</span>
+          <textarea id="lg-descricao" rows="3" maxlength="2000" placeholder="O que significa essa meta para você?"></textarea>
+        </label>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Horizonte</span>
+            <select id="lg-horizon" required>
+              <option value="vida">Meta de Vida</option>
+              <option value="10_anos">10 Anos</option>
+              <option value="5_anos">5 Anos</option>
+              <option value="1_ano">1 Ano</option>
+              <option value="submeta">Submeta</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Área da vida</span>
+            <select id="lg-area">
+              <option value="">— Nenhuma —</option>
+              <option value="saude">Saúde</option>
+              <option value="carreira">Carreira</option>
+              <option value="financeiro">Financeiro</option>
+              <option value="pessoal">Pessoal</option>
+              <option value="relacionamento">Relacionamento</option>
+              <option value="espiritual">Espiritual</option>
+              <option value="lazer">Lazer</option>
+              <option value="educacao">Educação</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Meta pai (opcional)</span>
+            <select id="lg-parent">
+              <option value="">— Nenhuma —</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Status</span>
+            <select id="lg-status">
+              <option value="ativo">Ativo</option>
+              <option value="pausado">Pausado</option>
+              <option value="concluido">Concluído</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Link com quest (opcional)</span>
+          <select id="lg-quest">
+            <option value="">— Nenhuma —</option>
+          </select>
+        </label>
+
+        <div class="btn-pair-grid">
+          <button class="btn btn-secondary" type="submit">Salvar</button>
+          <button id="btn-cancel-life-goal" class="btn btn-ghost" type="button">Cancelar</button>
         </div>
       </form>
     </div>

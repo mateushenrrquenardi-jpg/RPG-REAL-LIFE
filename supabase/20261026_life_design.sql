@@ -82,6 +82,7 @@ create or replace function public.save_life_goal(
 returns public.life_goals language plpgsql security definer set search_path = public as $$
 declare
   v_goal public.life_goals;
+  v_parent public.life_goals;
 begin
   if nullif(trim(p_nome), '') is null or char_length(trim(p_nome)) > 200 then
     raise exception 'Nome da meta inválido';
@@ -113,28 +114,25 @@ begin
 
   -- Validar parent: deve pertencer ao mesmo usuário e ter horizonte superior.
   if p_parent_id is not null then
-    declare v_parent public.life_goals;
-    begin
-      select * into v_parent from public.life_goals where id = p_parent_id and user_id = auth.uid();
-      if not found then raise exception 'Meta pai não encontrada'; end if;
+    select * into v_parent from public.life_goals where id = p_parent_id and user_id = auth.uid();
+    if not found then raise exception 'Meta pai não encontrada'; end if;
 
-      -- Hierarquia: vida > 10_anos > 5_anos > 1_ano > submeta
-      if v_parent.horizon = 'vida' and p_horizon not in ('10_anos') then
-        raise exception 'Filhos da Meta de Vida devem ser horizonte 10 anos';
-      end if;
-      if v_parent.horizon = '10_anos' and p_horizon not in ('5_anos') then
-        raise exception 'Filhos de horizonte 10 anos devem ser horizonte 5 anos';
-      end if;
-      if v_parent.horizon = '5_anos' and p_horizon not in ('1_ano') then
-        raise exception 'Filhos de horizonte 5 anos devem ser horizonte 1 ano';
-      end if;
-      if v_parent.horizon = '1_ano' and p_horizon not in ('submeta') then
-        raise exception 'Filhos de horizonte 1 ano devem ser submetas';
-      end if;
-      if v_parent.horizon = 'submeta' then
-        raise exception 'Submetas não podem ter filhos';
-      end if;
-    end;
+    -- Hierarquia: vida > 10_anos > 5_anos > 1_ano > submeta
+    if v_parent.horizon = 'vida' and p_horizon <> '10_anos' then
+      raise exception 'Filhos da Meta de Vida devem ser horizonte 10 anos';
+    end if;
+    if v_parent.horizon = '10_anos' and p_horizon <> '5_anos' then
+      raise exception 'Filhos de horizonte 10 anos devem ser horizonte 5 anos';
+    end if;
+    if v_parent.horizon = '5_anos' and p_horizon <> '1_ano' then
+      raise exception 'Filhos de horizonte 5 anos devem ser horizonte 1 ano';
+    end if;
+    if v_parent.horizon = '1_ano' and p_horizon <> 'submeta' then
+      raise exception 'Filhos de horizonte 1 ano devem ser submetas';
+    end if;
+    if v_parent.horizon = 'submeta' then
+      raise exception 'Submetas não podem ter filhos';
+    end if;
   end if;
 
   -- Validar linked_quest: deve pertencer ao mesmo usuário.

@@ -144,13 +144,14 @@ function horizonContainerId(horizon) {
   return map[horizon] || null;
 }
 
-function lifeGoalCardHtml(goal, children, allQuests) {
+function lifeGoalCardHtml(goal, children, allQuests, showActions = true) {
   const areaBadge = goal.area ? `<span class="badge">${escapeHtml(AREA_LABELS[goal.area] || goal.area)}</span>` : "";
   const statusClass = goal.status === "concluido" ? " goal-complete" : goal.status === "pausado" ? " goal-paused" : "";
   const linkedQuest = allQuests.find((q) => String(q.id) === String(goal.linked_quest_id));
   const questLink = linkedQuest ? `<div class="life-goal-quest-link"><span class="system-label">Quest vinculada:</span> ${escapeHtml(linkedQuest.nome)}</div>` : "";
-  const childrenHtml = children.length ? `<div class="life-goal-children">${children.map((c) => lifeGoalCardHtml(c, [], allQuests)).join("")}</div>` : "";
-  return `<article class="life-goal-card${statusClass}" data-id="${goal.id}"><div class="life-goal-header"><div class="life-goal-title-row"><strong>${escapeHtml(goal.nome)}</strong>${areaBadge}<span class="badge">${escapeHtml(STATUS_LABELS[goal.status] || goal.status)}</span></div><div class="life-goal-actions"><button class="btn btn-edit btn-sm" type="button" data-action="life-edit" data-id="${goal.id}" aria-label="Editar">Editar</button><button class="btn btn-delete btn-sm" type="button" data-action="life-delete" data-id="${goal.id}" aria-label="Deletar">Deletar</button></div></div>${goal.descricao ? `<p class="life-goal-desc">${escapeHtml(goal.descricao)}</p>` : ""}${questLink}${childrenHtml}</article>`;
+  const actionsHtml = showActions ? `<div class="life-goal-actions"><button class="btn btn-ghost btn-sm" type="button" data-action="life-edit" data-id="${goal.id}" aria-label="Editar"><span class="quest-action-icon quest-action-icon--edit" aria-hidden="true"></span></button><button class="btn btn-ghost btn-sm" type="button" data-action="life-delete" data-id="${goal.id}" aria-label="Deletar"><span class="quest-action-icon quest-action-icon--cancel" aria-hidden="true"></span></button></div>` : "";
+  const childrenHtml = children.length ? `<div class="life-goal-children">${children.map((c) => lifeGoalCardHtml(c, [], allQuests, false)).join("")}</div>` : "";
+  return `<article class="life-goal-card${statusClass}" data-id="${goal.id}"><div class="life-goal-header"><div class="life-goal-title-row"><strong>${escapeHtml(goal.nome)}</strong>${areaBadge}<span class="badge">${escapeHtml(STATUS_LABELS[goal.status] || goal.status)}</span></div>${actionsHtml}</div>${goal.descricao ? `<p class="life-goal-desc">${escapeHtml(goal.descricao)}</p>` : ""}${questLink}${childrenHtml}</article>`;
 }
 
 function renderLifeGoals(goals, allQuests) {

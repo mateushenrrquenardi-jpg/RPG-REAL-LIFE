@@ -1665,6 +1665,19 @@ textarea {
   flex-shrink: 0;
 }
 
+.life-goal-actions .btn-sm {
+  padding: 6px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.life-goal-actions .quest-action-icon {
+  display: inline-block;
+}
+
 .life-goal-desc {
   font-size: 13px;
   color: var(--muted, #8899aa);

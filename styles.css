@@ -1609,6 +1609,10 @@ textarea {
 }
 
 /* Life Design */
+.hero-panel .attribute-grid {
+  display: none;
+}
+
 .life-goal-list {
   display: flex;
   flex-direction: column;

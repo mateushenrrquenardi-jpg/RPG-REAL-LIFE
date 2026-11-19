@@ -132,6 +132,50 @@ button {
   margin-bottom: 3px;
 }
 
+.hero-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.btn-theme-toggle:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(69, 217, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-theme-toggle:active {
+  transform: translateY(1px);
+}
+
+.theme-toggle-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.btn-config-theme {
+  background: rgba(255, 200, 87, 0.12);
+  border: 1px solid rgba(255, 200, 87, 0.5);
+  color: var(--amber);
+}
+
 .gold-badge {
   display: inline-flex;
   align-items: center;
@@ -1726,4 +1770,171 @@ textarea {
   padding: 4px 10px;
   font-size: 11px;
   min-height: 28px;
+}
+
+/* ==========================================================================
+   TEMA CLARO (LIGHT MODE)
+   ========================================================================== */
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f5f9;
+  --surface: #ffffff;
+  --surface-2: #eaedf5;
+  --surface-3: #dde2ed;
+  --text: #161520;
+  --muted: #5e5a6f;
+  --line: rgba(0, 0, 0, 0.12);
+  --cyan: #007eb3;
+  --green: #178336;
+  --pink: #cb175a;
+  --amber: #b26e00;
+  --shadow: 0 16px 45px rgba(25, 30, 50, 0.08);
+  --panel-bg: #ffffff;
+  --border-color: rgba(0, 126, 179, 0.2);
+}
+
+[data-theme="light"] body {
+  background:
+    linear-gradient(140deg, rgba(0, 126, 179, 0.05), transparent 34%),
+    radial-gradient(circle at 82% 0%, rgba(203, 23, 90, 0.05), transparent 30%),
+    var(--bg);
+}
+
+[data-theme="light"] .hero-panel,
+[data-theme="light"] .panel {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+
+[data-theme="light"] .gold-badge {
+  background: rgba(178, 110, 0, 0.1);
+  border-color: rgba(178, 110, 0, 0.35);
+  box-shadow: 0 2px 8px rgba(178, 110, 0, 0.1);
+  color: #8c5600;
+}
+
+[data-theme="light"] .gold-badge .gold-val {
+  color: #8c5600;
+}
+
+[data-theme="light"] .xp-track {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 126, 179, 0.25);
+}
+
+[data-theme="light"] .tab {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+[data-theme="light"] .tab.active {
+  background: rgba(0, 126, 179, 0.1);
+  border-color: rgba(0, 126, 179, 0.65);
+  color: var(--cyan);
+}
+
+[data-theme="light"] .routine-card {
+  border-color: rgba(0, 126, 179, 0.25);
+  background: rgba(0, 126, 179, 0.04);
+}
+
+[data-theme="light"] .goal-card {
+  border-color: rgba(203, 23, 90, 0.25);
+  background: rgba(203, 23, 90, 0.04);
+}
+
+[data-theme="light"] .routine-track,
+[data-theme="light"] .goal-track {
+  background: rgba(0, 0, 0, 0.09);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .btn-complete {
+  background: rgba(23, 131, 54, 0.12);
+  border-color: rgba(23, 131, 54, 0.4);
+  color: var(--green);
+}
+
+[data-theme="light"] .btn-progress,
+[data-theme="light"] .btn-edit {
+  background: rgba(0, 126, 179, 0.12);
+  border-color: rgba(0, 126, 179, 0.4);
+  color: var(--cyan);
+}
+
+[data-theme="light"] .btn-delete {
+  background: rgba(203, 23, 90, 0.12);
+  border-color: rgba(203, 23, 90, 0.4);
+  color: var(--pink);
+}
+
+[data-theme="light"] .btn-secondary {
+  background: var(--cyan);
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-ghost {
+  border-color: rgba(0, 126, 179, 0.45);
+  background: rgba(0, 126, 179, 0.06);
+  color: var(--cyan);
+}
+
+[data-theme="light"] .modal-dialog::backdrop {
+  background: rgba(20, 24, 38, 0.45);
+}
+
+[data-theme="light"] .modal-content {
+  border-color: rgba(0, 126, 179, 0.35);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .reward-price {
+  color: #8c5600;
+  border-color: rgba(178, 110, 0, 0.35);
+  background: rgba(178, 110, 0, 0.08);
+}
+
+[data-theme="light"] .reward-buy {
+  background: rgba(178, 110, 0, 0.1);
+  border-color: rgba(178, 110, 0, 0.45);
+  color: #8c5600;
+}
+
+[data-theme="light"] .system-dock {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(0, 126, 179, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .dock-home {
+  background: linear-gradient(180deg, rgba(0, 126, 179, 0.15), rgba(0, 126, 179, 0.05)), var(--surface);
+  border-color: rgba(0, 126, 179, 0.55);
+}
+
+[data-theme="light"] .scanline {
+  opacity: 0.12;
+}
+
+[data-theme="light"] .life-goal-children .life-goal-card {
+  background: rgba(240, 244, 250, 0.7);
+}
+
+[data-theme="light"] .btn-config-theme {
+  background: rgba(178, 110, 0, 0.1);
+  border-color: rgba(178, 110, 0, 0.4);
+  color: #8c5600;
+}
+
+[data-theme="light"] .btn-theme-toggle {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+[data-theme="light"] .btn-theme-toggle:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0, 126, 179, 0.2);
 }

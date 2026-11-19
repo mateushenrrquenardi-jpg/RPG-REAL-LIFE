@@ -1512,7 +1512,52 @@ async function saveCleanDate(event) {
   }
 }
 
+function applyTheme(theme) {
+  const isLight = theme === "light";
+  document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
+  try {
+    localStorage.setItem("rpg_theme", isLight ? "light" : "dark");
+  } catch (_) {}
+
+  const icon = isLight ? "🌙" : "☀️";
+  const label = isLight ? "ESCURO" : "CLARO";
+  const configText = isLight ? "🌙 Mudar para Modo Escuro" : "☀️ Mudar para Modo Claro";
+
+  document.querySelectorAll(".theme-toggle-icon").forEach((el) => {
+    el.textContent = icon;
+  });
+  document.querySelectorAll(".theme-toggle-text").forEach((el) => {
+    el.textContent = label;
+  });
+  const configBtn = $("#btn-toggle-theme-config");
+  if (configBtn) configBtn.textContent = configText;
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "dark";
+  const next = current === "light" ? "dark" : "light";
+  applyTheme(next);
+  toast(`Modo ${next === "light" ? "Claro" : "Escuro"} ativado!`);
+}
+
+function initTheme() {
+  let theme = "dark";
+  try {
+    theme = localStorage.getItem("rpg_theme") || "dark";
+  } catch (_) {}
+  applyTheme(theme);
+
+  const toggleButtons = document.querySelectorAll(".btn-theme-toggle, #btn-toggle-theme-config");
+  toggleButtons.forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      toggleTheme();
+    };
+  });
+}
+
 function bind() {
+  initTheme();
   bindSystemDock();
   $("#auth-form").onsubmit = login;
   $("#btn-signup").onclick = (event) => {

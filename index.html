@@ -7,7 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261118-successful-weeks-1">
+  <link rel="stylesheet" href="styles.css?v=20261118-light-mode-1">
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem("rpg_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (_) {}
+    })();
+  </script>
   <style>
     /* Ajustes de organização: classes que substituem estilos inline do arquivo original.
        Nenhum valor visual foi alterado, exceto onde comentado (normalizações minimas). */
@@ -30,7 +38,13 @@
 <body>
   <main id="auth-screen" class="app-shell">
     <section class="panel" aria-label="Login">
-      <div class="panel-header"><h2>Entrar no RPG</h2></div>
+      <div class="panel-header">
+        <h2>Entrar no RPG</h2>
+        <button id="btn-theme-toggle-auth" class="btn-theme-toggle" type="button" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
+          <span class="theme-toggle-icon" aria-hidden="true">☀️</span>
+          <span class="theme-toggle-text">CLARO</span>
+        </button>
+      </div>
       <p class="state-text">Seus dados ficam protegidos pela sua conta.</p>
       <form id="auth-form" class="quest-form">
         <label class="field"><span>Email</span><input id="auth-email" type="email" autocomplete="email" required></label>
@@ -52,9 +66,15 @@
         <div class="hero-copy">
           <div class="hero-header-row">
             <p class="system-label">RPG Real Life</p>
-            <div class="gold-badge" aria-label="Saldo de Gold">
-              <strong id="hero-gold" class="gold-val">0</strong>
-              <span class="gold-label">GOLD</span>
+            <div class="hero-header-actions">
+              <button id="btn-theme-toggle" class="btn-theme-toggle" type="button" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
+                <span class="theme-toggle-icon" aria-hidden="true">☀️</span>
+                <span class="theme-toggle-text">CLARO</span>
+              </button>
+              <div class="gold-badge" aria-label="Saldo de Gold">
+                <strong id="hero-gold" class="gold-val">0</strong>
+                <span class="gold-label">GOLD</span>
+              </div>
             </div>
           </div>
           <h1>Mateus</h1>
@@ -428,6 +448,9 @@
         </div>
 
         <div class="config-actions">
+          <button id="btn-toggle-theme-config" class="btn btn-config btn-config-theme" type="button">
+            ☀️ Mudar para Modo Claro
+          </button>
           <button id="btn-change-avatar" class="btn btn-config btn-config-avatar" type="button">
             🖼️ Alterar Foto de Perfil
           </button>
@@ -837,6 +860,6 @@
   <script src="js/constants.js?v=20260912-tech-1"></script>
   <script src="js/rules.js?v=20261118-successful-weeks-1"></script>
   <script src="db.js?v=20260919-quest-dossier-1"></script>
-  <script src="app.js?v=20261118-successful-weeks-1"></script>
+  <script src="app.js?v=20261118-light-mode-1"></script>
 </body>
 </html>

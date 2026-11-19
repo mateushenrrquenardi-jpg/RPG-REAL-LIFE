@@ -1,5 +1,5 @@
 const { TITLES, ROUTINE_LEVELS, SHOP_PRODUCTS, SHOP_CATEGORIES } = RPG_CONFIG;
-const { progressPercent } = RPG_RULES;
+const { progressPercent, formatSuccessfulWeeks } = RPG_RULES;
 const $ = (selector) => document.querySelector(selector);
 const titleFor = (level) => TITLES.reduce((current, [minimum, title]) => Number(level) >= minimum ? title : current, "Iniciante");
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -459,7 +459,14 @@ function routineHtml(quest) {
   const fixed = routine.routine_fixed;
   const levelNum = String(quest.routine_level || 1).padStart(2, "0");
   const rankLabel = fixed ? "ROTINA FIXADA" : `Nivel ${levelNum} - ${level.name}`;
-  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS · ${pct}%</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div></div>`;
+  const weeklyTarget = Math.max(1, Math.min(7, Number(quest.weekly_target || 7)));
+  const weeklyCompleted = Number(routine.weekly_completed || 0);
+  const successfulWeeks = Number(routine.successful_weeks || 0);
+  const isTargetMet = weeklyCompleted >= weeklyTarget;
+  const weeklyStatus = isTargetMet ? ' <span class="routine-meta-ok">✓ META</span>' : "";
+  const weeksLabel = successfulWeeks === 1 ? "SEMANA DE SUCESSO" : "SEMANAS DE SUCESSO";
+
+  return `<div class="routine-card ${fixed ? "routine-fixed" : ""}"><div class="routine-top"><span class="routine-rank">${rankLabel}</span><span>${days}/${level.days} DIAS · ${pct}%</span></div><div class="routine-track" aria-label="Progresso da rotina"><div class="routine-fill" style="width:${pct}%"></div></div><div class="routine-bottom"><span>SEMANA: <strong>${weeklyCompleted}/${weeklyTarget} DIAS</strong>${weeklyStatus}</span><span><strong>${successfulWeeks}</strong> ${weeksLabel}</span></div></div>`;
 }
 
 function questDescription(quest) {

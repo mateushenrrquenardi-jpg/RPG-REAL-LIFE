@@ -18,6 +18,9 @@ Execute no SQL Editor do Supabase, uma única vez e exatamente nesta ordem. Não
 14. `20260913_clean_date_history.sql`
 15. `20260913_daily_quest_suggestions.sql`
 16. `20260919_quest_details_and_notes.sql`
+17. `20261026_goal_protocolo.sql`
+18. `20261026_life_design.sql`
+19. `20261118_routine_successful_weeks.sql`
 
 ## Convenções
 

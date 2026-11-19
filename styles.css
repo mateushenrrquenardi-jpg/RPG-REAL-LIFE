@@ -976,6 +976,11 @@ textarea {
   font-weight: 400;
 }
 
+.routine-meta-ok {
+  color: var(--green);
+  font-weight: 700;
+}
+
 .goal-rank {
   color: var(--pink);
   font-weight: 400;
@@ -1572,7 +1577,8 @@ textarea {
     grid-template-columns: minmax(0, 1fr) 44px 44px;
   }
 
-  #daily-list .routine-top {
+  #daily-list .routine-top,
+  #daily-list .routine-bottom {
     align-items: flex-start;
   }
 }

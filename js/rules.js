@@ -16,7 +16,12 @@
       .map(([milestone, gold]) => ({ milestone, gold }));
   }
 
-  const rules = Object.freeze({ clamp, progressPercent, crossedMilestoneRewards });
+  function formatSuccessfulWeeks(weeks) {
+    const count = Math.max(0, Number(weeks) || 0);
+    return `${count} ${count === 1 ? "SEMANA DE SUCESSO" : "SEMANAS DE SUCESSO"}`;
+  }
+
+  const rules = Object.freeze({ clamp, progressPercent, crossedMilestoneRewards, formatSuccessfulWeeks });
   root.RPG_RULES = rules;
   if (typeof module !== "undefined") module.exports = rules;
 })(globalThis);

@@ -1512,6 +1512,11 @@ async function saveCleanDate(event) {
   }
 }
 
+const CYBER_THEME_ICONS = {
+  light: '<svg class="cyber-theme-svg" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor"><circle cx="8" cy="8" r="3.2" stroke-width="1.4"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><line x1="8" y1="1" x2="8" y2="3.2" stroke-width="1.4" stroke-linecap="round"/><line x1="8" y1="12.8" x2="8" y2="15" stroke-width="1.4" stroke-linecap="round"/><line x1="1" y1="8" x2="3.2" y2="8" stroke-width="1.4" stroke-linecap="round"/><line x1="12.8" y1="8" x2="15" y2="8" stroke-width="1.4" stroke-linecap="round"/><line x1="3" y1="3" x2="4.5" y2="4.5" stroke-width="1.2" stroke-linecap="round"/><line x1="11.5" y1="11.5" x2="13" y2="13" stroke-width="1.2" stroke-linecap="round"/><line x1="3" y1="13" x2="4.5" y2="11.5" stroke-width="1.2" stroke-linecap="round"/><line x1="11.5" y1="4.5" x2="13" y2="3" stroke-width="1.2" stroke-linecap="round"/></svg>',
+  dark: '<svg class="cyber-theme-svg" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor"><path d="M13.2 9.5A5.8 5.8 0 1 1 6.5 2.8a4.8 4.8 0 0 0 6.7 6.7z" stroke-width="1.4" stroke-linejoin="round"/><circle cx="6" cy="8" r="1.2" fill="currentColor"/><line x1="10.5" y1="2.5" x2="14" y2="2.5" stroke-width="1.2" stroke-linecap="round"/><line x1="12" y1="4.5" x2="14.5" y2="4.5" stroke-width="1" stroke-linecap="round"/></svg>'
+};
+
 function applyTheme(theme) {
   const isLight = theme === "light";
   document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
@@ -1519,12 +1524,12 @@ function applyTheme(theme) {
     localStorage.setItem("rpg_theme", isLight ? "light" : "dark");
   } catch (_) {}
 
-  const icon = isLight ? "🌙" : "☀️";
+  const iconSvg = isLight ? CYBER_THEME_ICONS.dark : CYBER_THEME_ICONS.light;
   const label = isLight ? "ESCURO" : "CLARO";
-  const configText = isLight ? "🌙 Mudar para Modo Escuro" : "☀️ Mudar para Modo Claro";
+  const configText = isLight ? "// PROTOCOLO: MUDAR P/ MODO ESCURO" : "// PROTOCOLO: MUDAR P/ MODO CLARO";
 
   document.querySelectorAll(".theme-toggle-icon").forEach((el) => {
-    el.textContent = icon;
+    el.innerHTML = iconSvg;
   });
   document.querySelectorAll(".theme-toggle-text").forEach((el) => {
     el.textContent = label;
